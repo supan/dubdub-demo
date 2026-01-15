@@ -636,12 +636,17 @@ async def admin_login(request: AdminLoginRequest):
         # Generate admin session token
         admin_token = f"admin_{uuid.uuid4().hex}"
         
-        # Store admin session (expires in 24 hours)
-        await db.admin_sessions.insert_one({
-            "token": admin_token,
-            "created_at": datetime.now(timezone.utc),
-            "expires_at": datetime.now(timezone.utc) + timedelta(hours=24)
-        })
+        try:
+            # Store admin session (expires in 24 hours)
+            result = await db.admin_sessions.insert_one({
+                "token": admin_token,
+                "created_at": datetime.now(timezone.utc),
+                "expires_at": datetime.now(timezone.utc) + timedelta(hours=24)
+            })
+            logging.info(f"Admin session created: {admin_token}, inserted_id: {result.inserted_id}")
+        except Exception as e:
+            logging.error(f"Failed to create admin session: {e}")
+            raise HTTPException(status_code=500, detail="Failed to create session")
         
         return {"success": True, "token": admin_token}
     else:
@@ -650,13 +655,18 @@ async def admin_login(request: AdminLoginRequest):
 async def verify_admin_token(authorization: Optional[str] = Header(None)):
     """Verify admin token"""
     if not authorization:
+        logging.warning("No authorization header provided")
         raise HTTPException(status_code=401, detail="Admin token required")
     
     token = authorization.replace("Bearer ", "")
+    logging.info(f"Verifying admin token: {token[:20]}...")
     
     session = await db.admin_sessions.find_one({"token": token})
     if not session:
+        logging.warning(f"Admin session not found for token: {token[:20]}...")
         raise HTTPException(status_code=401, detail="Invalid admin token")
+    
+    logging.info(f"Admin session found, expires at: {session.get('expires_at')}")
     
     # Check expiry
     expires_at = session["expires_at"]
