@@ -104,8 +104,10 @@ export default function FeedScreen() {
       return;
     }
     
-    setIsTransitioning(true);
+    // IMMEDIATELY hide feedback and clear data to prevent double-show
     setShowFeedback(false);
+    setFeedbackData(null);
+    setIsTransitioning(true);
     
     // Smooth fade out, update content, then fade in
     Animated.timing(fadeAnim, {
@@ -113,9 +115,7 @@ export default function FeedScreen() {
       duration: 150,
       useNativeDriver: true,
     }).start(() => {
-      // Update content while invisible
-      setFeedbackData(null);
-      
+      // Update playable index while invisible
       if (currentIndex < playables.length - 1) {
         setCurrentIndex(currentIndex + 1);
       } else {
