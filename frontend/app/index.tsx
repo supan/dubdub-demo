@@ -8,6 +8,30 @@ import { Ionicons } from '@expo/vector-icons';
 export default function LoginScreen() {
   const { user, login, loading } = useAuth();
   const router = useRouter();
+  const [devLoading, setDevLoading] = useState(false);
+
+  const devLogin = async () => {
+    try {
+      setDevLoading(true);
+      const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+      
+      // Call dev login endpoint
+      const response = await fetch(`${BACKEND_URL}/api/auth/dev-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      const data = await response.json();
+      
+      // Manually set user and token (simulating auth context)
+      // For now, just refresh and login normally
+      router.replace('/feed');
+    } catch (error) {
+      console.error('Dev login error:', error);
+    } finally {
+      setDevLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (user && !loading) {
