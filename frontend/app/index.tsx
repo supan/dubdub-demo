@@ -17,14 +17,11 @@ export default function LoginScreen() {
     try {
       setDevLoading(true);
       
-      // Call dev login endpoint
       const response = await axios.post(`${BACKEND_URL}/api/auth/dev-login`);
       const { session_token, user: userData } = response.data;
       
-      // Set auth context
       setSessionToken(session_token);
       
-      // Fetch full user data
       const userResponse = await axios.get(`${BACKEND_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${session_token}` },
       });
@@ -72,28 +69,14 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.bottomContent}>
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={login}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={['#00FF87', '#00D9FF']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.buttonGradient}
-            >
+          <TouchableOpacity style={styles.loginButton} onPress={login} activeOpacity={0.8}>
+            <LinearGradient colors={['#00FF87', '#00D9FF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.buttonGradient}>
               <Ionicons name="logo-google" size={24} color="#0F0F1E" style={styles.googleIcon} />
               <Text style={styles.loginButtonText}>Continue with Google</Text>
             </LinearGradient>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.devButton}
-            onPress={devLogin}
-            activeOpacity={0.8}
-            disabled={devLoading}
-          >
+          <TouchableOpacity style={styles.devButton} onPress={devLogin} activeOpacity={0.8} disabled={devLoading}>
             <Ionicons name="code" size={20} color="#00FF87" style={styles.devIcon} />
             <Text style={styles.devButtonText}>
               {devLoading ? 'Logging in...' : 'Dev Login (Quick Test)'}
@@ -101,7 +84,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <Text style={styles.footerText}>Join the winning community</Text>
-          <Text style={styles.versionText}>v1.0.9</Text>
+          <Text style={styles.versionText}>v1.1.0</Text>
         </View>
       </View>
     </LinearGradient>
@@ -109,102 +92,21 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 32,
-    paddingTop: 80,
-    paddingBottom: 50,
-  },
-  header: {
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 72,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginTop: 20,
-    letterSpacing: -2,
-  },
-  tagline: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#00FF87',
-    marginTop: 8,
-    textAlign: 'center',
-    letterSpacing: 0.5,
-  },
-  centerContent: {
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  description: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#00D9FF',
-    textAlign: 'center',
-    lineHeight: 28,
-  },
-  bottomContent: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  loginButton: {
-    width: '100%',
-    borderRadius: 30,
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  buttonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 40,
-  },
-  googleIcon: {
-    marginRight: 12,
-  },
-  loginButtonText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F0F1E',
-  },
-  devButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0, 255, 135, 0.1)',
-    borderWidth: 1,
-    borderColor: '#00FF87',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 24,
-    width: '100%',
-  },
-  devIcon: {
-    marginRight: 8,
-  },
-  devButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#00FF87',
-  },
-  footerText: {
-    fontSize: 14,
-    fontWeight: '400',
-    color: '#B0B0C8',
-    marginTop: 20,
-  },
-  versionText: {
-    fontSize: 12,
-    fontWeight: '400',
-    color: '#666',
-    marginTop: 8,
-    opacity: 0.6,
-  },
+  container: { flex: 1 },
+  content: { flex: 1, justifyContent: 'space-between', alignItems: 'center', padding: 32, paddingTop: 80, paddingBottom: 50 },
+  header: { alignItems: 'center' },
+  title: { fontSize: 72, fontWeight: '800', color: '#FFFFFF', marginTop: 20, letterSpacing: -2 },
+  tagline: { fontSize: 20, fontWeight: '600', color: '#00FF87', marginTop: 8, textAlign: 'center', letterSpacing: 0.5 },
+  centerContent: { alignItems: 'center', paddingHorizontal: 20 },
+  description: { fontSize: 20, fontWeight: '600', color: '#00D9FF', textAlign: 'center', lineHeight: 28 },
+  bottomContent: { width: '100%', alignItems: 'center' },
+  loginButton: { width: '100%', borderRadius: 30, overflow: 'hidden', marginBottom: 12 },
+  buttonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, paddingHorizontal: 40 },
+  googleIcon: { marginRight: 12 },
+  loginButtonText: { fontSize: 18, fontWeight: '700', color: '#0F0F1E' },
+  devButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0, 255, 135, 0.1)', borderWidth: 1, borderColor: '#00FF87', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 24, width: '100%' },
+  devIcon: { marginRight: 8 },
+  devButtonText: { fontSize: 14, fontWeight: '600', color: '#00FF87' },
+  footerText: { fontSize: 14, fontWeight: '400', color: '#B0B0C8', marginTop: 20 },
+  versionText: { fontSize: 12, fontWeight: '400', color: '#666', marginTop: 8, opacity: 0.6 },
 });
