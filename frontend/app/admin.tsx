@@ -13,8 +13,10 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+const ADMIN_TOKEN_KEY = 'invin_admin_token';
 
 type ContentType = 'text' | 'image' | 'video' | 'image_text' | 'video_text';
 type AnswerType = 'mcq' | 'text_input';
