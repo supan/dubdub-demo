@@ -125,13 +125,6 @@ export default function AdminDashboard() {
     };
     checkExistingSession();
   }, []);
-      }
-    } catch (error: any) {
-      setLoginError(error.response?.data?.detail || 'Login failed');
-    } finally {
-      setLoginLoading(false);
-    }
-  };
 
   const fetchPlayables = async (token: string) => {
     try {
