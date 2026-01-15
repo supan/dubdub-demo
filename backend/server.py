@@ -522,34 +522,7 @@ async def seed_data():
         logging.error(f"Error seeding data: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.post("/admin/add-playable")
-async def add_playable(playable: Playable, current_user: User = Depends(require_auth)):
-    """Add a new playable to the database"""
-    try:
-        playable_dict = playable.dict()
-        playable_dict["playable_id"] = f"play_{uuid.uuid4().hex[:12]}"
-        playable_dict["created_at"] = datetime.now(timezone.utc)
-        
-        await db.playables.insert_one(playable_dict)
-        
-        return {"message": "Playable added successfully", "playable_id": playable_dict["playable_id"]}
-    
-    except Exception as e:
-        logging.error(f"Error adding playable: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@api_router.get("/admin/playables")
-async def get_all_playables(current_user: User = Depends(require_auth)):
-    """Get all playables (admin view)"""
-    try:
-        playables = await db.playables.find({}, {"_id": 0}).to_list(1000)
-        return {"count": len(playables), "playables": playables}
-    
-    except Exception as e:
-        logging.error(f"Error fetching playables: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@api_router.delete("/admin/reset-progress")
+@api_router.delete("/user/reset-progress")
 async def reset_user_progress(current_user: User = Depends(require_auth)):
     """Reset current user's progress (for testing)"""
     try:
