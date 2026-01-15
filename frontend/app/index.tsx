@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,7 +10,6 @@ export default function LoginScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    // If user is authenticated, navigate to feed
     if (user && !loading) {
       router.replace('/feed');
     }
@@ -19,19 +18,19 @@ export default function LoginScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#FF6B9D" />
+        <ActivityIndicator size="large" color="#00FF87" />
       </View>
     );
   }
 
   return (
     <LinearGradient
-      colors={['#667eea', '#764ba2', '#f093fb']}
+      colors={['#0F0F1E', '#1A1A2E', '#16213E']}
       style={styles.container}
     >
       <View style={styles.content}>
         <View style={styles.header}>
-          <Ionicons name="infinite" size={100} color="#fff" />
+          <Ionicons name="infinite" size={100} color="#00FF87" />
           <Text style={styles.title}>Invin</Text>
           <Text style={styles.tagline}>Quick Play. Infinite Wins</Text>
         </View>
@@ -51,8 +50,15 @@ export default function LoginScreen() {
             onPress={login}
             activeOpacity={0.8}
           >
-            <Ionicons name="logo-google" size={24} color="#fff" style={styles.googleIcon} />
-            <Text style={styles.loginButtonText}>Continue with Google</Text>
+            <LinearGradient
+              colors={['#00FF87', '#00D9FF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.buttonGradient}
+            >
+              <Ionicons name="logo-google" size={24} color="#0F0F1E" style={styles.googleIcon} />
+              <Text style={styles.loginButtonText}>Continue with Google</Text>
+            </LinearGradient>
           </TouchableOpacity>
 
           <Text style={styles.footerText}>Join the winning community</Text>
@@ -80,17 +86,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 72,
     fontWeight: '800',
-    color: '#fff',
+    color: '#FFFFFF',
     marginTop: 20,
     letterSpacing: -2,
   },
   tagline: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#fff',
+    color: '#00FF87',
     marginTop: 8,
     textAlign: 'center',
-    opacity: 0.95,
     letterSpacing: 0.5,
   },
   centerContent: {
@@ -100,48 +105,45 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 18,
     fontWeight: '400',
-    color: '#fff',
+    color: '#B0B0C8',
     textAlign: 'center',
     lineHeight: 28,
-    opacity: 0.9,
   },
   subDescription: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFD700',
+    color: '#00D9FF',
     textAlign: 'center',
     marginTop: 12,
-    opacity: 1,
   },
   bottomContent: {
     width: '100%',
     alignItems: 'center',
   },
   loginButton: {
+    width: '100%',
+    borderRadius: 30,
+    overflow: 'hidden',
+  },
+  buttonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
     paddingVertical: 18,
     paddingHorizontal: 40,
-    borderRadius: 30,
-    width: '100%',
-    elevation: 10,
   },
   googleIcon: {
     marginRight: 12,
-    color: '#667eea',
   },
   loginButtonText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#667eea',
+    fontWeight: '700',
+    color: '#0F0F1E',
   },
   footerText: {
     fontSize: 14,
     fontWeight: '400',
-    color: '#fff',
-    opacity: 0.7,
+    color: '#B0B0C8',
     marginTop: 20,
   },
 });

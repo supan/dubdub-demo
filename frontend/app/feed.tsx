@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   Dimensions,
   TouchableOpacity,
-  Modal,
   Animated,
   Platform,
 } from 'react-native';
@@ -15,6 +14,7 @@ import { useRouter } from 'expo-router';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import PlayableCard from '../components/PlayableCard';
 import FeedbackModal from '../components/FeedbackModal';
 
@@ -42,7 +42,7 @@ export default function FeedScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackData, setFeedbackData] = useState<any>(null);
-  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!user || !sessionToken) {
@@ -99,20 +99,22 @@ export default function FeedScreen() {
     }
   };
 
-  const handleNext = () => {
+  const handleSwipeUp = () => {
+    if (!showFeedback) return;
+    
     setShowFeedback(false);
     setFeedbackData(null);
 
     // Animate transition
     Animated.sequence([
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 200,
+      Animated.timing(translateY, {
+        toValue: -height,
+        duration: 300,
         useNativeDriver: true,
       }),
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 200,
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 0,
         useNativeDriver: true,
       }),
     ]).start();
@@ -120,11 +122,17 @@ export default function FeedScreen() {
     if (currentIndex < playables.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      // Fetch more playables
       fetchPlayables();
       setCurrentIndex(0);
     }
   };
+
+  const swipeGesture = Gesture.Pan()
+    .onEnd((event) => {
+      if (event.velocityY < -500 && showFeedback) {
+        handleSwipeUp();
+      }
+    });
 
   const handleLogout = async () => {
     await logout();
@@ -133,21 +141,28 @@ export default function FeedScreen() {
 
   if (loading) {
     return (
-      <LinearGradient colors={['#667eea', '#764ba2']} style={styles.container}>
-        <ActivityIndicator size="large" color="#fff" />
+      <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
+        <ActivityIndicator size="large" color="#00FF87" />
       </LinearGradient>
     );
   }
 
   if (playables.length === 0) {
     return (
-      <LinearGradient colors={['#667eea', '#764ba2']} style={styles.container}>
+      <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
         <View style={styles.emptyContainer}>
-          <Ionicons name="checkmark-circle" size={80} color="#fff" />
+          <Ionicons name="checkmark-circle" size={80} color="#00FF87" />
           <Text style={styles.emptyTitle}>All caught up!</Text>
           <Text style={styles.emptyText}>You've answered all available questions.</Text>
           <TouchableOpacity style={styles.refreshButton} onPress={fetchPlayables}>
-            <Text style={styles.refreshButtonText}>Refresh</Text>
+            <LinearGradient
+              colors={['#00FF87', '#00D9FF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.refreshGradient}
+            >
+              <Text style={styles.refreshButtonText}>Refresh</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -157,60 +172,64 @@ export default function FeedScreen() {
   const currentPlayable = playables[currentIndex];
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <LinearGradient
-        colors={['#667eea', '#764ba2']}
-        style={styles.header}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-      >
-        <View style={styles.headerContent}>
-          <View style={styles.streakContainer}>
-            <Ionicons name="flame" size={24} color="#FFD700" />
-            <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
+    <GestureDetector gesture={swipeGesture}>
+      <View style={styles.container}>
+        <LinearGradient
+          colors={['#0F0F1E', '#1A1A2E']}
+          style={styles.background}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <View style={styles.streakContainer}>
+                <Ionicons name="flame" size={24} color="#FF6B00" />
+                <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
+              </View>
+              <Text style={styles.headerTitle}>Invin</Text>
+              <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+                <Ionicons name="log-out-outline" size={24} color="#B0B0C8" />
+              </TouchableOpacity>
+            </View>
           </View>
-          <Text style={styles.headerTitle}>Invin</Text>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
 
-      {/* Playable Card */}
-      <Animated.View style={[styles.cardContainer, { opacity: fadeAnim }]}>
-        <PlayableCard
-          playable={currentPlayable}
-          onAnswer={handleAnswer}
-          submitting={submitting}
-        />
-      </Animated.View>
+          {/* Playable Card */}
+          <Animated.View style={[styles.cardContainer, { transform: [{ translateY }] }]}>
+            <PlayableCard
+              playable={currentPlayable}
+              onAnswer={handleAnswer}
+              submitting={submitting}
+            />
+          </Animated.View>
 
-      {/* Progress Indicator */}
-      <View style={styles.progressContainer}>
-        <Text style={styles.progressText}>
-          {currentIndex + 1} / {playables.length}
-        </Text>
+          {/* Progress Indicator */}
+          <View style={styles.progressContainer}>
+            <Text style={styles.progressText}>
+              {currentIndex + 1} / {playables.length}
+            </Text>
+          </View>
+
+          {/* Feedback Modal */}
+          {showFeedback && feedbackData && (
+            <FeedbackModal
+              visible={showFeedback}
+              correct={feedbackData.correct}
+              correctAnswer={feedbackData.correct_answer}
+              currentStreak={feedbackData.current_streak}
+              onSwipeUp={handleSwipeUp}
+            />
+          )}
+        </LinearGradient>
       </View>
-
-      {/* Feedback Modal */}
-      {showFeedback && feedbackData && (
-        <FeedbackModal
-          visible={showFeedback}
-          correct={feedbackData.correct}
-          correctAnswer={feedbackData.correct_answer}
-          currentStreak={feedbackData.current_streak}
-          onNext={handleNext}
-        />
-      )}
-    </View>
+    </GestureDetector>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+  },
+  background: {
+    flex: 1,
   },
   header: {
     paddingTop: Platform.OS === 'ios' ? 50 : 40,
@@ -225,21 +244,23 @@ const styles = StyleSheet.create({
   streakContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 107, 0, 0.15)',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 20,
     gap: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 107, 0, 0.3)',
   },
   streakText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#fff',
+    color: '#FF6B00',
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#fff',
+    color: '#FFFFFF',
     letterSpacing: -0.5,
   },
   logoutButton: {
@@ -255,7 +276,7 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 16,
-    color: '#666',
+    color: '#B0B0C8',
     fontWeight: '600',
   },
   emptyContainer: {
@@ -267,27 +288,28 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#fff',
+    color: '#FFFFFF',
     marginTop: 16,
   },
   emptyText: {
     fontSize: 18,
     fontWeight: '400',
-    color: '#fff',
+    color: '#B0B0C8',
     marginTop: 8,
     textAlign: 'center',
-    opacity: 0.9,
   },
   refreshButton: {
     marginTop: 24,
-    backgroundColor: '#fff',
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  refreshGradient: {
     paddingVertical: 12,
     paddingHorizontal: 32,
-    borderRadius: 24,
   },
   refreshButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#667eea',
+    color: '#0F0F1E',
   },
 });
