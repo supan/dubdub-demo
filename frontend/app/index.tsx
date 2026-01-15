@@ -100,9 +100,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   description: {
-    fontSize: 18,
-    fontWeight: '400',
-    color: '#B0B0C8',
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#00D9FF',
     textAlign: 'center',
     lineHeight: 28,
   },
