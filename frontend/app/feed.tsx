@@ -126,13 +126,7 @@ export default function FeedScreen() {
     }
   };
 
-  const swipeGesture = Gesture.Pan()
-    .enabled(!showFeedback)
-    .onEnd((event) => {
-      if (event.velocityY < -500) {
-        // Only handle swipe when modal is not showing
-      }
-    });
+  const swipeGesture = null; // Gesture removed
 
   const handleLogout = async () => {
     await logout();
