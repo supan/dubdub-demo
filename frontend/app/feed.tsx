@@ -17,7 +17,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import PlayableCard from '../components/PlayableCard';
 import FeedbackModal from '../components/FeedbackModal';
-import { useFonts, Poppins_700Bold, Poppins_600SemiBold, Poppins_400Regular } from '@expo-google-fonts/poppins';
 
 const { width, height } = Dimensions.get('window');
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
@@ -44,11 +43,6 @@ export default function FeedScreen() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackData, setFeedbackData] = useState<any>(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
-  const [fontsLoaded] = useFonts({
-    Poppins_700Bold,
-    Poppins_600SemiBold,
-    Poppins_400Regular,
-  });
 
   useEffect(() => {
     if (!user || !sessionToken) {
@@ -137,7 +131,7 @@ export default function FeedScreen() {
     router.replace('/');
   };
 
-  if (loading || !fontsLoaded) {
+  if (loading) {
     return (
       <LinearGradient colors={['#667eea', '#764ba2']} style={styles.container}>
         <ActivityIndicator size="large" color="#fff" />
@@ -239,7 +233,7 @@ const styles = StyleSheet.create({
   },
   streakText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: '#fff',
   },
   headerTitle: {
@@ -272,12 +266,13 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 32,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: '#fff',
     marginTop: 16,
   },
   emptyText: {
     fontSize: 18,
+    fontWeight: '400',
     color: '#fff',
     marginTop: 8,
     textAlign: 'center',
@@ -292,7 +287,7 @@ const styles = StyleSheet.create({
   },
   refreshButtonText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: '#667eea',
   },
 });

@@ -1,28 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useFonts, Poppins_700Bold, Poppins_600SemiBold, Poppins_400Regular } from '@expo-google-fonts/poppins';
-import * as SplashScreen from 'expo-splash-screen';
-
-SplashScreen.preventAutoHideAsync();
 
 export default function LoginScreen() {
   const { user, login, loading } = useAuth();
   const router = useRouter();
-  const [fontsLoaded] = useFonts({
-    Poppins_700Bold,
-    Poppins_600SemiBold,
-    Poppins_400Regular,
-  });
-
-  useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
 
   useEffect(() => {
     // If user is authenticated, navigate to feed
@@ -31,7 +16,7 @@ export default function LoginScreen() {
     }
   }, [user, loading]);
 
-  if (loading || !fontsLoaded) {
+  if (loading) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#FF6B9D" />
@@ -53,7 +38,7 @@ export default function LoginScreen() {
 
         <View style={styles.centerContent}>
           <Text style={styles.description}>
-            Challenge yourself with endless playable content
+            Challenge yourself with endless{' \n'}playable content
           </Text>
           <Text style={styles.subDescription}>
             Build streaks • Track progress • Win big
@@ -94,17 +79,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 72,
-    fontFamily: 'Poppins_700Bold',
+    fontWeight: '800',
     color: '#fff',
     marginTop: 20,
     letterSpacing: -2,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 8,
   },
   tagline: {
     fontSize: 20,
-    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: '#fff',
     marginTop: 8,
     textAlign: 'center',
@@ -117,7 +99,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 18,
-    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
     color: '#fff',
     textAlign: 'center',
     lineHeight: 28,
@@ -125,7 +107,7 @@ const styles = StyleSheet.create({
   },
   subDescription: {
     fontSize: 16,
-    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: '#FFD700',
     textAlign: 'center',
     marginTop: 12,
@@ -144,10 +126,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     borderRadius: 30,
     width: '100%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
     elevation: 10,
   },
   googleIcon: {
@@ -156,12 +134,12 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     fontSize: 18,
-    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: '#667eea',
   },
   footerText: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
     color: '#fff',
     opacity: 0.7,
     marginTop: 20,
