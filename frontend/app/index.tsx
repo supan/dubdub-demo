@@ -137,4 +137,11 @@ const styles = StyleSheet.create({
     color: '#B0B0C8',
     marginTop: 20,
   },
+  versionText: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#666',
+    marginTop: 8,
+    opacity: 0.6,
+  },
 });
