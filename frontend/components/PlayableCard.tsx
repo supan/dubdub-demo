@@ -48,11 +48,6 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
       onAnswer(answer);
     }
   };
-    const answer = playable.answer_type === 'mcq' ? selectedOption : userAnswer;
-    if (answer && !submitting) {
-      onAnswer(answer);
-    }
-  };
 
   const renderQuestion = () => {
     const { question, type } = playable;
