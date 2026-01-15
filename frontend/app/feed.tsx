@@ -44,16 +44,24 @@ export default function FeedScreen() {
   
   // State machine - single source of truth for game state
   const [gameState, setGameState] = useState<GameState>('LOADING');
+  
+  // Track if initial load is done to prevent re-fetching
+  const initialLoadDone = useRef(false);
 
+  // Initial authentication check - only run once
   useEffect(() => {
-    if (!user || !sessionToken) {
+    if (!sessionToken) {
       router.replace('/');
       return;
     }
-    // Initialize totalPlayed from user stats
-    setTotalPlayed(user.total_played || 0);
-    fetchPlayables();
-  }, [user, sessionToken]);
+    
+    // Only fetch playables once on initial mount
+    if (!initialLoadDone.current) {
+      initialLoadDone.current = true;
+      setTotalPlayed(user?.total_played || 0);
+      fetchPlayables();
+    }
+  }, [sessionToken]);
 
   const fetchPlayables = async () => {
     try {
@@ -68,6 +76,7 @@ export default function FeedScreen() {
         },
       });
       setPlayables(response.data);
+      setCurrentIndex(0);
       setGameState('PLAYING');
     } catch (error) {
       console.error('Error fetching playables:', error);
@@ -97,15 +106,16 @@ export default function FeedScreen() {
         }
       );
 
-      // Store feedback data THEN transition to feedback state
+      // Store feedback data
       setFeedbackData(response.data);
       setTotalPlayed(prev => prev + 1);
       
-      // Refresh user stats in background
+      // NOW show feedback modal - this is the ONLY place we transition to SHOWING_FEEDBACK
+      setGameState('SHOWING_FEEDBACK');
+      
+      // Refresh user stats in background (don't await - fire and forget)
       refreshUser().catch(console.error);
       
-      // NOW show feedback modal
-      setGameState('SHOWING_FEEDBACK');
     } catch (error) {
       console.error('Error submitting answer:', error);
       // On error, return to playing state so user can retry
@@ -113,8 +123,10 @@ export default function FeedScreen() {
     }
   }, [gameState, playables, currentIndex, sessionToken, refreshUser]);
 
-  // Only allow continue when showing feedback
+  // Only allow continue when showing feedback - user must click Continue button
   const handleNext = useCallback(() => {
+    console.log('handleNext called, current state:', gameState);
+    
     // STRICT state check - only process if showing feedback
     if (gameState !== 'SHOWING_FEEDBACK') {
       console.log('Ignoring next - not in SHOWING_FEEDBACK state:', gameState);
@@ -136,22 +148,20 @@ export default function FeedScreen() {
       // Update playable index while invisible
       if (currentIndex < playables.length - 1) {
         setCurrentIndex(prev => prev + 1);
+        
+        // Fade back in
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }).start(() => {
+          // ONLY NOW return to playing state
+          setGameState('PLAYING');
+        });
       } else {
-        // Fetch more playables
+        // Need more playables - fetch and reset
         fetchPlayables();
-        setCurrentIndex(0);
-        return; // fetchPlayables will set state to PLAYING
       }
-      
-      // Fade back in
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 150,
-        useNativeDriver: true,
-      }).start(() => {
-        // ONLY NOW return to playing state
-        setGameState('PLAYING');
-      });
     });
   }, [gameState, currentIndex, playables.length, fadeAnim]);
 
