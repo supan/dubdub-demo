@@ -160,7 +160,12 @@ export default function FeedScreen() {
     router.replace('/');
   };
 
-  if (loading) {
+  // Derive UI states from the game state
+  const isLoading = gameState === 'LOADING';
+  const isSubmitting = gameState === 'SUBMITTING';
+  const showFeedback = gameState === 'SHOWING_FEEDBACK';
+
+  if (isLoading) {
     return (
       <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
         <ActivityIndicator size="large" color="#00FF87" />
@@ -212,11 +217,13 @@ export default function FeedScreen() {
         </View>
 
         <Animated.View style={[styles.cardContainer, { opacity: fadeAnim }]}>
-          <PlayableCard
-            playable={currentPlayable}
-            onAnswer={handleAnswer}
-            submitting={submitting}
-          />
+          {currentPlayable && (
+            <PlayableCard
+              playable={currentPlayable}
+              onAnswer={handleAnswer}
+              submitting={isSubmitting}
+            />
+          )}
         </Animated.View>
 
         <View style={styles.progressContainer}>
@@ -225,6 +232,7 @@ export default function FeedScreen() {
           </Text>
         </View>
 
+        {/* Feedback Modal - only shown when in SHOWING_FEEDBACK state */}
         {showFeedback && feedbackData && (
           <FeedbackModal
             visible={showFeedback}
