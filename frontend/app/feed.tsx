@@ -243,9 +243,10 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '700',
     color: '#fff',
+    letterSpacing: -0.5,
   },
   logoutButton: {
     padding: 8,
