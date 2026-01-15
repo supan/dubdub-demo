@@ -36,11 +36,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session on mount
-    checkExistingSession();
+    const initializeAuth = async () => {
+      try {
+        // Handle deep link on cold start
+        await handleInitialURL();
+        
+        // Check for existing session on mount
+        await checkExistingSession();
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        setLoading(false);
+      }
+    };
     
-    // Handle deep link on cold start
-    handleInitialURL();
+    initializeAuth();
     
     // Handle deep link when app is running
     const subscription = Linking.addEventListener('url', handleDeepLink);
