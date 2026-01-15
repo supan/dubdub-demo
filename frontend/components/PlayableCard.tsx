@@ -23,13 +23,31 @@ interface PlayableCardProps {
 export default function PlayableCard({ playable, onAnswer, submitting }: PlayableCardProps) {
   const [userAnswer, setUserAnswer] = useState('');
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   // Safety check
   if (!playable) {
     return null;
   }
 
+  // Reset submission state when playable changes
+  useEffect(() => {
+    setHasSubmitted(false);
+    setUserAnswer('');
+    setSelectedOption(null);
+  }, [playable.playable_id]);
+
   const handleSubmit = () => {
+    if (hasSubmitted || submitting) {
+      return; // Prevent double submission
+    }
+    
+    const answer = playable.answer_type === 'mcq' ? selectedOption : userAnswer;
+    if (answer) {
+      setHasSubmitted(true);
+      onAnswer(answer);
+    }
+  };
     const answer = playable.answer_type === 'mcq' ? selectedOption : userAnswer;
     if (answer && !submitting) {
       onAnswer(answer);
