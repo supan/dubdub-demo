@@ -205,7 +205,7 @@ export default function FeedScreen() {
 
         <View style={styles.progressContainer}>
           <Text style={styles.progressText}>
-            {currentIndex + 1} / {playables.length}
+            {totalPlayed + 1} / 8
           </Text>
         </View>
 
