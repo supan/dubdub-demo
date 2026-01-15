@@ -48,6 +48,8 @@ export default function FeedScreen() {
       router.replace('/');
       return;
     }
+    // Initialize totalPlayed from user stats
+    setTotalPlayed(user.total_played || 0);
     fetchPlayables();
   }, [user, sessionToken]);
 
