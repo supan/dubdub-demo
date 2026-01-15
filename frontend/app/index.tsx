@@ -106,13 +106,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 28,
   },
-  subDescription: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#00D9FF',
-    textAlign: 'center',
-    marginTop: 12,
-  },
   bottomContent: {
     width: '100%',
     alignItems: 'center',
