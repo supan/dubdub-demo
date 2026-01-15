@@ -37,10 +37,7 @@ export default function LoginScreen() {
 
         <View style={styles.centerContent}>
           <Text style={styles.description}>
-            Challenge yourself with endless{' \n'}playable content
-          </Text>
-          <Text style={styles.subDescription}>
-            Build streaks • Track progress • Win big
+            Challenge yourself with infinite plays
           </Text>
         </View>
 
