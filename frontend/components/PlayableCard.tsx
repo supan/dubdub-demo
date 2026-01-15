@@ -55,7 +55,7 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
             <Image
               source={{ uri: question.image_base64 }}
               style={styles.image}
-              resizeMode="contain"
+              resizeMode="cover"
             />
           </View>
         )}
@@ -113,7 +113,7 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
         <TextInput
           style={styles.textInput}
           placeholder="Type your answer..."
-          placeholderTextColor="#999"
+          placeholderTextColor="#666"
           value={userAnswer}
           onChangeText={setUserAnswer}
           autoCapitalize="words"
@@ -139,7 +139,7 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
         {/* Category Badge */}
         <View style={styles.categoryBadge}>
           <LinearGradient
-            colors={['#FF6B9D', '#C06C84']}
+            colors={['#00FF87', '#00D9FF']}
             style={styles.categoryGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
@@ -168,7 +168,7 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
           activeOpacity={0.8}
         >
           <LinearGradient
-            colors={canSubmit && !submitting ? ['#667eea', '#764ba2'] : ['#ccc', '#999']}
+            colors={canSubmit && !submitting ? ['#00FF87', '#00D9FF'] : ['#333', '#222']}
             style={styles.submitGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
@@ -178,7 +178,7 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
             ) : (
               <View style={styles.submitContent}>
                 <Text style={styles.submitButtonText}>Submit Answer</Text>
-                <Ionicons name="arrow-forward" size={20} color="#fff" />
+                <Ionicons name="arrow-forward" size={20} color={canSubmit ? '#0F0F1E' : '#666'} />
               </View>
             )}
           </LinearGradient>
@@ -210,13 +210,13 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: '700',
+    color: '#0F0F1E',
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
+    color: '#FFFFFF',
     marginBottom: 24,
   },
   questionContainer: {
@@ -237,10 +237,12 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: '100%',
     height: 200,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#2A2A3E',
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   image: {
     width: '100%',
@@ -248,7 +250,7 @@ const styles = StyleSheet.create({
   },
   questionText: {
     fontSize: 18,
-    color: '#555',
+    color: '#E0E0E0',
     lineHeight: 26,
   },
   optionsContainer: {
@@ -256,15 +258,15 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   optionButton: {
-    backgroundColor: '#fff',
+    backgroundColor: '#1E1E2E',
     borderRadius: 12,
     padding: 16,
     borderWidth: 2,
-    borderColor: '#e0e0e0',
+    borderColor: '#2A2A3E',
   },
   optionButtonSelected: {
-    borderColor: '#667eea',
-    backgroundColor: '#f0f4ff',
+    borderColor: '#00FF87',
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
   },
   optionContent: {
     flexDirection: 'row',
@@ -276,39 +278,39 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#ccc',
+    borderColor: '#444',
     justifyContent: 'center',
     alignItems: 'center',
   },
   optionCircleSelected: {
-    borderColor: '#667eea',
+    borderColor: '#00FF87',
   },
   optionCircleInner: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#667eea',
+    backgroundColor: '#00FF87',
   },
   optionText: {
     fontSize: 16,
-    color: '#333',
+    color: '#E0E0E0',
     flex: 1,
   },
   optionTextSelected: {
     fontWeight: '600',
-    color: '#667eea',
+    color: '#00FF87',
   },
   textInputContainer: {
     marginBottom: 24,
   },
   textInput: {
-    backgroundColor: '#fff',
+    backgroundColor: '#1E1E2E',
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: '#333',
+    color: '#FFFFFF',
     borderWidth: 2,
-    borderColor: '#e0e0e0',
+    borderColor: '#2A2A3E',
     minHeight: 60,
   },
   submitButton: {
@@ -317,7 +319,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   submitButtonDisabled: {
-    opacity: 0.6,
+    opacity: 0.5,
   },
   submitGradient: {
     paddingVertical: 16,
@@ -331,7 +333,7 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: '700',
+    color: '#0F0F1E',
   },
 });
