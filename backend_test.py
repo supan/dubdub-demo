@@ -421,21 +421,23 @@ print('Test user and session created successfully');
         
         print("\n📋 Running API Tests...")
         
-        # Step 2: Test authentication endpoints
+        # Step 2: Test authentication endpoints (except logout)
         self.test_auth_session_endpoint()
         self.test_auth_me_endpoint()
-        self.test_auth_logout_endpoint()
         
-        # Step 3: Test playables and user endpoints
+        # Step 3: Test playables and user endpoints (before logout)
         self.test_playables_feed()
         self.test_answer_submission_and_streak_tracking()
         self.test_user_stats()
         
-        # Step 4: Test unauthorized access
+        # Step 4: Test logout last (as it invalidates the session)
+        self.test_auth_logout_endpoint()
+        
+        # Step 5: Test unauthorized access
         print("\n🔒 Testing Unauthorized Access...")
         self.test_unauthorized_access()
         
-        # Step 5: Print summary
+        # Step 6: Print summary
         self.print_test_summary()
         
         return True
