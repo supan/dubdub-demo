@@ -82,9 +82,49 @@ export default function AdminDashboard() {
       });
 
       if (response.data.success) {
-        setAdminToken(response.data.token);
+        const token = response.data.token;
+        setAdminToken(token);
         setIsLoggedIn(true);
-        fetchPlayables(response.data.token);
+        
+        // Store token for persistence
+        try {
+          await AsyncStorage.setItem(ADMIN_TOKEN_KEY, token);
+        } catch (e) {
+          console.log('Could not store admin token');
+        }
+        
+        // Fetch playables with the token directly (not from state)
+        fetchPlayables(token);
+      }
+    } catch (error: any) {
+      setLoginError(error.response?.data?.detail || 'Login failed');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  // Check for existing session on mount
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem(ADMIN_TOKEN_KEY);
+        if (storedToken) {
+          // Verify token is still valid
+          const response = await axios.get(`${BACKEND_URL}/api/admin/playables`, {
+            headers: { Authorization: `Bearer ${storedToken}` },
+          });
+          // If successful, restore session
+          setAdminToken(storedToken);
+          setIsLoggedIn(true);
+          setPlayables(response.data.playables);
+        }
+      } catch (e) {
+        // Token invalid, remove it
+        await AsyncStorage.removeItem(ADMIN_TOKEN_KEY);
+      }
+    };
+    checkExistingSession();
+  }, []);
       }
     } catch (error: any) {
       setLoginError(error.response?.data?.detail || 'Login failed');
