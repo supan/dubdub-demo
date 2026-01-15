@@ -173,12 +173,11 @@ export default function FeedScreen() {
   const currentPlayable = playables[currentIndex];
 
   return (
-    <GestureDetector gesture={swipeGesture}>
-      <View style={styles.container}>
-        <LinearGradient
-          colors={['#0F0F1E', '#1A1A2E']}
-          style={styles.background}
-        >
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['#0F0F1E', '#1A1A2E']}
+        style={styles.background}
+      >
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerContent}>
