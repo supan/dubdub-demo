@@ -137,7 +137,7 @@ export default function FeedScreen() {
     router.replace('/');
   };
 
-  if (loading) {
+  if (loading || !fontsLoaded) {
     return (
       <LinearGradient colors={['#667eea', '#764ba2']} style={styles.container}>
         <ActivityIndicator size="large" color="#fff" />
