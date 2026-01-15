@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   submitButtonDisabled: {
-    opacity: 0.5,
+    opacity: 0.6,
   },
   submitGradient: {
     paddingVertical: 16,
@@ -356,6 +356,6 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#0F0F1E',
+    color: canSubmit && !submitting ? '#0F0F1E' : '#999',
   },
 });
