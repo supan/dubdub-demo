@@ -220,7 +220,7 @@ export default function FeedScreen() {
           )}
         </LinearGradient>
       </View>
-    </GestureDetector>
+    </View>
   );
 }
 
