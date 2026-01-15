@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -30,18 +30,20 @@ interface Playable {
   difficulty: string;
 }
 
+// State machine states for proper flow control
+type GameState = 'LOADING' | 'PLAYING' | 'SUBMITTING' | 'SHOWING_FEEDBACK' | 'TRANSITIONING';
+
 export default function FeedScreen() {
   const { user, sessionToken, logout, refreshUser } = useAuth();
   const router = useRouter();
   const [playables, setPlayables] = useState<Playable[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackData, setFeedbackData] = useState<any>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const [totalPlayed, setTotalPlayed] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  
+  // State machine - single source of truth for game state
+  const [gameState, setGameState] = useState<GameState>('LOADING');
 
   useEffect(() => {
     if (!user || !sessionToken) {
@@ -55,7 +57,7 @@ export default function FeedScreen() {
 
   const fetchPlayables = async () => {
     try {
-      setLoading(true);
+      setGameState('LOADING');
       const response = await axios.get(`${BACKEND_URL}/api/playables/feed`, {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
@@ -66,18 +68,23 @@ export default function FeedScreen() {
         },
       });
       setPlayables(response.data);
+      setGameState('PLAYING');
     } catch (error) {
       console.error('Error fetching playables:', error);
-    } finally {
-      setLoading(false);
+      setGameState('PLAYING'); // Allow retry
     }
   };
 
-  const handleAnswer = async (answer: string) => {
-    if (submitting || !playables[currentIndex]) return;
+  // Only allow answer submission when in PLAYING state
+  const handleAnswer = useCallback(async (answer: string) => {
+    // STRICT state check - only process if in PLAYING state
+    if (gameState !== 'PLAYING' || !playables[currentIndex]) {
+      console.log('Ignoring answer - not in PLAYING state:', gameState);
+      return;
+    }
 
     try {
-      setSubmitting(true);
+      setGameState('SUBMITTING');
       const playable = playables[currentIndex];
 
       const response = await axios.post(
@@ -90,28 +97,35 @@ export default function FeedScreen() {
         }
       );
 
+      // Store feedback data THEN transition to feedback state
       setFeedbackData(response.data);
-      setShowFeedback(true);
-      setTotalPlayed(prev => prev + 1); // Increment local counter
-      await refreshUser();
+      setTotalPlayed(prev => prev + 1);
+      
+      // Refresh user stats in background
+      refreshUser().catch(console.error);
+      
+      // NOW show feedback modal
+      setGameState('SHOWING_FEEDBACK');
     } catch (error) {
       console.error('Error submitting answer:', error);
-    } finally {
-      setSubmitting(false);
+      // On error, return to playing state so user can retry
+      setGameState('PLAYING');
     }
-  };
+  }, [gameState, playables, currentIndex, sessionToken, refreshUser]);
 
-  const handleNext = () => {
-    // Prevent double-triggering
-    if (isTransitioning) {
-      console.log('Already transitioning, ignoring...');
+  // Only allow continue when showing feedback
+  const handleNext = useCallback(() => {
+    // STRICT state check - only process if showing feedback
+    if (gameState !== 'SHOWING_FEEDBACK') {
+      console.log('Ignoring next - not in SHOWING_FEEDBACK state:', gameState);
       return;
     }
     
-    // IMMEDIATELY hide feedback and clear data to prevent double-show
-    setShowFeedback(false);
+    // Transition to TRANSITIONING state - prevents any other actions
+    setGameState('TRANSITIONING');
+    
+    // Clear feedback data
     setFeedbackData(null);
-    setIsTransitioning(true);
     
     // Smooth fade out, update content, then fade in
     Animated.timing(fadeAnim, {
@@ -121,10 +135,12 @@ export default function FeedScreen() {
     }).start(() => {
       // Update playable index while invisible
       if (currentIndex < playables.length - 1) {
-        setCurrentIndex(currentIndex + 1);
+        setCurrentIndex(prev => prev + 1);
       } else {
+        // Fetch more playables
         fetchPlayables();
         setCurrentIndex(0);
+        return; // fetchPlayables will set state to PLAYING
       }
       
       // Fade back in
@@ -133,11 +149,11 @@ export default function FeedScreen() {
         duration: 150,
         useNativeDriver: true,
       }).start(() => {
-        // Re-enable transitions after complete
-        setIsTransitioning(false);
+        // ONLY NOW return to playing state
+        setGameState('PLAYING');
       });
     });
-  };
+  }, [gameState, currentIndex, playables.length, fadeAnim]);
 
   const handleLogout = async () => {
     await logout();
