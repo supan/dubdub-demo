@@ -30,11 +30,9 @@ export default function FeedbackModal({
 }: FeedbackModalProps) {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
-      translateY.setValue(0);
       Animated.parallel([
         Animated.spring(scaleAnim, {
           toValue: 1,
@@ -54,29 +52,6 @@ export default function FeedbackModal({
     }
   }, [visible]);
 
-  const swipeGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      if (event.translationY < 0) {
-        translateY.setValue(event.translationY);
-      }
-    })
-    .onEnd((event) => {
-      if (event.velocityY < -500 || event.translationY < -100) {
-        Animated.timing(translateY, {
-          toValue: -height,
-          duration: 300,
-          useNativeDriver: true,
-        }).start(() => {
-          runOnJS(onSwipeUp)();
-        });
-      } else {
-        Animated.spring(translateY, {
-          toValue: 0,
-          useNativeDriver: true,
-        }).start();
-      }
-    });
-
   return (
     <Modal
       visible={visible}
@@ -84,63 +59,67 @@ export default function FeedbackModal({
       animationType="none"
     >
       <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
-        <GestureDetector gesture={swipeGesture}>
-          <Animated.View
-            style={[
-              styles.container,
-              {
-                transform: [{ scale: scaleAnim }, { translateY }],
-              },
-            ]}
+        <Animated.View
+          style={[
+            styles.container,
+            {
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
+          <LinearGradient
+            colors={correct ? ['#00FF87', '#00D9FF'] : ['#FF6B6B', '#FF8E53']}
+            style={styles.gradient}
           >
-            <LinearGradient
-              colors={correct ? ['#00FF87', '#00D9FF'] : ['#FF6B6B', '#FF8E53']}
-              style={styles.gradient}
-            >
-              {/* Swipe Indicator */}
-              <View style={styles.swipeIndicator}>
-                <View style={styles.swipeBar} />
-                <Text style={styles.swipeText}>Swipe up for next</Text>
-              </View>
+            {/* Icon */}
+            <View style={styles.iconContainer}>
+              {correct ? (
+                <Ionicons name="checkmark-circle" size={80} color="#0F0F1E" />
+              ) : (
+                <Ionicons name="close-circle" size={80} color="#0F0F1E" />
+              )}
+            </View>
 
-              {/* Icon */}
-              <View style={styles.iconContainer}>
-                {correct ? (
-                  <Ionicons name="checkmark-circle" size={80} color="#0F0F1E" />
-                ) : (
-                  <Ionicons name="close-circle" size={80} color="#0F0F1E" />
+            {/* Title */}
+            <Text style={styles.title}>
+              {correct ? 'Correct! 🎉' : 'Not quite!'}
+            </Text>
+
+            {/* Message */}
+            {correct ? (
+              <View style={styles.messageContainer}>
+                <Text style={styles.message}>You got it right!</Text>
+                {currentStreak > 1 && (
+                  <View style={styles.streakContainer}>
+                    <Ionicons name="flame" size={24} color="#FF6B00" />
+                    <Text style={styles.streakText}>
+                      {currentStreak} in a row!
+                    </Text>
+                  </View>
                 )}
               </View>
-
-              {/* Title */}
-              <Text style={styles.title}>
-                {correct ? 'Correct! 🎉' : 'Not quite!'}
-              </Text>
-
-              {/* Message */}
-              {correct ? (
-                <View style={styles.messageContainer}>
-                  <Text style={styles.message}>You got it right!</Text>
-                  {currentStreak > 1 && (
-                    <View style={styles.streakContainer}>
-                      <Ionicons name="flame" size={24} color="#FF6B00" />
-                      <Text style={styles.streakText}>
-                        {currentStreak} in a row!
-                      </Text>
-                    </View>
-                  )}
+            ) : (
+              <View style={styles.messageContainer}>
+                <Text style={styles.message}>The correct answer is:</Text>
+                <View style={styles.correctAnswerBox}>
+                  <Text style={styles.correctAnswerText}>{correctAnswer}</Text>
                 </View>
-              ) : (
-                <View style={styles.messageContainer}>
-                  <Text style={styles.message}>The correct answer is:</Text>
-                  <View style={styles.correctAnswerBox}>
-                    <Text style={styles.correctAnswerText}>{correctAnswer}</Text>
-                  </View>
-                </View>
-              )}
-            </LinearGradient>
-          </Animated.View>
-        </GestureDetector>
+              </View>
+            )}
+
+            {/* Continue Button */}
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={onSwipeUp}
+              activeOpacity={0.8}
+            >
+              <View style={styles.continueButtonContent}>
+                <Text style={styles.continueButtonText}>Continue</Text>
+                <Ionicons name="arrow-forward" size={20} color="#0F0F1E" />
+              </View>
+            </TouchableOpacity>
+          </LinearGradient>
+        </Animated.View>
       </Animated.View>
     </Modal>
   );
@@ -164,22 +143,6 @@ const styles = StyleSheet.create({
     padding: 32,
     alignItems: 'center',
   },
-  swipeIndicator: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  swipeBar: {
-    width: 50,
-    height: 4,
-    backgroundColor: 'rgba(15, 15, 30, 0.3)',
-    borderRadius: 2,
-    marginBottom: 8,
-  },
-  swipeText: {
-    fontSize: 12,
-    color: 'rgba(15, 15, 30, 0.6)',
-    fontWeight: '600',
-  },
   iconContainer: {
     marginBottom: 16,
   },
@@ -192,7 +155,7 @@ const styles = StyleSheet.create({
   },
   messageContainer: {
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 24,
     width: '100%',
   },
   message: {
@@ -231,5 +194,23 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0F0F1E',
     textAlign: 'center',
+  },
+  continueButton: {
+    backgroundColor: '#0F0F1E',
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 24,
+    width: '100%',
+  },
+  continueButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  continueButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#00FF87',
   },
 });
