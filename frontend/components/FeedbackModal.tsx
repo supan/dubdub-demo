@@ -111,9 +111,15 @@ export default function FeedbackModal({
 
             {/* Continue Button */}
             <TouchableOpacity
-              style={styles.continueButton}
-              onPress={onSwipeUp}
+              style={[styles.continueButton, buttonDisabled && styles.continueButtonDisabled]}
+              onPress={() => {
+                if (!buttonDisabled) {
+                  setButtonDisabled(true);
+                  onSwipeUp();
+                }
+              }}
               activeOpacity={0.8}
+              disabled={buttonDisabled}
             >
               <View style={styles.continueButtonContent}>
                 <Text style={styles.continueButtonText}>Continue</Text>
