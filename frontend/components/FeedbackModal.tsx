@@ -210,6 +210,9 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     width: '100%',
   },
+  continueButtonDisabled: {
+    opacity: 0.5,
+  },
   continueButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
