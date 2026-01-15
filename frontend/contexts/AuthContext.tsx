@@ -24,6 +24,8 @@ interface AuthContextType {
   logout: () => void;
   loading: boolean;
   refreshUser: () => Promise<void>;
+  setUser: (user: User | null) => void;
+  setSessionToken: (token: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
