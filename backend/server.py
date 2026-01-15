@@ -573,6 +573,37 @@ async def reset_user_progress(current_user: User = Depends(require_auth)):
         logging.error(f"Error resetting progress: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/dev/reset-progress")
+async def dev_reset_progress(email: str = "supanshah51191@gmail.com"):
+    """Reset user progress by email (dev only)"""
+    try:
+        # Find user by email
+        user = await db.users.find_one({"email": email})
+        if not user:
+            return {"message": f"User {email} not found"}
+        
+        user_id = user.get("user_id", str(user.get("_id")))
+        
+        # Delete user's progress
+        await db.user_progress.delete_many({"user_id": user_id})
+        
+        # Reset user stats
+        await db.users.update_one(
+            {"email": email},
+            {"$set": {
+                "total_played": 0,
+                "correct_answers": 0,
+                "current_streak": 0,
+                "best_streak": 0
+            }}
+        )
+        
+        return {"message": f"Progress reset for {email}"}
+    
+    except Exception as e:
+        logging.error(f"Error resetting progress: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Include the router in the main app
 app.include_router(api_router)
 
