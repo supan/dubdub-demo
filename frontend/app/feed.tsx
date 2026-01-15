@@ -40,6 +40,7 @@ export default function FeedScreen() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackData, setFeedbackData] = useState<any>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [totalPlayed, setTotalPlayed] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
