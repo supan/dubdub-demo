@@ -44,6 +44,11 @@ export default function FeedScreen() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackData, setFeedbackData] = useState<any>(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const [fontsLoaded] = useFonts({
+    Poppins_700Bold,
+    Poppins_600SemiBold,
+    Poppins_400Regular,
+  });
 
   useEffect(() => {
     if (!user || !sessionToken) {
