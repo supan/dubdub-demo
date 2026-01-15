@@ -654,6 +654,7 @@ async def admin_login(request: AdminLoginRequest):
 
 async def verify_admin_token(authorization: Optional[str] = Header(None)):
     """Verify admin token"""
+    logging.info(f"verify_admin_token called with auth: {authorization}")
     if not authorization:
         logging.warning("No authorization header provided")
         raise HTTPException(status_code=401, detail="Admin token required")
@@ -661,10 +662,16 @@ async def verify_admin_token(authorization: Optional[str] = Header(None)):
     token = authorization.replace("Bearer ", "")
     logging.info(f"Verifying admin token: {token[:20]}...")
     
-    session = await db.admin_sessions.find_one({"token": token})
+    try:
+        session = await db.admin_sessions.find_one({"token": token})
+        logging.info(f"Session lookup result: {session}")
+    except Exception as e:
+        logging.error(f"Error looking up session: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
+    
     if not session:
         logging.warning(f"Admin session not found for token: {token[:20]}...")
-        raise HTTPException(status_code=401, detail="Invalid admin token")
+        raise HTTPException(status_code=401, detail="Invalid admin token - session not found")
     
     logging.info(f"Admin session found, expires at: {session.get('expires_at')}")
     
