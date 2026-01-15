@@ -176,7 +176,7 @@ export default function FeedScreen() {
             <Ionicons name="flame" size={24} color="#FFD700" />
             <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
           </View>
-          <Text style={styles.headerTitle}>PlayQuiz</Text>
+          <Text style={styles.headerTitle}>Invin</Text>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
             <Ionicons name="log-out-outline" size={24} color="#fff" />
           </TouchableOpacity>
