@@ -119,6 +119,58 @@ async def require_auth(authorization: Optional[str] = Header(None)) -> User:
 
 # ==================== AUTH ENDPOINTS ====================
 
+@api_router.post("/auth/dev-login")
+async def dev_login():
+    """Development login - bypasses OAuth for testing"""
+    try:
+        # Hardcoded dev user
+        dev_email = "supanshah51191@gmail.com"
+        
+        # Find or create user
+        user_doc = await db.users.find_one({"email": dev_email}, {"_id": 0})
+        
+        if not user_doc:
+            # Create dev user
+            user_id = f"user_{uuid.uuid4().hex[:12]}"
+            new_user = {
+                "user_id": user_id,
+                "email": dev_email,
+                "name": "Dev User",
+                "picture": None,
+                "total_played": 0,
+                "correct_answers": 0,
+                "current_streak": 0,
+                "best_streak": 0,
+                "created_at": datetime.now(timezone.utc)
+            }
+            await db.users.insert_one(new_user)
+            user_id_to_use = user_id
+        else:
+            user_id_to_use = user_doc["user_id"]
+        
+        # Create session
+        dev_session_token = f"dev_session_{uuid.uuid4().hex}"
+        session_doc = {
+            "user_id": user_id_to_use,
+            "session_token": dev_session_token,
+            "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
+            "created_at": datetime.now(timezone.utc)
+        }
+        await db.user_sessions.insert_one(session_doc)
+        
+        return {
+            "session_token": dev_session_token,
+            "user": {
+                "user_id": user_id_to_use,
+                "email": dev_email,
+                "name": "Dev User"
+            }
+        }
+    
+    except Exception as e:
+        logging.error(f"Dev login error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.post("/auth/session")
 async def exchange_session(request: Request, response: Response):
     """Exchange session_id for session_token"""
