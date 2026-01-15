@@ -157,6 +157,7 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Category Badge */}
         <View style={styles.categoryBadge}>
@@ -179,28 +180,34 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
         {/* Answer Input */}
         {renderAnswerInput()}
 
-        {/* Submit Button */}
+        {/* Submit Button - Fixed visibility for disabled state */}
         <TouchableOpacity
-          style={[
-            styles.submitButton,
-            (!canSubmit || submitting) && styles.submitButtonDisabled,
-          ]}
+          style={styles.submitButton}
           onPress={handleSubmit}
           disabled={!canSubmit || submitting}
           activeOpacity={0.8}
         >
           <LinearGradient
-            colors={canSubmit && !submitting ? ['#00FF87', '#00D9FF'] : ['#333', '#222']}
+            colors={canSubmit && !submitting ? ['#00FF87', '#00D9FF'] : ['#4A4A5A', '#3A3A4A']}
             style={styles.submitGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
             {submitting ? (
-              <Text style={styles.submitButtonText}>Submitting...</Text>
+              <Text style={[styles.submitButtonText, { color: '#FFFFFF' }]}>Submitting...</Text>
             ) : (
               <View style={styles.submitContent}>
-                <Text style={styles.submitButtonText}>Submit Answer</Text>
-                <Ionicons name="arrow-forward" size={20} color={canSubmit ? '#0F0F1E' : '#666'} />
+                <Text style={[
+                  styles.submitButtonText,
+                  { color: canSubmit ? '#0F0F1E' : '#AAAAAA' }
+                ]}>
+                  Submit Answer
+                </Text>
+                <Ionicons 
+                  name="arrow-forward" 
+                  size={20} 
+                  color={canSubmit ? '#0F0F1E' : '#AAAAAA'} 
+                />
               </View>
             )}
           </LinearGradient>
@@ -219,6 +226,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
+    paddingBottom: 32,
   },
   categoryBadge: {
     alignSelf: 'flex-start',
@@ -286,9 +294,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#2A2A3E',
   },
+  // Changed from green to blue for selection (neutral color)
   optionButtonSelected: {
-    borderColor: '#00FF87',
-    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    borderColor: '#5B8DEF',
+    backgroundColor: 'rgba(91, 141, 239, 0.15)',
   },
   optionContent: {
     flexDirection: 'row',
@@ -304,23 +313,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  // Changed from green to blue for selection indicator
   optionCircleSelected: {
-    borderColor: '#00FF87',
+    borderColor: '#5B8DEF',
   },
   optionCircleInner: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#00FF87',
+    backgroundColor: '#5B8DEF',
   },
   optionText: {
     fontSize: 16,
     color: '#E0E0E0',
     flex: 1,
   },
+  // Changed from green to white for selected text
   optionTextSelected: {
     fontWeight: '600',
-    color: '#00FF87',
+    color: '#FFFFFF',
   },
   textInputContainer: {
     marginBottom: 24,
@@ -340,9 +351,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginTop: 8,
   },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
   submitGradient: {
     paddingVertical: 16,
     alignItems: 'center',
@@ -356,6 +364,5 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: 18,
     fontWeight: '700',
-    color: canSubmit && !submitting ? '#0F0F1E' : '#999',
   },
 });
