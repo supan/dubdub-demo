@@ -98,6 +98,13 @@ export default function FeedScreen() {
   };
 
   const handleNext = () => {
+    // Prevent double-triggering
+    if (isTransitioning) {
+      console.log('Already transitioning, ignoring...');
+      return;
+    }
+    
+    setIsTransitioning(true);
     setShowFeedback(false);
     
     // Smooth fade out, update content, then fade in
@@ -121,7 +128,10 @@ export default function FeedScreen() {
         toValue: 1,
         duration: 150,
         useNativeDriver: true,
-      }).start();
+      }).start(() => {
+        // Re-enable transitions after complete
+        setIsTransitioning(false);
+      });
     });
   };
 
