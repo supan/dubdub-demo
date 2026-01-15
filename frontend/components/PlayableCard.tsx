@@ -24,6 +24,11 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
   const [userAnswer, setUserAnswer] = useState('');
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
+  // Safety check
+  if (!playable) {
+    return null;
+  }
+
   const handleSubmit = () => {
     const answer = playable.answer_type === 'mcq' ? selectedOption : userAnswer;
     if (answer && !submitting) {
