@@ -92,6 +92,7 @@ export default function FeedScreen() {
 
       setFeedbackData(response.data);
       setShowFeedback(true);
+      setTotalPlayed(prev => prev + 1); // Increment local counter
       await refreshUser();
     } catch (error) {
       console.error('Error submitting answer:', error);
