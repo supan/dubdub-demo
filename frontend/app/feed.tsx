@@ -171,48 +171,48 @@ export default function FeedScreen() {
         colors={['#0F0F1E', '#1A1A2E']}
         style={styles.background}
       >
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerContent}>
-              <View style={styles.streakContainer}>
-                <Ionicons name="flame" size={24} color="#FF6B00" />
-                <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
-              </View>
-              <Text style={styles.headerTitle}>Invin</Text>
-              <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-                <Ionicons name="log-out-outline" size={24} color="#B0B0C8" />
-              </TouchableOpacity>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <View style={styles.streakContainer}>
+              <Ionicons name="flame" size={24} color="#FF6B00" />
+              <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
             </View>
+            <Text style={styles.headerTitle}>Invin</Text>
+            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+              <Ionicons name="log-out-outline" size={24} color="#B0B0C8" />
+            </TouchableOpacity>
           </View>
+        </View>
 
-          {/* Playable Card */}
-          <Animated.View style={[styles.cardContainer, { transform: [{ translateY }] }]}>
-            <PlayableCard
-              playable={currentPlayable}
-              onAnswer={handleAnswer}
-              submitting={submitting}
-            />
-          </Animated.View>
+        {/* Playable Card */}
+        <Animated.View style={[styles.cardContainer, { transform: [{ translateY }] }]}>
+          <PlayableCard
+            playable={currentPlayable}
+            onAnswer={handleAnswer}
+            submitting={submitting}
+          />
+        </Animated.View>
 
-          {/* Progress Indicator */}
-          <View style={styles.progressContainer}>
-            <Text style={styles.progressText}>
-              {currentIndex + 1} / {playables.length}
-            </Text>
-          </View>
+        {/* Progress Indicator */}
+        <View style={styles.progressContainer}>
+          <Text style={styles.progressText}>
+            {currentIndex + 1} / {playables.length}
+          </Text>
+        </View>
 
-          {/* Feedback Modal */}
-          {showFeedback && feedbackData && (
-            <FeedbackModal
-              visible={showFeedback}
-              correct={feedbackData.correct}
-              correctAnswer={feedbackData.correct_answer}
-              currentStreak={feedbackData.current_streak}
-              onSwipeUp={handleSwipeUp}
-            />
-          )}
-        </LinearGradient>
-      </View>
+        {/* Feedback Modal */}
+        {showFeedback && feedbackData && (
+          <FeedbackModal
+            visible={showFeedback}
+            correct={feedbackData.correct}
+            correctAnswer={feedbackData.correct_answer}
+            currentStreak={feedbackData.current_streak}
+            onSwipeUp={handleSwipeUp}
+          />
+        )}
+      </LinearGradient>
+    </View>
   );
 }
 
