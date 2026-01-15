@@ -373,7 +373,7 @@ async def seed_data():
                 "category": "Geography",
                 "title": "World Capitals",
                 "question": {
-                    "image_base64": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzRBOTBFMiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjMwIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkVpZmZlbCBUb3dlcjwvdGV4dD48L3N2Zz4=",
+                    "image_base64": "https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=400&h=300&fit=crop",
                     "text": "Which city is this landmark located in?"
                 },
                 "options": None,
@@ -452,7 +452,7 @@ async def seed_data():
                 "category": "Art",
                 "title": "Famous Paintings",
                 "question": {
-                    "image_base64": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzFFMUUxRSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjI1IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk1vbmEgTGlzYTwvdGV4dD48L3N2Zz4=",
+                    "image_base64": "https://images.unsplash.com/photo-1574870111867-089730e5a72b?w=400&h=300&fit=crop",
                     "text": "Who painted this famous artwork?"
                 },
                 "options": None,
@@ -468,6 +468,57 @@ async def seed_data():
     
     except Exception as e:
         logging.error(f"Error seeding data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/admin/add-playable")
+async def add_playable(playable: Playable, current_user: User = Depends(require_auth)):
+    """Add a new playable to the database"""
+    try:
+        playable_dict = playable.dict()
+        playable_dict["playable_id"] = f"play_{uuid.uuid4().hex[:12]}"
+        playable_dict["created_at"] = datetime.now(timezone.utc)
+        
+        await db.playables.insert_one(playable_dict)
+        
+        return {"message": "Playable added successfully", "playable_id": playable_dict["playable_id"]}
+    
+    except Exception as e:
+        logging.error(f"Error adding playable: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/playables")
+async def get_all_playables(current_user: User = Depends(require_auth)):
+    """Get all playables (admin view)"""
+    try:
+        playables = await db.playables.find({}, {"_id": 0}).to_list(1000)
+        return {"count": len(playables), "playables": playables}
+    
+    except Exception as e:
+        logging.error(f"Error fetching playables: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/admin/reset-progress")
+async def reset_user_progress(current_user: User = Depends(require_auth)):
+    """Reset current user's progress (for testing)"""
+    try:
+        # Delete user's progress
+        await db.user_progress.delete_many({"user_id": current_user.user_id})
+        
+        # Reset user stats
+        await db.users.update_one(
+            {"user_id": current_user.user_id},
+            {"$set": {
+                "total_played": 0,
+                "correct_answers": 0,
+                "current_streak": 0,
+                "best_streak": 0
+            }}
+        )
+        
+        return {"message": "Progress reset successfully"}
+    
+    except Exception as e:
+        logging.error(f"Error resetting progress: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # Include the router in the main app
