@@ -14,7 +14,6 @@ import { useRouter } from 'expo-router';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import PlayableCard from '../components/PlayableCard';
 import FeedbackModal from '../components/FeedbackModal';
 
