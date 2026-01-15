@@ -1,33 +1,39 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 export default function LoginScreen() {
-  const { user, login, loading } = useAuth();
+  const { user, login, loading, setUser, setSessionToken } = useAuth();
   const router = useRouter();
   const [devLoading, setDevLoading] = useState(false);
 
   const devLogin = async () => {
     try {
       setDevLoading(true);
-      const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
       
       // Call dev login endpoint
-      const response = await fetch(`${BACKEND_URL}/api/auth/dev-login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await axios.post(`${BACKEND_URL}/api/auth/dev-login`);
+      const { session_token, user: userData } = response.data;
+      
+      // Set auth context
+      setSessionToken(session_token);
+      
+      // Fetch full user data
+      const userResponse = await axios.get(`${BACKEND_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${session_token}` },
       });
       
-      const data = await response.json();
-      
-      // Manually set user and token (simulating auth context)
-      // For now, just refresh and login normally
+      setUser(userResponse.data);
       router.replace('/feed');
     } catch (error) {
       console.error('Dev login error:', error);
+      alert('Dev login failed');
     } finally {
       setDevLoading(false);
     }
@@ -82,8 +88,20 @@ export default function LoginScreen() {
             </LinearGradient>
           </TouchableOpacity>
 
+          <TouchableOpacity
+            style={styles.devButton}
+            onPress={devLogin}
+            activeOpacity={0.8}
+            disabled={devLoading}
+          >
+            <Ionicons name="code" size={20} color="#00FF87" style={styles.devIcon} />
+            <Text style={styles.devButtonText}>
+              {devLoading ? 'Logging in...' : 'Dev Login (Quick Test)'}
+            </Text>
+          </TouchableOpacity>
+
           <Text style={styles.footerText}>Join the winning community</Text>
-          <Text style={styles.versionText}>v1.0.7</Text>
+          <Text style={styles.versionText}>v1.0.8</Text>
         </View>
       </View>
     </LinearGradient>
@@ -139,6 +157,7 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 30,
     overflow: 'hidden',
+    marginBottom: 12,
   },
   buttonGradient: {
     flexDirection: 'row',
@@ -154,6 +173,26 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#0F0F1E',
+  },
+  devButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    borderWidth: 1,
+    borderColor: '#00FF87',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    width: '100%',
+  },
+  devIcon: {
+    marginRight: 8,
+  },
+  devButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#00FF87',
   },
   footerText: {
     fontSize: 14,
