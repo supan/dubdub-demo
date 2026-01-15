@@ -604,6 +604,212 @@ async def dev_reset_progress(email: str = "supanshah51191@gmail.com"):
         logging.error(f"Error resetting progress: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ==================== ADMIN ENDPOINTS ====================
+
+# Admin credentials (in production, use environment variables)
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "@dm!n!spl@ying"
+
+class AdminLoginRequest(BaseModel):
+    username: str
+    password: str
+
+class AdminResetProgressRequest(BaseModel):
+    email: str
+
+class AddPlayableRequest(BaseModel):
+    type: str  # "text", "image", "video", "image_text", "video_text"
+    answer_type: str  # "mcq", "text_input"
+    category: str
+    title: str
+    question_text: Optional[str] = None
+    image_url: Optional[str] = None
+    video_url: Optional[str] = None
+    options: Optional[List[str]] = None  # For MCQ (4 options)
+    correct_answer: str
+    difficulty: str = "medium"
+
+@api_router.post("/admin/login")
+async def admin_login(request: AdminLoginRequest):
+    """Admin login endpoint"""
+    if request.username == ADMIN_USERNAME and request.password == ADMIN_PASSWORD:
+        # Generate admin session token
+        admin_token = f"admin_{uuid.uuid4().hex}"
+        
+        # Store admin session (expires in 24 hours)
+        await db.admin_sessions.insert_one({
+            "token": admin_token,
+            "created_at": datetime.now(timezone.utc),
+            "expires_at": datetime.now(timezone.utc) + timedelta(hours=24)
+        })
+        
+        return {"success": True, "token": admin_token}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+async def verify_admin_token(authorization: Optional[str] = Header(None)):
+    """Verify admin token"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Admin token required")
+    
+    token = authorization.replace("Bearer ", "")
+    
+    session = await db.admin_sessions.find_one({"token": token})
+    if not session:
+        raise HTTPException(status_code=401, detail="Invalid admin token")
+    
+    # Check expiry
+    expires_at = session["expires_at"]
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    
+    if expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=401, detail="Admin session expired")
+    
+    return True
+
+@api_router.post("/admin/reset-user-progress")
+async def admin_reset_user_progress(
+    request: AdminResetProgressRequest,
+    _: bool = Depends(verify_admin_token)
+):
+    """Reset progress for a specific user by email (admin only)"""
+    try:
+        # Find user by email
+        user = await db.users.find_one({"email": request.email})
+        if not user:
+            raise HTTPException(status_code=404, detail=f"User with email {request.email} not found")
+        
+        user_id = user.get("user_id", str(user.get("_id")))
+        
+        # Delete user's progress
+        deleted = await db.user_progress.delete_many({"user_id": user_id})
+        
+        # Reset user stats
+        await db.users.update_one(
+            {"email": request.email},
+            {"$set": {
+                "total_played": 0,
+                "correct_answers": 0,
+                "current_streak": 0,
+                "best_streak": 0
+            }}
+        )
+        
+        return {
+            "success": True,
+            "message": f"Progress reset for {request.email}",
+            "deleted_progress_count": deleted.deleted_count
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error resetting progress: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/admin/add-playable")
+async def admin_add_playable(
+    request: AddPlayableRequest,
+    _: bool = Depends(verify_admin_token)
+):
+    """Add a new playable content (admin only)"""
+    try:
+        # Validate based on type
+        question = {}
+        
+        # Add text if provided
+        if request.question_text:
+            question["text"] = request.question_text
+        
+        # Add image URL if provided
+        if request.image_url:
+            question["image_base64"] = request.image_url  # Using same field name for compatibility
+        
+        # Add video URL if provided
+        if request.video_url:
+            question["video_url"] = request.video_url
+        
+        # Validate required fields based on type
+        if request.type in ["text", "text_mcq"] and not request.question_text:
+            raise HTTPException(status_code=400, detail="Text question requires question_text")
+        
+        if request.type in ["image", "image_text"] and not request.image_url:
+            raise HTTPException(status_code=400, detail="Image question requires image_url")
+        
+        if request.type in ["video", "video_text"] and not request.video_url:
+            raise HTTPException(status_code=400, detail="Video question requires video_url")
+        
+        # Validate MCQ has options
+        if request.answer_type == "mcq":
+            if not request.options or len(request.options) < 2:
+                raise HTTPException(status_code=400, detail="MCQ requires at least 2 options")
+            if request.correct_answer not in request.options:
+                raise HTTPException(status_code=400, detail="Correct answer must be one of the options")
+        
+        # Create playable
+        playable_id = f"play_{uuid.uuid4().hex[:12]}"
+        playable_doc = {
+            "playable_id": playable_id,
+            "type": request.type,
+            "answer_type": request.answer_type,
+            "category": request.category,
+            "title": request.title,
+            "question": question,
+            "options": request.options if request.answer_type == "mcq" else None,
+            "correct_answer": request.correct_answer,
+            "difficulty": request.difficulty,
+            "created_at": datetime.now(timezone.utc)
+        }
+        
+        await db.playables.insert_one(playable_doc)
+        
+        return {
+            "success": True,
+            "message": "Playable added successfully",
+            "playable_id": playable_id
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error adding playable: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/playables")
+async def admin_get_playables(_: bool = Depends(verify_admin_token)):
+    """Get all playables (admin only)"""
+    try:
+        playables = await db.playables.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+        return {"playables": playables, "count": len(playables)}
+    except Exception as e:
+        logging.error(f"Error getting playables: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/admin/playables/{playable_id}")
+async def admin_delete_playable(playable_id: str, _: bool = Depends(verify_admin_token)):
+    """Delete a playable (admin only)"""
+    try:
+        result = await db.playables.delete_one({"playable_id": playable_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Playable not found")
+        return {"success": True, "message": "Playable deleted"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error deleting playable: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/users")
+async def admin_get_users(_: bool = Depends(verify_admin_token)):
+    """Get all users (admin only)"""
+    try:
+        users = await db.users.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+        return {"users": users, "count": len(users)}
+    except Exception as e:
+        logging.error(f"Error getting users: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Include the router in the main app
 app.include_router(api_router)
 
