@@ -141,7 +141,11 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
           onChangeText={setUserAnswer}
           autoCapitalize="words"
           returnKeyType="done"
-          onSubmitEditing={handleSubmit}
+          blurOnSubmit={false}
+          onSubmitEditing={(e) => {
+            e.preventDefault();
+            // Don't submit on return key press
+          }}
         />
       </View>
     );
