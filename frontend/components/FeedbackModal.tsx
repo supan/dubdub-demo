@@ -30,9 +30,11 @@ export default function FeedbackModal({
 }: FeedbackModalProps) {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [buttonDisabled, setButtonDisabled] = useState(false);
 
   useEffect(() => {
     if (visible) {
+      setButtonDisabled(false); // Reset button state when modal opens
       Animated.parallel([
         Animated.spring(scaleAnim, {
           toValue: 1,
