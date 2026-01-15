@@ -68,7 +68,7 @@ export default function FeedbackModal({
           duration: 300,
           useNativeDriver: true,
         }).start(() => {
-          onSwipeUp();
+          runOnJS(onSwipeUp)();
         });
       } else {
         Animated.spring(translateY, {
