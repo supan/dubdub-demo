@@ -128,9 +128,10 @@ export default function FeedScreen() {
   };
 
   const swipeGesture = Gesture.Pan()
+    .enabled(!showFeedback)
     .onEnd((event) => {
-      if (event.velocityY < -500 && showFeedback) {
-        handleSwipeUp();
+      if (event.velocityY < -500) {
+        // Only handle swipe when modal is not showing
       }
     });
 
