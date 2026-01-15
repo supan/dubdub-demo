@@ -98,27 +98,30 @@ export default function FeedScreen() {
 
   const handleNext = () => {
     setShowFeedback(false);
-    setFeedbackData(null);
-
-    Animated.sequence([
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
+    
+    // Smooth fade out, update content, then fade in
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      // Update content while invisible
+      setFeedbackData(null);
+      
+      if (currentIndex < playables.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+      } else {
+        fetchPlayables();
+        setCurrentIndex(0);
+      }
+      
+      // Fade back in
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 200,
+        duration: 150,
         useNativeDriver: true,
-      }),
-    ]).start();
-
-    if (currentIndex < playables.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    } else {
-      fetchPlayables();
-      setCurrentIndex(0);
-    }
+      }).start();
+    });
   };
 
   const handleLogout = async () => {
