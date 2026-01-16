@@ -354,21 +354,28 @@ export default function AdminDashboard() {
           style={[styles.tab, activeTab === 'reset' && styles.tabActive]}
           onPress={() => setActiveTab('reset')}
         >
-          <Ionicons name="refresh" size={20} color={activeTab === 'reset' ? '#00FF87' : '#888'} />
+          <Ionicons name="refresh" size={18} color={activeTab === 'reset' ? '#00FF87' : '#888'} />
           <Text style={[styles.tabText, activeTab === 'reset' && styles.tabTextActive]}>Reset</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'add' && styles.tabActive]}
           onPress={() => setActiveTab('add')}
         >
-          <Ionicons name="add-circle" size={20} color={activeTab === 'add' ? '#00FF87' : '#888'} />
+          <Ionicons name="add-circle" size={18} color={activeTab === 'add' ? '#00FF87' : '#888'} />
           <Text style={[styles.tabText, activeTab === 'add' && styles.tabTextActive]}>Add</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'bulk' && styles.tabActive]}
+          onPress={() => setActiveTab('bulk')}
+        >
+          <Ionicons name="cloud-upload" size={18} color={activeTab === 'bulk' ? '#00FF87' : '#888'} />
+          <Text style={[styles.tabText, activeTab === 'bulk' && styles.tabTextActive]}>Bulk</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'view' && styles.tabActive]}
           onPress={() => setActiveTab('view')}
         >
-          <Ionicons name="list" size={20} color={activeTab === 'view' ? '#00FF87' : '#888'} />
+          <Ionicons name="list" size={18} color={activeTab === 'view' ? '#00FF87' : '#888'} />
           <Text style={[styles.tabText, activeTab === 'view' && styles.tabTextActive]}>View</Text>
         </TouchableOpacity>
       </View>
