@@ -145,8 +145,9 @@ export default function FeedScreen() {
       duration: 150,
       useNativeDriver: true,
     }).start(() => {
-      // Update playable index while invisible
+      // Check if there are more playables
       if (currentIndex < playables.length - 1) {
+        // Move to next playable
         setCurrentIndex(prev => prev + 1);
         
         // Fade back in
@@ -159,8 +160,16 @@ export default function FeedScreen() {
           setGameState('PLAYING');
         });
       } else {
-        // Need more playables - fetch and reset
-        fetchPlayables();
+        // No more playables in current batch - show completion screen
+        setPlayables([]); // This will trigger the empty state UI
+        setGameState('PLAYING');
+        
+        // Fade back in to show completion screen
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }).start();
       }
     });
   }, [gameState, currentIndex, playables.length, fadeAnim]);
