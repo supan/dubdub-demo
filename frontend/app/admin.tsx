@@ -610,6 +610,263 @@ export default function AdminDashboard() {
           </View>
         )}
 
+        {/* Bulk Upload Tab */}
+        {activeTab === 'bulk' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Bulk Upload Content</Text>
+            <Text style={styles.sectionDescription}>
+              Upload multiple questions at once using Excel (.xlsx) or CSV files.
+            </Text>
+
+            {/* Step 1: Download Template */}
+            <View style={styles.bulkStep}>
+              <View style={styles.stepHeader}>
+                <View style={styles.stepNumber}>
+                  <Text style={styles.stepNumberText}>1</Text>
+                </View>
+                <Text style={styles.stepTitle}>Download Sample Template</Text>
+              </View>
+              
+              <Text style={styles.label}>Select Format Type</Text>
+              <View style={styles.typeSelector}>
+                {[
+                  { id: 'text_mcq', name: 'Text + MCQ' },
+                  { id: 'text_input', name: 'Text + Input' },
+                  { id: 'image_mcq', name: 'Image + MCQ' },
+                  { id: 'image_text_input', name: 'Image + Input' },
+                  { id: 'video_mcq', name: 'Video + MCQ' },
+                  { id: 'video_text_input', name: 'Video + Input' },
+                ].map((format) => (
+                  <TouchableOpacity
+                    key={format.id}
+                    style={[styles.typeOption, bulkFormatType === format.id && styles.typeOptionSelected]}
+                    onPress={() => setBulkFormatType(format.id)}
+                  >
+                    <Text style={[styles.typeOptionText, bulkFormatType === format.id && styles.typeOptionTextSelected]}>
+                      {format.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <View style={styles.downloadButtons}>
+                <TouchableOpacity
+                  style={styles.downloadButton}
+                  onPress={() => {
+                    const url = `${BACKEND_URL}/api/admin/template/${bulkFormatType}?file_format=xlsx`;
+                    if (Platform.OS === 'web') {
+                      // For web, create a temporary link and click it
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.setAttribute('download', `template_${bulkFormatType}.xlsx`);
+                      // Add auth header via fetch
+                      fetch(url, {
+                        headers: { Authorization: `Bearer ${adminToken}` }
+                      })
+                        .then(res => res.blob())
+                        .then(blob => {
+                          const blobUrl = window.URL.createObjectURL(blob);
+                          link.href = blobUrl;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        });
+                    }
+                  }}
+                >
+                  <Ionicons name="download" size={18} color="#00FF87" />
+                  <Text style={styles.downloadButtonText}>Excel (.xlsx)</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.downloadButton}
+                  onPress={() => {
+                    const url = `${BACKEND_URL}/api/admin/template/${bulkFormatType}?file_format=csv`;
+                    if (Platform.OS === 'web') {
+                      fetch(url, {
+                        headers: { Authorization: `Bearer ${adminToken}` }
+                      })
+                        .then(res => res.blob())
+                        .then(blob => {
+                          const blobUrl = window.URL.createObjectURL(blob);
+                          const link = document.createElement('a');
+                          link.href = blobUrl;
+                          link.setAttribute('download', `template_${bulkFormatType}.csv`);
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        });
+                    }
+                  }}
+                >
+                  <Ionicons name="download" size={18} color="#00FF87" />
+                  <Text style={styles.downloadButtonText}>CSV (.csv)</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Step 2: Upload File */}
+            <View style={styles.bulkStep}>
+              <View style={styles.stepHeader}>
+                <View style={styles.stepNumber}>
+                  <Text style={styles.stepNumberText}>2</Text>
+                </View>
+                <Text style={styles.stepTitle}>Upload Your File</Text>
+              </View>
+
+              {Platform.OS === 'web' ? (
+                <View style={styles.uploadArea}>
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={(e: any) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setSelectedFile(file);
+                        setBulkResult(null);
+                      }
+                    }}
+                    style={{ display: 'none' }}
+                    id="bulk-file-input"
+                  />
+                  <TouchableOpacity
+                    style={styles.uploadButton}
+                    onPress={() => {
+                      (document.getElementById('bulk-file-input') as HTMLInputElement)?.click();
+                    }}
+                  >
+                    <Ionicons name="cloud-upload" size={32} color="#00FF87" />
+                    <Text style={styles.uploadButtonText}>
+                      {selectedFile ? selectedFile.name : 'Click to select file'}
+                    </Text>
+                    <Text style={styles.uploadHint}>Supports .xlsx, .xls, .csv</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.uploadArea}>
+                  <Text style={styles.mobileNote}>
+                    Bulk upload is best used on desktop/web browser.{'\n'}
+                    Visit the admin dashboard URL in your browser.
+                  </Text>
+                </View>
+              )}
+
+              {selectedFile && (
+                <TouchableOpacity
+                  style={styles.processButton}
+                  onPress={async () => {
+                    if (!selectedFile || !adminToken) return;
+                    
+                    setBulkUploading(true);
+                    setBulkResult(null);
+                    
+                    try {
+                      const formData = new FormData();
+                      formData.append('file', selectedFile);
+                      
+                      const response = await axios.post(
+                        `${BACKEND_URL}/api/admin/bulk-upload?format_type=${bulkFormatType}`,
+                        formData,
+                        {
+                          headers: {
+                            Authorization: `Bearer ${adminToken}`,
+                            'Content-Type': 'multipart/form-data',
+                          },
+                        }
+                      );
+                      
+                      setBulkResult(response.data);
+                      
+                      // Refresh playables list
+                      if (adminToken) fetchPlayables(adminToken);
+                    } catch (error: any) {
+                      setBulkResult({
+                        success: false,
+                        error: error.response?.data?.detail || 'Upload failed'
+                      });
+                    } finally {
+                      setBulkUploading(false);
+                    }
+                  }}
+                  disabled={bulkUploading}
+                >
+                  <LinearGradient
+                    colors={['#00FF87', '#00D9FF']}
+                    style={styles.processButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    {bulkUploading ? (
+                      <ActivityIndicator color="#0F0F1E" />
+                    ) : (
+                      <>
+                        <Ionicons name="cloud-upload" size={20} color="#0F0F1E" />
+                        <Text style={styles.processButtonText}>Process & Upload</Text>
+                      </>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Upload Results */}
+            {bulkResult && (
+              <View style={[styles.bulkResult, !bulkResult.success && styles.bulkResultError]}>
+                {bulkResult.success ? (
+                  <>
+                    <View style={styles.resultHeader}>
+                      <Ionicons name="checkmark-circle" size={24} color="#00FF87" />
+                      <Text style={styles.resultTitle}>Upload Complete!</Text>
+                    </View>
+                    <View style={styles.resultStats}>
+                      <View style={styles.resultStat}>
+                        <Text style={styles.resultStatValue}>{bulkResult.total_rows}</Text>
+                        <Text style={styles.resultStatLabel}>Total Rows</Text>
+                      </View>
+                      <View style={styles.resultStat}>
+                        <Text style={[styles.resultStatValue, { color: '#00FF87' }]}>{bulkResult.created_count}</Text>
+                        <Text style={styles.resultStatLabel}>Created</Text>
+                      </View>
+                      <View style={styles.resultStat}>
+                        <Text style={[styles.resultStatValue, { color: '#FF6B6B' }]}>{bulkResult.error_count}</Text>
+                        <Text style={styles.resultStatLabel}>Errors</Text>
+                      </View>
+                    </View>
+                    {bulkResult.errors && bulkResult.errors.length > 0 && (
+                      <View style={styles.errorList}>
+                        <Text style={styles.errorListTitle}>Errors:</Text>
+                        {bulkResult.errors.slice(0, 5).map((err: string, idx: number) => (
+                          <Text key={idx} style={styles.errorListItem}>• {err}</Text>
+                        ))}
+                        {bulkResult.errors.length > 5 && (
+                          <Text style={styles.errorListItem}>... and {bulkResult.errors.length - 5} more</Text>
+                        )}
+                      </View>
+                    )}
+                  </>
+                ) : (
+                  <View style={styles.resultHeader}>
+                    <Ionicons name="close-circle" size={24} color="#FF6B6B" />
+                    <Text style={[styles.resultTitle, { color: '#FF6B6B' }]}>
+                      {bulkResult.error || 'Upload Failed'}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Instructions */}
+            <View style={styles.instructions}>
+              <Text style={styles.instructionsTitle}>How it works:</Text>
+              <Text style={styles.instructionItem}>1. Select the format type that matches your content</Text>
+              <Text style={styles.instructionItem}>2. Download the sample template (Excel or CSV)</Text>
+              <Text style={styles.instructionItem}>3. Fill in your questions following the sample format</Text>
+              <Text style={styles.instructionItem}>4. Upload your completed file</Text>
+              <Text style={styles.instructionItem}>5. Review the results and fix any errors</Text>
+            </View>
+          </View>
+        )}
+
         {/* View Content Tab */}
         {activeTab === 'view' && (
           <View style={styles.section}>
