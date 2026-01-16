@@ -64,7 +64,13 @@ export default function AdminDashboard() {
   // Existing Content State
   const [playables, setPlayables] = useState<Playable[]>([]);
   const [loadingPlayables, setLoadingPlayables] = useState(false);
-  const [activeTab, setActiveTab] = useState<'reset' | 'add' | 'view'>('reset');
+  const [activeTab, setActiveTab] = useState<'reset' | 'add' | 'bulk' | 'view'>('reset');
+
+  // Bulk Upload State
+  const [bulkFormatType, setBulkFormatType] = useState('text_mcq');
+  const [bulkUploading, setBulkUploading] = useState(false);
+  const [bulkResult, setBulkResult] = useState<any>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleLogin = async () => {
     if (!username || !password) {
