@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Keyboard,
 } from 'react-native';
 import { Video, ResizeMode } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,6 +25,8 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
   const [userAnswer, setUserAnswer] = useState('');
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const textInputRef = useRef<TextInput>(null);
 
   // Safety check
   if (!playable) {
@@ -37,6 +40,23 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
     setSelectedOption(null);
   }, [playable.playable_id]);
 
+  // Scroll to text input when keyboard appears
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      () => {
+        // Scroll to make sure text input is visible
+        setTimeout(() => {
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+    };
+  }, []);
+
   const handleSubmit = () => {
     if (hasSubmitted || submitting) {
       return; // Prevent double submission
@@ -44,9 +64,17 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
     
     const answer = playable.answer_type === 'mcq' ? selectedOption : userAnswer;
     if (answer) {
+      // Dismiss keyboard before submitting
+      Keyboard.dismiss();
       setHasSubmitted(true);
       onAnswer(answer);
     }
+  };
+
+  // Handle keyboard done/return key - DO NOT submit, just dismiss keyboard
+  const handleKeyboardDone = () => {
+    // Only dismiss keyboard, don't submit
+    Keyboard.dismiss();
   };
 
   const renderQuestion = () => {
@@ -129,6 +157,7 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
     return (
       <View style={styles.textInputContainer}>
         <TextInput
+          ref={textInputRef}
           style={styles.textInput}
           placeholder="Type your answer..."
           placeholderTextColor="#666"
@@ -136,12 +165,18 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
           onChangeText={setUserAnswer}
           autoCapitalize="words"
           returnKeyType="done"
-          blurOnSubmit={false}
-          onSubmitEditing={(e) => {
-            e.preventDefault();
-            // Don't submit on return key press
+          blurOnSubmit={true}
+          onSubmitEditing={handleKeyboardDone}
+          onFocus={() => {
+            // Scroll to input when focused
+            setTimeout(() => {
+              scrollViewRef.current?.scrollToEnd({ animated: true });
+            }, 200);
           }}
         />
+        <Text style={styles.inputHint}>
+          Press "Submit Answer" button below when ready
+        </Text>
       </View>
     );
   };
@@ -152,12 +187,15 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
     >
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
       >
         {/* Category Badge */}
         <View style={styles.categoryBadge}>
@@ -212,6 +250,9 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
             )}
           </LinearGradient>
         </TouchableOpacity>
+        
+        {/* Extra padding at bottom for keyboard */}
+        <View style={{ height: 50 }} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -345,6 +386,13 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#2A2A3E',
     minHeight: 60,
+  },
+  inputHint: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 8,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   submitButton: {
     borderRadius: 12,
