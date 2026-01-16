@@ -371,8 +371,58 @@ async def get_user_stats(current_user: User = Depends(require_auth)):
         "total_played": current_user.total_played,
         "correct_answers": current_user.correct_answers,
         "current_streak": current_user.current_streak,
-        "best_streak": current_user.best_streak
+        "best_streak": current_user.best_streak,
+        "skipped": getattr(current_user, 'skipped', 0)
     }
+
+@api_router.post("/playables/{playable_id}/skip")
+async def skip_playable(
+    playable_id: str,
+    current_user: User = Depends(require_auth)
+):
+    """Skip a playable without affecting streak"""
+    try:
+        # Get playable to verify it exists
+        playable = await db.playables.find_one(
+            {"playable_id": playable_id},
+            {"_id": 0}
+        )
+        
+        if not playable:
+            raise HTTPException(status_code=404, detail="Playable not found")
+        
+        # Save progress as skipped (so it doesn't appear again)
+        progress = {
+            "user_id": current_user.user_id,
+            "playable_id": playable_id,
+            "answered": False,
+            "skipped": True,
+            "correct": False,
+            "timestamp": datetime.now(timezone.utc)
+        }
+        await db.user_progress.insert_one(progress)
+        
+        # Update user's skipped count (streak stays the same)
+        await db.users.update_one(
+            {"user_id": current_user.user_id},
+            {"$inc": {"skipped": 1}}
+        )
+        
+        # Get updated user stats
+        user_doc = await db.users.find_one({"user_id": current_user.user_id}, {"_id": 0})
+        
+        return {
+            "skipped": True,
+            "playable_id": playable_id,
+            "current_streak": user_doc.get("current_streak", 0),
+            "total_skipped": user_doc.get("skipped", 1)
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error skipping playable: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ==================== SEED DATA ====================
 
