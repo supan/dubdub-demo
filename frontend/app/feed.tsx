@@ -195,18 +195,58 @@ export default function FeedScreen() {
   if (playables.length === 0) {
     return (
       <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <View style={styles.streakContainer}>
+              <Ionicons name="flame" size={24} color="#FF6B00" />
+              <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
+            </View>
+            <Text style={styles.headerTitle}>Invin</Text>
+            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+              <Ionicons name="log-out-outline" size={24} color="#B0B0C8" />
+            </TouchableOpacity>
+          </View>
+        </View>
+        
         <View style={styles.emptyContainer}>
-          <Ionicons name="checkmark-circle" size={80} color="#00FF87" />
-          <Text style={styles.emptyTitle}>All caught up!</Text>
-          <Text style={styles.emptyText}>You've answered all available questions.</Text>
-          <TouchableOpacity style={styles.refreshButton} onPress={fetchPlayables}>
+          <View style={styles.completionIcon}>
+            <Ionicons name="trophy" size={80} color="#FFD700" />
+          </View>
+          <Text style={styles.emptyTitle}>All Done!</Text>
+          <Text style={styles.emptyText}>
+            You've completed all available questions.{'\n'}
+            Great job! Come back later for more.
+          </Text>
+          
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{user?.total_played || totalPlayed}</Text>
+              <Text style={styles.statLabel}>Played</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{user?.correct_answers || 0}</Text>
+              <Text style={styles.statLabel}>Correct</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{user?.best_streak || 0}</Text>
+              <Text style={styles.statLabel}>Best Streak</Text>
+            </View>
+          </View>
+          
+          <TouchableOpacity style={styles.refreshButton} onPress={() => {
+            initialLoadDone.current = false;
+            fetchPlayables();
+          }}>
             <LinearGradient
               colors={['#00FF87', '#00D9FF']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.refreshGradient}
             >
-              <Text style={styles.refreshButtonText}>Refresh</Text>
+              <Ionicons name="refresh" size={20} color="#0F0F1E" />
+              <Text style={styles.refreshButtonText}>Check for New Questions</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
