@@ -800,6 +800,326 @@ async def admin_get_users(_: bool = Depends(verify_admin_token)):
         logging.error(f"Error getting users: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ==================== BULK UPLOAD ENDPOINTS ====================
+
+from fastapi import UploadFile, File
+from fastapi.responses import StreamingResponse
+import io
+import csv
+from openpyxl import Workbook, load_workbook
+
+# Sample data for templates
+SAMPLE_DATA = {
+    "text_mcq": [
+        {"category": "Science", "title": "Chemistry Basics", "question_text": "What is H2O commonly known as?", 
+         "option_1": "Salt", "option_2": "Water", "option_3": "Sugar", "option_4": "Oil", 
+         "correct_answer": "Water", "difficulty": "easy"},
+        {"category": "History", "title": "Ancient Civilizations", "question_text": "Which civilization built the pyramids?", 
+         "option_1": "Roman", "option_2": "Greek", "option_3": "Egyptian", "option_4": "Persian", 
+         "correct_answer": "Egyptian", "difficulty": "easy"},
+    ],
+    "text_input": [
+        {"category": "Geography", "title": "World Capitals", "question_text": "What is the capital of France?", 
+         "correct_answer": "Paris", "difficulty": "easy"},
+        {"category": "Literature", "title": "Famous Authors", "question_text": "Who wrote 'Hamlet'?", 
+         "correct_answer": "Shakespeare", "difficulty": "medium"},
+    ],
+    "image_mcq": [
+        {"category": "Art", "title": "Famous Paintings", "image_url": "https://example.com/image1.jpg", 
+         "question_text": "Who painted this artwork?", 
+         "option_1": "Van Gogh", "option_2": "Picasso", "option_3": "Da Vinci", "option_4": "Monet", 
+         "correct_answer": "Da Vinci", "difficulty": "medium"},
+    ],
+    "image_text_input": [
+        {"category": "Geography", "title": "Landmarks", "image_url": "https://example.com/landmark.jpg", 
+         "question_text": "Name this famous landmark", 
+         "correct_answer": "Eiffel Tower", "difficulty": "easy"},
+    ],
+    "video_mcq": [
+        {"category": "Science", "title": "Physics Demo", "video_url": "https://example.com/video.mp4", 
+         "question_text": "What principle is demonstrated in this video?", 
+         "option_1": "Gravity", "option_2": "Magnetism", "option_3": "Electricity", "option_4": "Sound", 
+         "correct_answer": "Gravity", "difficulty": "medium"},
+    ],
+    "video_text_input": [
+        {"category": "Music", "title": "Instruments", "video_url": "https://example.com/music.mp4", 
+         "question_text": "What instrument is being played?", 
+         "correct_answer": "Piano", "difficulty": "easy"},
+    ],
+}
+
+def get_template_columns(format_type: str) -> List[str]:
+    """Get column headers for each format type"""
+    base_cols = ["category", "title", "difficulty"]
+    
+    if format_type == "text_mcq":
+        return base_cols + ["question_text", "option_1", "option_2", "option_3", "option_4", "correct_answer"]
+    elif format_type == "text_input":
+        return base_cols + ["question_text", "correct_answer"]
+    elif format_type == "image_mcq":
+        return base_cols + ["image_url", "question_text", "option_1", "option_2", "option_3", "option_4", "correct_answer"]
+    elif format_type == "image_text_input":
+        return base_cols + ["image_url", "question_text", "correct_answer"]
+    elif format_type == "video_mcq":
+        return base_cols + ["video_url", "question_text", "option_1", "option_2", "option_3", "option_4", "correct_answer"]
+    elif format_type == "video_text_input":
+        return base_cols + ["video_url", "question_text", "correct_answer"]
+    else:
+        return base_cols + ["question_text", "correct_answer"]
+
+@api_router.get("/admin/template/{format_type}")
+async def download_template(format_type: str, file_format: str = "xlsx", _: bool = Depends(verify_admin_token)):
+    """Download sample template for bulk upload"""
+    
+    valid_formats = ["text_mcq", "text_input", "image_mcq", "image_text_input", "video_mcq", "video_text_input"]
+    if format_type not in valid_formats:
+        raise HTTPException(status_code=400, detail=f"Invalid format type. Valid types: {valid_formats}")
+    
+    columns = get_template_columns(format_type)
+    sample_data = SAMPLE_DATA.get(format_type, [])
+    
+    if file_format == "csv":
+        # Generate CSV
+        output = io.StringIO()
+        writer = csv.DictWriter(output, fieldnames=columns)
+        writer.writeheader()
+        for row in sample_data:
+            writer.writerow({col: row.get(col, "") for col in columns})
+        
+        output.seek(0)
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename=template_{format_type}.csv"}
+        )
+    else:
+        # Generate Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = format_type
+        
+        # Add headers
+        for col_idx, col_name in enumerate(columns, 1):
+            cell = ws.cell(row=1, column=col_idx, value=col_name)
+            cell.font = cell.font.copy(bold=True)
+        
+        # Add sample data
+        for row_idx, row_data in enumerate(sample_data, 2):
+            for col_idx, col_name in enumerate(columns, 1):
+                ws.cell(row=row_idx, column=col_idx, value=row_data.get(col_name, ""))
+        
+        # Add instructions sheet
+        ws_instructions = wb.create_sheet("Instructions")
+        instructions = [
+            "BULK UPLOAD INSTRUCTIONS",
+            "",
+            f"Format Type: {format_type.upper()}",
+            "",
+            "COLUMN DESCRIPTIONS:",
+            "- category: The category/topic of the question (e.g., Science, History)",
+            "- title: A short title for the question",
+            "- difficulty: easy, medium, or hard",
+            "- question_text: The actual question to display",
+            "- correct_answer: The correct answer (must match one of the options for MCQ)",
+        ]
+        
+        if "mcq" in format_type:
+            instructions.extend([
+                "- option_1 to option_4: The four multiple choice options",
+                "",
+                "IMPORTANT: correct_answer MUST exactly match one of the options!"
+            ])
+        
+        if "image" in format_type:
+            instructions.append("- image_url: Public URL to the image (must be accessible)")
+        if "video" in format_type:
+            instructions.append("- video_url: Public URL to the video file (mp4 recommended)")
+        
+        for row_idx, line in enumerate(instructions, 1):
+            ws_instructions.cell(row=row_idx, column=1, value=line)
+        
+        # Save to bytes
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename=template_{format_type}.xlsx"}
+        )
+
+@api_router.post("/admin/bulk-upload")
+async def bulk_upload_playables(
+    file: UploadFile = File(...),
+    format_type: str = "text_mcq",
+    _: bool = Depends(verify_admin_token)
+):
+    """Bulk upload playables from Excel or CSV file"""
+    
+    valid_formats = ["text_mcq", "text_input", "image_mcq", "image_text_input", "video_mcq", "video_text_input"]
+    if format_type not in valid_formats:
+        raise HTTPException(status_code=400, detail=f"Invalid format type. Valid types: {valid_formats}")
+    
+    # Read file
+    content = await file.read()
+    
+    try:
+        rows = []
+        
+        if file.filename.endswith('.csv'):
+            # Parse CSV
+            text_content = content.decode('utf-8')
+            reader = csv.DictReader(io.StringIO(text_content))
+            rows = list(reader)
+        elif file.filename.endswith(('.xlsx', '.xls')):
+            # Parse Excel
+            wb = load_workbook(io.BytesIO(content))
+            ws = wb.active
+            
+            # Get headers from first row
+            headers = [cell.value for cell in ws[1] if cell.value]
+            
+            # Get data rows
+            for row in ws.iter_rows(min_row=2, values_only=True):
+                if any(row):  # Skip empty rows
+                    row_dict = {headers[i]: row[i] for i in range(len(headers)) if i < len(row)}
+                    rows.append(row_dict)
+        else:
+            raise HTTPException(status_code=400, detail="Invalid file format. Please upload .csv or .xlsx file")
+        
+        if not rows:
+            raise HTTPException(status_code=400, detail="No data found in file")
+        
+        # Process rows and create playables
+        created = []
+        errors = []
+        
+        for idx, row in enumerate(rows, 1):
+            try:
+                # Validate required fields
+                category = row.get('category', '').strip()
+                title = row.get('title', '').strip()
+                question_text = row.get('question_text', '').strip()
+                correct_answer = row.get('correct_answer', '').strip()
+                difficulty = row.get('difficulty', 'medium').strip().lower()
+                
+                if not category or not title or not correct_answer:
+                    errors.append(f"Row {idx}: Missing required fields (category, title, or correct_answer)")
+                    continue
+                
+                # Build question object
+                question = {}
+                if question_text:
+                    question["text"] = question_text
+                
+                # Handle image/video URLs
+                if "image" in format_type:
+                    image_url = row.get('image_url', '').strip()
+                    if image_url:
+                        question["image_base64"] = image_url  # Using same field for compatibility
+                    else:
+                        errors.append(f"Row {idx}: Image URL required for image format")
+                        continue
+                
+                if "video" in format_type:
+                    video_url = row.get('video_url', '').strip()
+                    if video_url:
+                        question["video_url"] = video_url
+                    else:
+                        errors.append(f"Row {idx}: Video URL required for video format")
+                        continue
+                
+                # Determine type and answer_type
+                if format_type == "text_mcq":
+                    playable_type = "text"
+                    answer_type = "mcq"
+                elif format_type == "text_input":
+                    playable_type = "text"
+                    answer_type = "text_input"
+                elif format_type == "image_mcq":
+                    playable_type = "image"
+                    answer_type = "mcq"
+                elif format_type == "image_text_input":
+                    playable_type = "image_text"
+                    answer_type = "text_input"
+                elif format_type == "video_mcq":
+                    playable_type = "video"
+                    answer_type = "mcq"
+                elif format_type == "video_text_input":
+                    playable_type = "video_text"
+                    answer_type = "text_input"
+                else:
+                    playable_type = "text"
+                    answer_type = "text_input"
+                
+                # Handle MCQ options
+                options = None
+                if "mcq" in format_type:
+                    options = [
+                        row.get('option_1', '').strip(),
+                        row.get('option_2', '').strip(),
+                        row.get('option_3', '').strip(),
+                        row.get('option_4', '').strip(),
+                    ]
+                    options = [o for o in options if o]  # Remove empty options
+                    
+                    if len(options) < 2:
+                        errors.append(f"Row {idx}: MCQ requires at least 2 options")
+                        continue
+                    
+                    if correct_answer not in options:
+                        errors.append(f"Row {idx}: Correct answer '{correct_answer}' not in options")
+                        continue
+                
+                # Create playable document
+                playable_id = f"play_{uuid.uuid4().hex[:12]}"
+                playable_doc = {
+                    "playable_id": playable_id,
+                    "type": playable_type,
+                    "answer_type": answer_type,
+                    "category": category,
+                    "title": title,
+                    "question": question,
+                    "options": options,
+                    "correct_answer": correct_answer,
+                    "difficulty": difficulty if difficulty in ["easy", "medium", "hard"] else "medium",
+                    "created_at": datetime.now(timezone.utc)
+                }
+                
+                await db.playables.insert_one(playable_doc)
+                created.append({"row": idx, "playable_id": playable_id, "title": title})
+                
+            except Exception as e:
+                errors.append(f"Row {idx}: {str(e)}")
+        
+        return {
+            "success": True,
+            "total_rows": len(rows),
+            "created_count": len(created),
+            "error_count": len(errors),
+            "created": created,
+            "errors": errors
+        }
+        
+    except Exception as e:
+        logging.error(f"Bulk upload error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
+@api_router.get("/admin/template-formats")
+async def get_template_formats(_: bool = Depends(verify_admin_token)):
+    """Get list of available template formats"""
+    return {
+        "formats": [
+            {"id": "text_mcq", "name": "Text + MCQ", "description": "Text question with 4 multiple choice options"},
+            {"id": "text_input", "name": "Text + Text Input", "description": "Text question with typed answer"},
+            {"id": "image_mcq", "name": "Image + MCQ", "description": "Image with text question and 4 MCQ options"},
+            {"id": "image_text_input", "name": "Image + Text Input", "description": "Image with text question and typed answer"},
+            {"id": "video_mcq", "name": "Video + MCQ", "description": "Video with text question and 4 MCQ options"},
+            {"id": "video_text_input", "name": "Video + Text Input", "description": "Video with text question and typed answer"},
+        ]
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
