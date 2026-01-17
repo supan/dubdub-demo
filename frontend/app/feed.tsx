@@ -315,12 +315,6 @@ export default function FeedScreen() {
                     </Text>
                   </View>
                 </View>
-                
-                {/* Swipe hint */}
-                <View style={styles.swipeHint}>
-                  <Ionicons name="chevron-up" size={28} color="#555" />
-                  <Text style={styles.swipeHintText}>Swipe up for next</Text>
-                </View>
               </View>
             ) : (
               // Question View
@@ -332,16 +326,18 @@ export default function FeedScreen() {
                     submitting={isSubmitting}
                   />
                 )}
-                
-                {/* Swipe hint */}
-                <View style={styles.swipeHint}>
-                  <Ionicons name="chevron-up" size={28} color="#555" />
-                  <Text style={styles.swipeHintText}>Swipe up to skip</Text>
-                </View>
               </>
             )}
           </Animated.View>
         </GestureDetector>
+        
+        {/* Swipe hint - outside gesture detector */}
+        <View style={styles.swipeHintBottom}>
+          <Ionicons name="chevron-up" size={24} color="#444" />
+          <Text style={styles.swipeHintText}>
+            {showFeedback ? "Swipe up for next" : "Swipe up to skip"}
+          </Text>
+        </View>
 
         {/* Progress indicator */}
         <View style={styles.progressBar}>
