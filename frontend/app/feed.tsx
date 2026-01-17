@@ -88,12 +88,7 @@ export default function FeedScreen() {
     }
   };
 
-  const goToNext = useCallback(() => {
-    'worklet';
-    runOnJS(handleTransitionToNext)();
-  }, [currentIndex, playables.length]);
-
-  const handleTransitionToNext = () => {
+  const handleTransitionToNext = useCallback(() => {
     if (currentIndex < playables.length - 1) {
       setCurrentIndex(prev => prev + 1);
       setFeedbackData(null);
@@ -105,7 +100,7 @@ export default function FeedScreen() {
       setFeedbackData(null);
       setGameState('PLAYING');
     }
-  };
+  }, [currentIndex, playables.length]);
 
   const handleSkip = useCallback(async () => {
     if (gameState !== 'PLAYING' || !playables[currentIndex]) return;
