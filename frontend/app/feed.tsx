@@ -1,11 +1,10 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
-  Animated,
   Platform,
   Dimensions,
 } from 'react-native';
@@ -15,13 +14,20 @@ import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GestureDetector, Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  runOnJS,
+  interpolate,
+  Extrapolation,
+} from 'react-native-reanimated';
 import PlayableCard from '../components/PlayableCard';
-import FeedbackModal from '../components/FeedbackModal';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const SWIPE_THRESHOLD = 80; // Minimum swipe distance to trigger action
-const SWIPE_VELOCITY_THRESHOLD = 500; // Minimum velocity to trigger swipe
+const SWIPE_THRESHOLD = 100;
 
 interface Playable {
   playable_id: string;
@@ -35,7 +41,6 @@ interface Playable {
   difficulty: string;
 }
 
-// State machine states for proper flow control
 type GameState = 'LOADING' | 'PLAYING' | 'SUBMITTING' | 'SHOWING_FEEDBACK' | 'TRANSITIONING';
 
 export default function FeedScreen() {
@@ -45,25 +50,21 @@ export default function FeedScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [feedbackData, setFeedbackData] = useState<any>(null);
   const [totalPlayed, setTotalPlayed] = useState(0);
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
-  
-  // State machine - single source of truth for game state
   const [gameState, setGameState] = useState<GameState>('LOADING');
-  
-  // Track if initial load is done to prevent re-fetching
-  const initialLoadDone = useRef(false);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
 
-  // Initial authentication check - only run once
+  // Animated values for smooth swipe
+  const translateY = useSharedValue(0);
+  const opacity = useSharedValue(1);
+
   useEffect(() => {
     if (!sessionToken) {
       router.replace('/');
       return;
     }
     
-    // Only fetch playables once on initial mount
-    if (!initialLoadDone.current) {
-      initialLoadDone.current = true;
+    if (!initialLoadDone) {
+      setInitialLoadDone(true);
       setTotalPlayed(user?.total_played || 0);
       fetchPlayables();
     }
@@ -73,61 +74,57 @@ export default function FeedScreen() {
     try {
       setGameState('LOADING');
       const response = await axios.get(`${BACKEND_URL}/api/playables/feed`, {
-        headers: {
-          Authorization: `Bearer ${sessionToken}`,
-        },
-        params: {
-          skip: 0,
-          limit: 20,
-        },
+        headers: { Authorization: `Bearer ${sessionToken}` },
+        params: { skip: 0, limit: 20 },
       });
       setPlayables(response.data);
       setCurrentIndex(0);
+      translateY.value = 0;
+      opacity.value = 1;
       setGameState('PLAYING');
     } catch (error) {
       console.error('Error fetching playables:', error);
-      setGameState('PLAYING'); // Allow retry
+      setGameState('PLAYING');
     }
   };
 
-  // Handle skip - swipe up without answering
-  const handleSkip = useCallback(async () => {
-    if (gameState !== 'PLAYING' || !playables[currentIndex]) {
-      return;
+  const goToNext = useCallback(() => {
+    'worklet';
+    runOnJS(handleTransitionToNext)();
+  }, [currentIndex, playables.length]);
+
+  const handleTransitionToNext = () => {
+    if (currentIndex < playables.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+      setFeedbackData(null);
+      translateY.value = 0;
+      opacity.value = 1;
+      setGameState('PLAYING');
+    } else {
+      setPlayables([]);
+      setFeedbackData(null);
+      setGameState('PLAYING');
     }
+  };
+
+  const handleSkip = useCallback(async () => {
+    if (gameState !== 'PLAYING' || !playables[currentIndex]) return;
 
     try {
       const playable = playables[currentIndex];
-      
-      // Call skip API
       await axios.post(
         `${BACKEND_URL}/api/playables/${playable.playable_id}/skip`,
         {},
-        {
-          headers: {
-            Authorization: `Bearer ${sessionToken}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${sessionToken}` } }
       );
-      
-      // Move to next question
-      moveToNext();
-      
-      // Refresh user stats in background
       refreshUser().catch(console.error);
-      
     } catch (error) {
-      console.error('Error skipping playable:', error);
+      console.error('Error skipping:', error);
     }
-  }, [gameState, playables, currentIndex, sessionToken, refreshUser]);
+  }, [gameState, playables, currentIndex, sessionToken]);
 
-  // Only allow answer submission when in PLAYING state
   const handleAnswer = useCallback(async (answer: string) => {
-    // STRICT state check - only process if in PLAYING state
-    if (gameState !== 'PLAYING' || !playables[currentIndex]) {
-      console.log('Ignoring answer - not in PLAYING state:', gameState);
-      return;
-    }
+    if (gameState !== 'PLAYING' || !playables[currentIndex]) return;
 
     try {
       setGameState('SUBMITTING');
@@ -136,106 +133,67 @@ export default function FeedScreen() {
       const response = await axios.post(
         `${BACKEND_URL}/api/playables/${playable.playable_id}/answer`,
         { answer },
-        {
-          headers: {
-            Authorization: `Bearer ${sessionToken}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${sessionToken}` } }
       );
 
-      // Store feedback data
       setFeedbackData(response.data);
       setTotalPlayed(prev => prev + 1);
-      
-      // NOW show feedback modal - this is the ONLY place we transition to SHOWING_FEEDBACK
       setGameState('SHOWING_FEEDBACK');
-      
-      // Refresh user stats in background (don't await - fire and forget)
       refreshUser().catch(console.error);
-      
     } catch (error) {
-      console.error('Error submitting answer:', error);
-      // On error, return to playing state so user can retry
+      console.error('Error submitting:', error);
       setGameState('PLAYING');
     }
-  }, [gameState, playables, currentIndex, sessionToken, refreshUser]);
+  }, [gameState, playables, currentIndex, sessionToken]);
 
-  // Move to next question with animation
-  const moveToNext = useCallback(() => {
-    setGameState('TRANSITIONING');
-    setFeedbackData(null);
-    
-    // Animate slide up and fade out
-    Animated.parallel([
-      Animated.timing(translateY, {
-        toValue: -SCREEN_HEIGHT,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      // Reset position instantly
-      translateY.setValue(0);
-      
-      // Check if there are more playables
-      if (currentIndex < playables.length - 1) {
-        setCurrentIndex(prev => prev + 1);
-        
-        // Fade back in
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }).start(() => {
-          setGameState('PLAYING');
-        });
-      } else {
-        // No more playables - show completion screen
-        setPlayables([]);
-        fadeAnim.setValue(1);
-        setGameState('PLAYING');
+  // Smooth pan gesture
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      // Only allow upward swipes
+      if (event.translationY < 0) {
+        translateY.value = event.translationY;
+        // Fade out as user swipes up
+        opacity.value = interpolate(
+          Math.abs(event.translationY),
+          [0, SCREEN_HEIGHT * 0.3],
+          [1, 0.3],
+          Extrapolation.CLAMP
+        );
       }
-    });
-  }, [currentIndex, playables.length, fadeAnim, translateY]);
-
-  // Handle swipe on feedback modal - dismiss and move to next
-  const handleFeedbackSwipe = useCallback(() => {
-    if (gameState !== 'SHOWING_FEEDBACK') {
-      return;
-    }
-    moveToNext();
-  }, [gameState, moveToNext]);
-
-  // Swipe gesture for skipping (when playing) or continuing (when showing feedback)
-  const swipeGesture = Gesture.Pan()
+    })
     .onEnd((event) => {
-      const { translationY, velocityY } = event;
-      
-      // Check if swipe is significant enough (distance or velocity)
-      const isSwipeUp = translationY < -SWIPE_THRESHOLD || velocityY < -SWIPE_VELOCITY_THRESHOLD;
-      
-      if (isSwipeUp) {
-        if (gameState === 'PLAYING') {
-          // Skip the current question
-          handleSkip();
-        } else if (gameState === 'SHOWING_FEEDBACK') {
-          // Dismiss feedback and go to next
-          handleFeedbackSwipe();
-        }
+      const shouldSwipe = 
+        event.translationY < -SWIPE_THRESHOLD || 
+        event.velocityY < -500;
+
+      if (shouldSwipe) {
+        // Animate out
+        translateY.value = withTiming(-SCREEN_HEIGHT, { duration: 250 }, () => {
+          // Handle skip or continue based on state
+          if (gameState === 'PLAYING') {
+            runOnJS(handleSkip)();
+          }
+          runOnJS(goToNext)();
+        });
+        opacity.value = withTiming(0, { duration: 200 });
+      } else {
+        // Spring back
+        translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
+        opacity.value = withSpring(1);
       }
     })
     .runOnJS(true);
+
+  const animatedCardStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+    opacity: opacity.value,
+  }));
 
   const handleLogout = async () => {
     await logout();
     router.replace('/');
   };
 
-  // Derive UI states from the game state
   const isLoading = gameState === 'LOADING';
   const isSubmitting = gameState === 'SUBMITTING';
   const showFeedback = gameState === 'SHOWING_FEEDBACK';
@@ -268,44 +226,40 @@ export default function FeedScreen() {
           </View>
           
           <View style={styles.emptyContainer}>
-            <View style={styles.completionIcon}>
-              <Ionicons name="trophy" size={80} color="#FFD700" />
-            </View>
+            <Ionicons name="trophy" size={80} color="#FFD700" />
             <Text style={styles.emptyTitle}>All Done!</Text>
             <Text style={styles.emptyText}>
-              You've completed all available questions.{'\n'}
-              Great job! Come back later for more.
+              You've completed all questions.{'\n'}Come back later for more!
             </Text>
             
-            <View style={styles.statsContainer}>
-              <View style={styles.statItem}>
+            <View style={styles.statsRow}>
+              <View style={styles.statBox}>
                 <Text style={styles.statValue}>{user?.total_played || totalPlayed}</Text>
                 <Text style={styles.statLabel}>Played</Text>
               </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
+              <View style={styles.statBox}>
                 <Text style={styles.statValue}>{user?.correct_answers || 0}</Text>
                 <Text style={styles.statLabel}>Correct</Text>
               </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
+              <View style={styles.statBox}>
                 <Text style={styles.statValue}>{user?.best_streak || 0}</Text>
-                <Text style={styles.statLabel}>Best Streak</Text>
+                <Text style={styles.statLabel}>Best</Text>
               </View>
             </View>
             
-            <TouchableOpacity style={styles.refreshButton} onPress={() => {
-              initialLoadDone.current = false;
-              fetchPlayables();
-            }}>
+            <TouchableOpacity 
+              style={styles.refreshBtn}
+              onPress={() => {
+                setInitialLoadDone(false);
+                fetchPlayables();
+              }}
+            >
               <LinearGradient
                 colors={['#00FF87', '#00D9FF']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
                 style={styles.refreshGradient}
               >
                 <Ionicons name="refresh" size={20} color="#0F0F1E" />
-                <Text style={styles.refreshButtonText}>Check for New Questions</Text>
+                <Text style={styles.refreshText}>Check for New</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -318,106 +272,89 @@ export default function FeedScreen() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={styles.container}>
-        <LinearGradient
-          colors={['#0F0F1E', '#1A1A2E']}
-          style={styles.background}
-        >
-          <View style={styles.header}>
-            <View style={styles.headerContent}>
-              <View style={styles.streakContainer}>
-                <Ionicons name="flame" size={24} color="#FF6B00" />
-                <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
-              </View>
-              <Text style={styles.headerTitle}>Invin</Text>
-              <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-                <Ionicons name="log-out-outline" size={24} color="#B0B0C8" />
-              </TouchableOpacity>
+      <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <View style={styles.streakContainer}>
+              <Ionicons name="flame" size={24} color="#FF6B00" />
+              <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
             </View>
+            <Text style={styles.headerTitle}>Invin</Text>
+            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+              <Ionicons name="log-out-outline" size={24} color="#B0B0C8" />
+            </TouchableOpacity>
           </View>
+        </View>
 
-          <GestureDetector gesture={swipeGesture}>
-            <Animated.View 
-              style={[
-                styles.cardContainer, 
-                { 
-                  opacity: fadeAnim,
-                  transform: [{ translateY: translateY }]
-                }
-              ]}
-            >
-              {currentPlayable && (
-                <PlayableCard
-                  playable={currentPlayable}
-                  onAnswer={handleAnswer}
-                  submitting={isSubmitting}
-                />
-              )}
-              
-              {/* Swipe hint at bottom */}
-              {gameState === 'PLAYING' && (
-                <View style={styles.swipeHintContainer}>
-                  <Animated.View style={styles.swipeHint}>
-                    <Ionicons name="chevron-up" size={24} color="#666" />
-                    <Text style={styles.swipeHintText}>Swipe up to skip</Text>
-                  </Animated.View>
-                </View>
-              )}
-            </Animated.View>
-          </GestureDetector>
-
-          <View style={styles.progressContainer}>
-            <Text style={styles.progressText}>
-              {currentIndex + 1} / {playables.length}
-            </Text>
-          </View>
-
-          {/* Feedback Modal - swipeable */}
-          {showFeedback && feedbackData && (
-            <GestureDetector gesture={swipeGesture}>
-              <View style={styles.feedbackOverlay}>
-                <Animated.View style={styles.feedbackContainer}>
-                  <View style={[
-                    styles.feedbackCard,
-                    feedbackData.correct ? styles.feedbackCorrect : styles.feedbackIncorrect
-                  ]}>
-                    <View style={styles.feedbackIconContainer}>
-                      <Ionicons 
-                        name={feedbackData.correct ? "checkmark-circle" : "close-circle"} 
-                        size={80} 
-                        color={feedbackData.correct ? "#00FF87" : "#FF6B6B"} 
-                      />
-                    </View>
-                    
-                    <Text style={styles.feedbackTitle}>
-                      {feedbackData.correct ? "Correct! 🎉" : "Incorrect 😔"}
+        {/* Main Content - Swipeable */}
+        <GestureDetector gesture={panGesture}>
+          <Animated.View style={[styles.cardWrapper, animatedCardStyle]}>
+            {showFeedback && feedbackData ? (
+              // Feedback View
+              <View style={styles.feedbackContainer}>
+                <View style={[
+                  styles.feedbackCard,
+                  feedbackData.correct ? styles.feedbackCorrect : styles.feedbackIncorrect
+                ]}>
+                  <Ionicons 
+                    name={feedbackData.correct ? "checkmark-circle" : "close-circle"} 
+                    size={72} 
+                    color={feedbackData.correct ? "#00FF87" : "#FF6B6B"} 
+                  />
+                  
+                  <Text style={styles.feedbackTitle}>
+                    {feedbackData.correct ? "Correct!" : "Wrong"}
+                  </Text>
+                  
+                  {!feedbackData.correct && (
+                    <Text style={styles.correctAnswerText}>
+                      Answer: {feedbackData.correct_answer}
                     </Text>
-                    
-                    {!feedbackData.correct && (
-                      <Text style={styles.correctAnswerText}>
-                        Correct answer: {feedbackData.correct_answer}
-                      </Text>
-                    )}
-                    
-                    <View style={styles.streakBadge}>
-                      <Ionicons name="flame" size={20} color="#FF6B00" />
-                      <Text style={styles.streakBadgeText}>
-                        Streak: {feedbackData.current_streak}
-                      </Text>
-                    </View>
-                    
-                    {/* Swipe hint */}
-                    <View style={styles.feedbackSwipeHint}>
-                      <Ionicons name="chevron-up" size={28} color="#888" />
-                      <Text style={styles.feedbackSwipeText}>Swipe up for next</Text>
-                    </View>
+                  )}
+                  
+                  <View style={styles.streakBadge}>
+                    <Ionicons name="flame" size={18} color="#FF6B00" />
+                    <Text style={styles.streakBadgeText}>
+                      {feedbackData.current_streak} streak
+                    </Text>
                   </View>
-                </Animated.View>
+                </View>
+                
+                {/* Swipe hint */}
+                <View style={styles.swipeHint}>
+                  <Ionicons name="chevron-up" size={28} color="#555" />
+                  <Text style={styles.swipeHintText}>Swipe up for next</Text>
+                </View>
               </View>
-            </GestureDetector>
-          )}
-        </LinearGradient>
-      </View>
+            ) : (
+              // Question View
+              <>
+                {currentPlayable && (
+                  <PlayableCard
+                    playable={currentPlayable}
+                    onAnswer={handleAnswer}
+                    submitting={isSubmitting}
+                  />
+                )}
+                
+                {/* Swipe hint */}
+                <View style={styles.swipeHint}>
+                  <Ionicons name="chevron-up" size={28} color="#555" />
+                  <Text style={styles.swipeHintText}>Swipe up to skip</Text>
+                </View>
+              </>
+            )}
+          </Animated.View>
+        </GestureDetector>
+
+        {/* Progress indicator */}
+        <View style={styles.progressBar}>
+          <Text style={styles.progressText}>
+            {currentIndex + 1} / {playables.length}
+          </Text>
+        </View>
+      </LinearGradient>
     </GestureHandlerRootView>
   );
 }
@@ -426,12 +363,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  background: {
-    flex: 1,
-  },
   header: {
     paddingTop: Platform.OS === 'ios' ? 50 : 40,
-    paddingBottom: 16,
+    paddingBottom: 12,
     paddingHorizontal: 20,
   },
   headerContent: {
@@ -443,12 +377,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 107, 0, 0.15)',
-    paddingVertical: 8,
+    paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 20,
     gap: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 107, 0, 0.3)',
   },
   streakText: {
     fontSize: 18,
@@ -456,81 +388,128 @@ const styles = StyleSheet.create({
     color: '#FF6B00',
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '700',
     color: '#FFFFFF',
-    letterSpacing: -0.5,
   },
   logoutButton: {
     padding: 8,
   },
-  cardContainer: {
+  cardWrapper: {
     flex: 1,
-    padding: 16,
   },
-  progressContainer: {
-    paddingVertical: 16,
+  progressBar: {
+    paddingVertical: 12,
     alignItems: 'center',
   },
   progressText: {
-    fontSize: 16,
-    color: '#B0B0C8',
+    fontSize: 14,
+    color: '#666',
     fontWeight: '600',
   },
+  swipeHint: {
+    position: 'absolute',
+    bottom: 16,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  swipeHintText: {
+    fontSize: 13,
+    color: '#555',
+    marginTop: 2,
+  },
+  // Feedback styles
+  feedbackContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  feedbackCard: {
+    backgroundColor: '#1E1E2E',
+    borderRadius: 24,
+    padding: 40,
+    alignItems: 'center',
+    width: '100%',
+    borderWidth: 3,
+  },
+  feedbackCorrect: {
+    borderColor: '#00FF87',
+  },
+  feedbackIncorrect: {
+    borderColor: '#FF6B6B',
+  },
+  feedbackTitle: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  correctAnswerText: {
+    fontSize: 16,
+    color: '#888',
+    marginBottom: 16,
+  },
+  streakBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 107, 0, 0.15)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    gap: 6,
+    marginTop: 12,
+  },
+  streakBadgeText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FF6B00',
+  },
+  // Empty state
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
   },
-  completionIcon: {
-    marginBottom: 16,
-  },
   emptyTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginTop: 8,
+    marginTop: 16,
   },
   emptyText: {
     fontSize: 16,
-    fontWeight: '400',
-    color: '#B0B0C8',
-    marginTop: 12,
+    color: '#888',
     textAlign: 'center',
+    marginTop: 8,
     lineHeight: 24,
   },
-  statsContainer: {
+  statsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    marginTop: 32,
+    gap: 16,
+  },
+  statBox: {
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 16,
-    padding: 20,
-    marginTop: 32,
-    gap: 20,
-  },
-  statItem: {
+    padding: 16,
     alignItems: 'center',
-    flex: 1,
+    minWidth: 80,
   },
   statValue: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '700',
     color: '#00FF87',
   },
   statLabel: {
     fontSize: 12,
-    fontWeight: '600',
     color: '#888',
     marginTop: 4,
-    textTransform: 'uppercase',
   },
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  refreshButton: {
+  refreshBtn: {
     marginTop: 32,
     borderRadius: 24,
     overflow: 'hidden',
@@ -542,94 +521,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 24,
   },
-  refreshButtonText: {
+  refreshText: {
     fontSize: 16,
     fontWeight: '700',
     color: '#0F0F1E',
-  },
-  // Swipe hint styles
-  swipeHintContainer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  swipeHint: {
-    alignItems: 'center',
-    opacity: 0.6,
-  },
-  swipeHintText: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  // Feedback overlay styles
-  feedbackOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 100,
-  },
-  feedbackContainer: {
-    width: '85%',
-    maxWidth: 340,
-  },
-  feedbackCard: {
-    backgroundColor: '#1E1E2E',
-    borderRadius: 24,
-    padding: 32,
-    alignItems: 'center',
-    borderWidth: 2,
-  },
-  feedbackCorrect: {
-    borderColor: '#00FF87',
-  },
-  feedbackIncorrect: {
-    borderColor: '#FF6B6B',
-  },
-  feedbackIconContainer: {
-    marginBottom: 16,
-  },
-  feedbackTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 12,
-  },
-  correctAnswerText: {
-    fontSize: 16,
-    color: '#B0B0C8',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  streakBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 107, 0, 0.15)',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    gap: 8,
-    marginTop: 8,
-  },
-  streakBadgeText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FF6B00',
-  },
-  feedbackSwipeHint: {
-    marginTop: 32,
-    alignItems: 'center',
-  },
-  feedbackSwipeText: {
-    fontSize: 14,
-    color: '#888',
-    marginTop: 4,
   },
 });
