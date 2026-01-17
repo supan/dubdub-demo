@@ -298,9 +298,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   submitGradient: {
+    flexDirection: 'row',
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   },
   submitButtonText: {
     fontSize: 16,
