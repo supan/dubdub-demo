@@ -168,7 +168,7 @@ export default function FeedScreen() {
           if (gameState === 'PLAYING') {
             runOnJS(handleSkip)();
           }
-          runOnJS(goToNext)();
+          runOnJS(handleTransitionToNext)();
         });
         opacity.value = withTiming(0, { duration: 200 });
       } else {
