@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,27 +7,20 @@ import {
   TouchableOpacity,
   Platform,
   Dimensions,
+  Animated,
+  PanResponder,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { GestureDetector, Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  runOnJS,
-  interpolate,
-  Extrapolation,
-} from 'react-native-reanimated';
 import PlayableCard from '../components/PlayableCard';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const SWIPE_THRESHOLD = 100;
+const SWIPE_THRESHOLD = 80;
+const SWIPE_VELOCITY = 0.5;
 
 interface Playable {
   playable_id: string;
@@ -53,9 +46,9 @@ export default function FeedScreen() {
   const [gameState, setGameState] = useState<GameState>('LOADING');
   const [initialLoadDone, setInitialLoadDone] = useState(false);
 
-  // Animated values for smooth swipe
-  const translateY = useSharedValue(0);
-  const opacity = useSharedValue(1);
+  // Animated values
+  const translateY = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (!sessionToken) {
@@ -79,8 +72,8 @@ export default function FeedScreen() {
       });
       setPlayables(response.data);
       setCurrentIndex(0);
-      translateY.value = 0;
-      opacity.value = 1;
+      translateY.setValue(0);
+      opacity.setValue(1);
       setGameState('PLAYING');
     } catch (error) {
       console.error('Error fetching playables:', error);
@@ -88,12 +81,42 @@ export default function FeedScreen() {
     }
   };
 
+  const animateToNext = useCallback((onComplete: () => void) => {
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: -SCREEN_HEIGHT,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      translateY.setValue(0);
+      opacity.setValue(1);
+      onComplete();
+    });
+  }, []);
+
+  const springBack = useCallback(() => {
+    Animated.spring(translateY, {
+      toValue: 0,
+      useNativeDriver: true,
+      tension: 100,
+      friction: 10,
+    }).start();
+    Animated.spring(opacity, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
   const handleTransitionToNext = useCallback(() => {
     if (currentIndex < playables.length - 1) {
       setCurrentIndex(prev => prev + 1);
       setFeedbackData(null);
-      translateY.value = 0;
-      opacity.value = 1;
       setGameState('PLAYING');
     } else {
       setPlayables([]);
@@ -118,6 +141,13 @@ export default function FeedScreen() {
     }
   }, [gameState, playables, currentIndex, sessionToken]);
 
+  const handleSwipeComplete = useCallback(() => {
+    if (gameState === 'PLAYING') {
+      handleSkip();
+    }
+    animateToNext(handleTransitionToNext);
+  }, [gameState, handleSkip, animateToNext, handleTransitionToNext]);
+
   const handleAnswer = useCallback(async (answer: string) => {
     if (gameState !== 'PLAYING' || !playables[currentIndex]) return;
 
@@ -141,48 +171,34 @@ export default function FeedScreen() {
     }
   }, [gameState, playables, currentIndex, sessionToken]);
 
-  // Smooth pan gesture
-  const panGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      // Only allow upward swipes
-      if (event.translationY < 0) {
-        translateY.value = event.translationY;
-        // Fade out as user swipes up
-        opacity.value = interpolate(
-          Math.abs(event.translationY),
-          [0, SCREEN_HEIGHT * 0.3],
-          [1, 0.3],
-          Extrapolation.CLAMP
-        );
-      }
-    })
-    .onEnd((event) => {
-      const shouldSwipe = 
-        event.translationY < -SWIPE_THRESHOLD || 
-        event.velocityY < -500;
+  // PanResponder for swipe gestures
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only capture vertical swipes
+        return Math.abs(gestureState.dy) > Math.abs(gestureState.dx) && gestureState.dy < -10;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy < 0) {
+          translateY.setValue(gestureState.dy);
+          const newOpacity = 1 - Math.min(Math.abs(gestureState.dy) / (SCREEN_HEIGHT * 0.3), 0.7);
+          opacity.setValue(newOpacity);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        const shouldSwipe = 
+          gestureState.dy < -SWIPE_THRESHOLD || 
+          gestureState.vy < -SWIPE_VELOCITY;
 
-      if (shouldSwipe) {
-        // Animate out
-        translateY.value = withTiming(-SCREEN_HEIGHT, { duration: 250 }, () => {
-          // Handle skip or continue based on state
-          if (gameState === 'PLAYING') {
-            runOnJS(handleSkip)();
-          }
-          runOnJS(handleTransitionToNext)();
-        });
-        opacity.value = withTiming(0, { duration: 200 });
-      } else {
-        // Spring back
-        translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
-        opacity.value = withSpring(1);
-      }
+        if (shouldSwipe && (gameState === 'PLAYING' || gameState === 'SHOWING_FEEDBACK')) {
+          handleSwipeComplete();
+        } else {
+          springBack();
+        }
+      },
     })
-    .runOnJS(true);
-
-  const animatedCardStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-    opacity: opacity.value,
-  }));
+  ).current;
 
   const handleLogout = async () => {
     await logout();
@@ -195,80 +211,15 @@ export default function FeedScreen() {
 
   if (isLoading) {
     return (
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
-          <ActivityIndicator size="large" color="#00FF87" />
-        </LinearGradient>
-      </GestureHandlerRootView>
+      <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
+        <ActivityIndicator size="large" color="#00FF87" />
+      </LinearGradient>
     );
   }
 
   if (playables.length === 0) {
     return (
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
-          <View style={styles.header}>
-            <View style={styles.headerContent}>
-              <View style={styles.streakContainer}>
-                <Ionicons name="flame" size={24} color="#FF6B00" />
-                <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
-              </View>
-              <Text style={styles.headerTitle}>Invin</Text>
-              <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-                <Ionicons name="log-out-outline" size={24} color="#B0B0C8" />
-              </TouchableOpacity>
-            </View>
-          </View>
-          
-          <View style={styles.emptyContainer}>
-            <Ionicons name="trophy" size={80} color="#FFD700" />
-            <Text style={styles.emptyTitle}>All Done!</Text>
-            <Text style={styles.emptyText}>
-              You've completed all questions.{'\n'}Come back later for more!
-            </Text>
-            
-            <View style={styles.statsRow}>
-              <View style={styles.statBox}>
-                <Text style={styles.statValue}>{user?.total_played || totalPlayed}</Text>
-                <Text style={styles.statLabel}>Played</Text>
-              </View>
-              <View style={styles.statBox}>
-                <Text style={styles.statValue}>{user?.correct_answers || 0}</Text>
-                <Text style={styles.statLabel}>Correct</Text>
-              </View>
-              <View style={styles.statBox}>
-                <Text style={styles.statValue}>{user?.best_streak || 0}</Text>
-                <Text style={styles.statLabel}>Best</Text>
-              </View>
-            </View>
-            
-            <TouchableOpacity 
-              style={styles.refreshBtn}
-              onPress={() => {
-                setInitialLoadDone(false);
-                fetchPlayables();
-              }}
-            >
-              <LinearGradient
-                colors={['#00FF87', '#00D9FF']}
-                style={styles.refreshGradient}
-              >
-                <Ionicons name="refresh" size={20} color="#0F0F1E" />
-                <Text style={styles.refreshText}>Check for New</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
-      </GestureHandlerRootView>
-    );
-  }
-
-  const currentPlayable = playables[currentIndex];
-
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
       <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
-        {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View style={styles.streakContainer}>
@@ -281,72 +232,138 @@ export default function FeedScreen() {
             </TouchableOpacity>
           </View>
         </View>
-
-        {/* Main Content - Swipeable */}
-        <GestureDetector gesture={panGesture}>
-          <Animated.View style={[styles.cardWrapper, animatedCardStyle]}>
-            {showFeedback && feedbackData ? (
-              // Feedback View
-              <View style={styles.feedbackContainer}>
-                <View style={[
-                  styles.feedbackCard,
-                  feedbackData.correct ? styles.feedbackCorrect : styles.feedbackIncorrect
-                ]}>
-                  <Ionicons 
-                    name={feedbackData.correct ? "checkmark-circle" : "close-circle"} 
-                    size={72} 
-                    color={feedbackData.correct ? "#00FF87" : "#FF6B6B"} 
-                  />
-                  
-                  <Text style={styles.feedbackTitle}>
-                    {feedbackData.correct ? "Correct!" : "Wrong"}
-                  </Text>
-                  
-                  {!feedbackData.correct && (
-                    <Text style={styles.correctAnswerText}>
-                      Answer: {feedbackData.correct_answer}
-                    </Text>
-                  )}
-                  
-                  <View style={styles.streakBadge}>
-                    <Ionicons name="flame" size={18} color="#FF6B00" />
-                    <Text style={styles.streakBadgeText}>
-                      {feedbackData.current_streak} streak
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            ) : (
-              // Question View
-              <>
-                {currentPlayable && (
-                  <PlayableCard
-                    playable={currentPlayable}
-                    onAnswer={handleAnswer}
-                    submitting={isSubmitting}
-                  />
-                )}
-              </>
-            )}
-          </Animated.View>
-        </GestureDetector>
         
-        {/* Swipe hint - outside gesture detector */}
-        <View style={styles.swipeHintBottom}>
-          <Ionicons name="chevron-up" size={24} color="#444" />
-          <Text style={styles.swipeHintText}>
-            {showFeedback ? "Swipe up for next" : "Swipe up to skip"}
+        <View style={styles.emptyContainer}>
+          <Ionicons name="trophy" size={80} color="#FFD700" />
+          <Text style={styles.emptyTitle}>All Done!</Text>
+          <Text style={styles.emptyText}>
+            You've completed all questions.{'\n'}Come back later for more!
           </Text>
-        </View>
-
-        {/* Progress indicator */}
-        <View style={styles.progressBar}>
-          <Text style={styles.progressText}>
-            {currentIndex + 1} / {playables.length}
-          </Text>
+          
+          <View style={styles.statsRow}>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{user?.total_played || totalPlayed}</Text>
+              <Text style={styles.statLabel}>Played</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{user?.correct_answers || 0}</Text>
+              <Text style={styles.statLabel}>Correct</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{user?.best_streak || 0}</Text>
+              <Text style={styles.statLabel}>Best</Text>
+            </View>
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.refreshBtn}
+            onPress={() => {
+              setInitialLoadDone(false);
+              fetchPlayables();
+            }}
+          >
+            <LinearGradient
+              colors={['#00FF87', '#00D9FF']}
+              style={styles.refreshGradient}
+            >
+              <Ionicons name="refresh" size={20} color="#0F0F1E" />
+              <Text style={styles.refreshText}>Check for New</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
       </LinearGradient>
-    </GestureHandlerRootView>
+    );
+  }
+
+  const currentPlayable = playables[currentIndex];
+
+  return (
+    <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <View style={styles.streakContainer}>
+            <Ionicons name="flame" size={24} color="#FF6B00" />
+            <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
+          </View>
+          <Text style={styles.headerTitle}>Invin</Text>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+            <Ionicons name="log-out-outline" size={24} color="#B0B0C8" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Main Content - Swipeable */}
+      <Animated.View 
+        style={[
+          styles.cardWrapper, 
+          { 
+            transform: [{ translateY }],
+            opacity 
+          }
+        ]}
+        {...panResponder.panHandlers}
+      >
+        {showFeedback && feedbackData ? (
+          // Feedback View
+          <View style={styles.feedbackContainer}>
+            <View style={[
+              styles.feedbackCard,
+              feedbackData.correct ? styles.feedbackCorrect : styles.feedbackIncorrect
+            ]}>
+              <Ionicons 
+                name={feedbackData.correct ? "checkmark-circle" : "close-circle"} 
+                size={72} 
+                color={feedbackData.correct ? "#00FF87" : "#FF6B6B"} 
+              />
+              
+              <Text style={styles.feedbackTitle}>
+                {feedbackData.correct ? "Correct!" : "Wrong"}
+              </Text>
+              
+              {!feedbackData.correct && (
+                <Text style={styles.correctAnswerText}>
+                  Answer: {feedbackData.correct_answer}
+                </Text>
+              )}
+              
+              <View style={styles.streakBadge}>
+                <Ionicons name="flame" size={18} color="#FF6B00" />
+                <Text style={styles.streakBadgeText}>
+                  {feedbackData.current_streak} streak
+                </Text>
+              </View>
+            </View>
+          </View>
+        ) : (
+          // Question View
+          <>
+            {currentPlayable && (
+              <PlayableCard
+                playable={currentPlayable}
+                onAnswer={handleAnswer}
+                submitting={isSubmitting}
+              />
+            )}
+          </>
+        )}
+      </Animated.View>
+      
+      {/* Swipe hint */}
+      <View style={styles.swipeHintBottom}>
+        <Ionicons name="chevron-up" size={24} color="#444" />
+        <Text style={styles.swipeHintText}>
+          {showFeedback ? "Swipe up for next" : "Swipe up to skip"}
+        </Text>
+      </View>
+
+      {/* Progress indicator */}
+      <View style={styles.progressBar}>
+        <Text style={styles.progressText}>
+          {currentIndex + 1} / {playables.length}
+        </Text>
+      </View>
+    </LinearGradient>
   );
 }
 
@@ -397,14 +414,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     fontWeight: '600',
-  },
-  swipeHint: {
-    position: 'absolute',
-    bottom: 16,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    pointerEvents: 'none',
   },
   swipeHintBottom: {
     alignItems: 'center',
