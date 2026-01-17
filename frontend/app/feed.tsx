@@ -406,6 +406,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     pointerEvents: 'none',
   },
+  swipeHintBottom: {
+    alignItems: 'center',
+    paddingBottom: 8,
+  },
   swipeHintText: {
     fontSize: 13,
     color: '#555',
