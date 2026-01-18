@@ -229,6 +229,8 @@ async def exchange_session(request: Request, response: Response):
                 "correct_answers": 0,
                 "current_streak": 0,
                 "best_streak": 0,
+                "selected_categories": None,
+                "onboarding_complete": False,
                 "created_at": datetime.now(timezone.utc)
             }
             await db.users.insert_one(new_user)
