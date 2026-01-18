@@ -183,11 +183,6 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
         >
-          <Ionicons 
-            name="chevron-up" 
-            size={18} 
-            color={canSubmit && !submitting ? '#0F0F1E' : '#666'} 
-          />
           <Text style={[
             styles.submitButtonText,
             { color: canSubmit && !submitting ? '#0F0F1E' : '#888' }
