@@ -66,7 +66,9 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
             style={styles.media}
             useNativeControls
             resizeMode={ResizeMode.CONTAIN}
-            shouldPlay={false}
+            shouldPlay={true}
+            isLooping={false}
+            isMuted={false}
           />
         </View>
       );
