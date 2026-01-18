@@ -235,10 +235,46 @@ export default function FeedScreen() {
   const isSubmitting = gameState === 'SUBMITTING';
   const showFeedback = gameState === 'SHOWING_FEEDBACK';
 
+  // Loading state - beautiful branded loading screen
   if (isLoading) {
     return (
       <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
-        <ActivityIndicator size="large" color="#00FF87" />
+        <View style={styles.loadingContainer}>
+          {/* Animated Logo */}
+          <Animated.View style={[styles.loadingLogo, { 
+            transform: [{ scale: 1 }],
+          }]}>
+            <View style={styles.loadingLogoInner}>
+              <Ionicons name="infinite" size={80} color="#00FF87" />
+            </View>
+          </Animated.View>
+          
+          {/* App Name */}
+          <Text style={styles.loadingTitle}>Invin</Text>
+          
+          {/* Loading Message */}
+          <Text style={styles.loadingSubtitle}>Loading your questions...</Text>
+          
+          {/* Custom Loading Dots */}
+          <View style={styles.loadingDotsContainer}>
+            <View style={[styles.loadingDot, styles.loadingDotActive]} />
+            <View style={[styles.loadingDot, { opacity: 0.5 }]} />
+            <View style={[styles.loadingDot, { opacity: 0.3 }]} />
+          </View>
+          
+          {/* Fun Loading Tips */}
+          <View style={styles.loadingTipContainer}>
+            <Ionicons name="bulb" size={16} color="#FFB800" />
+            <Text style={styles.loadingTip}>
+              {[
+                "Answer quickly to build your streak!",
+                "Swipe up to skip to the next question",
+                "Challenge yourself with harder categories",
+                "Come back daily for new questions!",
+              ][Math.floor(Math.random() * 4)]}
+            </Text>
+          </View>
+        </View>
       </LinearGradient>
     );
   }
