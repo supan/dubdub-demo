@@ -70,6 +70,16 @@ class UserProgress(BaseModel):
     correct: bool
     timestamp: datetime
 
+class Category(BaseModel):
+    category_id: str
+    name: str
+    icon: str  # Icon name (e.g., 'flask', 'globe', 'book')
+    color: str  # Hex color for the category
+    playable_count: int = 0
+
+class CategorySelectionRequest(BaseModel):
+    categories: List[str]  # List of category names
+
 # ==================== AUTH HELPERS ====================
 
 async def get_current_user_from_token(authorization: Optional[str] = Header(None)) -> Optional[User]:
