@@ -193,12 +193,16 @@ export default function FeedScreen() {
     }
   }, [gameState, playables, currentIndex, sessionToken]);
 
-  // PanResponder for swipe gestures
+  // Ref for the transition function so PanResponder can access it
+  const doSwipeRef = useRef(doSwipeTransition);
+  useEffect(() => { doSwipeRef.current = doSwipeTransition; }, [doSwipeTransition]);
+
+  // PanResponder for swipe gestures - uses refs to avoid stale closures
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Only capture vertical swipes
+        // Only capture vertical swipes upward
         return Math.abs(gestureState.dy) > Math.abs(gestureState.dx) && gestureState.dy < -10;
       },
       onPanResponderMove: (_, gestureState) => {
@@ -213,10 +217,23 @@ export default function FeedScreen() {
           gestureState.dy < -SWIPE_THRESHOLD || 
           gestureState.vy < -SWIPE_VELOCITY;
 
-        if (shouldSwipe && (gameState === 'PLAYING' || gameState === 'SHOWING_FEEDBACK')) {
-          handleSwipeComplete();
+        const currentState = gameStateRef.current;
+        
+        if (shouldSwipe && (currentState === 'PLAYING' || currentState === 'SHOWING_FEEDBACK')) {
+          // Call the latest version of doSwipeTransition via ref
+          doSwipeRef.current();
         } else {
-          springBack();
+          // Spring back to original position
+          Animated.spring(translateY, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 100,
+            friction: 10,
+          }).start();
+          Animated.spring(opacity, {
+            toValue: 1,
+            useNativeDriver: true,
+          }).start();
         }
       },
     })
