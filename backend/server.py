@@ -961,6 +961,91 @@ async def admin_get_users(_: bool = Depends(verify_admin_token)):
         logging.error(f"Error getting users: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/admin/stats")
+async def admin_get_stats(date: str = None, _: bool = Depends(verify_admin_token)):
+    """Get user performance stats for a specific date (admin only)
+    
+    Args:
+        date: Date in YYYY-MM-DD format. If not provided, returns stats for today.
+    """
+    try:
+        # Parse date or use today
+        if date:
+            try:
+                target_date = datetime.strptime(date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+        else:
+            target_date = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Date range for the selected day
+        start_of_day = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_day = start_of_day + timedelta(days=1)
+        
+        # Get all users
+        all_users = await db.users.find({}, {"_id": 0}).to_list(1000)
+        
+        # Get progress records for the target date
+        progress_records = await db.user_progress.find({
+            "timestamp": {"$gte": start_of_day, "$lt": end_of_day}
+        }, {"_id": 0}).to_list(10000)
+        
+        # Build stats per user
+        user_stats = []
+        for user in all_users:
+            user_id = user.get("user_id")
+            email = user.get("email", "Unknown")
+            name = user.get("name", "Unknown")
+            
+            # Filter progress for this user on target date
+            user_progress = [p for p in progress_records if p.get("user_id") == user_id]
+            
+            played_count = len(user_progress)
+            correct_count = sum(1 for p in user_progress if p.get("correct", False))
+            incorrect_count = played_count - correct_count
+            
+            # Calculate accuracy
+            accuracy = round((correct_count / played_count * 100), 1) if played_count > 0 else 0
+            
+            user_stats.append({
+                "user_id": user_id,
+                "email": email,
+                "name": name,
+                "played": played_count,
+                "correct": correct_count,
+                "incorrect": incorrect_count,
+                "accuracy": accuracy,
+                "current_streak": user.get("current_streak", 0),
+                "best_streak": user.get("best_streak", 0),
+                "total_played_all_time": user.get("total_played", 0),
+                "total_correct_all_time": user.get("correct_answers", 0),
+            })
+        
+        # Sort by played count (descending)
+        user_stats.sort(key=lambda x: x["played"], reverse=True)
+        
+        # Calculate totals
+        total_played = sum(u["played"] for u in user_stats)
+        total_correct = sum(u["correct"] for u in user_stats)
+        active_users = sum(1 for u in user_stats if u["played"] > 0)
+        
+        return {
+            "date": target_date.strftime("%Y-%m-%d"),
+            "summary": {
+                "total_users": len(all_users),
+                "active_users": active_users,
+                "total_played": total_played,
+                "total_correct": total_correct,
+                "overall_accuracy": round((total_correct / total_played * 100), 1) if total_played > 0 else 0
+            },
+            "user_stats": user_stats
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error getting stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ==================== BULK UPLOAD ENDPOINTS ====================
 
 from fastapi import UploadFile, File
