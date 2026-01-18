@@ -124,8 +124,11 @@ export default function FeedScreen() {
   }, []);
 
   const handleTransitionToNext = useCallback(() => {
-    if (currentIndex < playables.length - 1) {
-      setCurrentIndex(prev => prev + 1);
+    const idx = currentIndexRef.current;
+    const items = playablesRef.current;
+    
+    if (idx < items.length - 1) {
+      setCurrentIndex(idx + 1);
       setFeedbackData(null);
       setGameState('PLAYING');
     } else {
@@ -133,13 +136,17 @@ export default function FeedScreen() {
       setFeedbackData(null);
       setGameState('PLAYING');
     }
-  }, [currentIndex, playables.length]);
+  }, []);
 
   const handleSkip = useCallback(async () => {
-    if (gameState !== 'PLAYING' || !playables[currentIndex]) return;
+    const state = gameStateRef.current;
+    const idx = currentIndexRef.current;
+    const items = playablesRef.current;
+    
+    if (state !== 'PLAYING' || !items[idx]) return;
 
     try {
-      const playable = playables[currentIndex];
+      const playable = items[idx];
       await axios.post(
         `${BACKEND_URL}/api/playables/${playable.playable_id}/skip`,
         {},
@@ -149,14 +156,19 @@ export default function FeedScreen() {
     } catch (error) {
       console.error('Error skipping:', error);
     }
-  }, [gameState, playables, currentIndex, sessionToken]);
+  }, [sessionToken, refreshUser]);
 
-  const handleSwipeComplete = useCallback(() => {
-    if (gameState === 'PLAYING') {
+  const doSwipeTransition = useCallback(() => {
+    const state = gameStateRef.current;
+    
+    // Only skip if in PLAYING state (not in feedback)
+    if (state === 'PLAYING') {
       handleSkip();
     }
+    
+    // Animate and transition to next
     animateToNext(handleTransitionToNext);
-  }, [gameState, handleSkip, animateToNext, handleTransitionToNext]);
+  }, [handleSkip, animateToNext, handleTransitionToNext]);
 
   const handleAnswer = useCallback(async (answer: string) => {
     if (gameState !== 'PLAYING' || !playables[currentIndex]) return;
