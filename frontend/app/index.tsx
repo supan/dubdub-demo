@@ -93,7 +93,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <Text style={styles.footerText}>Join the winning community</Text>
-          <Text style={styles.versionText}>v1.2.1</Text>
+          <Text style={styles.versionText}>v1.3.0</Text>
         </View>
       </View>
     </LinearGradient>
