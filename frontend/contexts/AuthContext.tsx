@@ -15,6 +15,8 @@ interface User {
   correct_answers: number;
   current_streak: number;
   best_streak: number;
+  selected_categories?: string[];
+  onboarding_complete?: boolean;
 }
 
 interface AuthContextType {
