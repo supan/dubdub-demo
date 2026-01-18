@@ -2,7 +2,7 @@
   "expo": {
     "name": "Invin",
     "slug": "invin",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "invin",
@@ -15,7 +15,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#667eea"
+        "backgroundColor": "#0F0F1E"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.emergent.invin"
@@ -33,7 +33,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#667eea"
+          "backgroundColor": "#0F0F1E"
         }
       ]
     ],
