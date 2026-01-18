@@ -37,11 +37,16 @@ export default function OnboardingScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!sessionToken) {
-      router.replace('/');
-      return;
-    }
-    fetchCategories();
+    // Wait for component to mount before navigation
+    const timer = setTimeout(() => {
+      if (!sessionToken) {
+        router.replace('/');
+        return;
+      }
+      fetchCategories();
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [sessionToken]);
 
   const fetchCategories = async () => {
