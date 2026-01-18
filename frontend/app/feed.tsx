@@ -593,4 +593,65 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0F0F1E',
   },
+  // Loading screen styles
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  loadingLogo: {
+    marginBottom: 24,
+  },
+  loadingLogoInner: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+  },
+  loadingTitle: {
+    fontSize: 36,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  loadingSubtitle: {
+    fontSize: 16,
+    color: '#888',
+    marginBottom: 32,
+  },
+  loadingDotsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 48,
+  },
+  loadingDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#00FF87',
+  },
+  loadingDotActive: {
+    opacity: 1,
+  },
+  loadingTipContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 184, 0, 0.1)',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    gap: 10,
+    maxWidth: 320,
+  },
+  loadingTip: {
+    fontSize: 13,
+    color: '#FFB800',
+    flex: 1,
+    lineHeight: 18,
+  },
 });
