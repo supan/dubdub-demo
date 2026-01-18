@@ -376,6 +376,13 @@ export default function AdminDashboard() {
       {/* Tabs */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
+          style={[styles.tab, activeTab === 'stats' && styles.tabActive]}
+          onPress={() => { setActiveTab('stats'); fetchStats(); }}
+        >
+          <Ionicons name="stats-chart" size={18} color={activeTab === 'stats' ? '#00FF87' : '#888'} />
+          <Text style={[styles.tabText, activeTab === 'stats' && styles.tabTextActive]}>Stats</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
           style={[styles.tab, activeTab === 'reset' && styles.tabActive]}
           onPress={() => setActiveTab('reset')}
         >
@@ -406,6 +413,107 @@ export default function AdminDashboard() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Stats Tab */}
+        {activeTab === 'stats' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>User Performance Stats</Text>
+            <Text style={styles.sectionDescription}>
+              View user performance metrics for a specific date.
+            </Text>
+
+            {/* Date Picker */}
+            <View style={styles.datePickerRow}>
+              <Text style={styles.dateLabel}>Select Date:</Text>
+              {Platform.OS === 'web' ? (
+                <input
+                  type="date"
+                  value={statsDate}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                  style={{
+                    backgroundColor: '#1E1E2E',
+                    color: '#FFF',
+                    border: '1px solid #333',
+                    borderRadius: 8,
+                    padding: 10,
+                    fontSize: 14,
+                  }}
+                />
+              ) : (
+                <TextInput
+                  style={styles.dateInput}
+                  value={statsDate}
+                  onChangeText={handleDateChange}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor="#666"
+                />
+              )}
+              <TouchableOpacity style={styles.refreshBtn} onPress={() => fetchStats()}>
+                <Ionicons name="refresh" size={20} color="#00FF87" />
+              </TouchableOpacity>
+            </View>
+
+            {statsLoading ? (
+              <ActivityIndicator size="large" color="#00FF87" style={{ marginTop: 20 }} />
+            ) : statsData ? (
+              <View style={styles.statsContainer}>
+                {/* Summary Cards */}
+                <View style={styles.summaryRow}>
+                  <View style={styles.summaryCard}>
+                    <Text style={styles.summaryValue}>{statsData.summary.active_users}</Text>
+                    <Text style={styles.summaryLabel}>Active Users</Text>
+                  </View>
+                  <View style={styles.summaryCard}>
+                    <Text style={styles.summaryValue}>{statsData.summary.total_played}</Text>
+                    <Text style={styles.summaryLabel}>Total Played</Text>
+                  </View>
+                  <View style={styles.summaryCard}>
+                    <Text style={styles.summaryValue}>{statsData.summary.total_correct}</Text>
+                    <Text style={styles.summaryLabel}>Correct</Text>
+                  </View>
+                  <View style={styles.summaryCard}>
+                    <Text style={[styles.summaryValue, { color: '#00FF87' }]}>
+                      {statsData.summary.overall_accuracy}%
+                    </Text>
+                    <Text style={styles.summaryLabel}>Accuracy</Text>
+                  </View>
+                </View>
+
+                {/* User Table */}
+                <View style={styles.tableContainer}>
+                  <View style={styles.tableHeader}>
+                    <Text style={[styles.tableHeaderCell, { flex: 2 }]}>User</Text>
+                    <Text style={styles.tableHeaderCell}>Played</Text>
+                    <Text style={styles.tableHeaderCell}>Correct</Text>
+                    <Text style={styles.tableHeaderCell}>Accuracy</Text>
+                    <Text style={styles.tableHeaderCell}>Streak</Text>
+                  </View>
+                  {statsData.user_stats.map((user: any, index: number) => (
+                    <View key={user.user_id} style={[styles.tableRow, index % 2 === 0 && styles.tableRowAlt]}>
+                      <View style={{ flex: 2 }}>
+                        <Text style={styles.tableCell} numberOfLines={1}>{user.name}</Text>
+                        <Text style={styles.tableCellSmall} numberOfLines={1}>{user.email}</Text>
+                      </View>
+                      <Text style={styles.tableCell}>{user.played}</Text>
+                      <Text style={styles.tableCell}>{user.correct}</Text>
+                      <Text style={[styles.tableCell, { color: user.accuracy >= 70 ? '#00FF87' : user.accuracy >= 40 ? '#FFB800' : '#FF6B6B' }]}>
+                        {user.accuracy}%
+                      </Text>
+                      <Text style={styles.tableCell}>{user.current_streak}🔥</Text>
+                    </View>
+                  ))}
+                  {statsData.user_stats.length === 0 && (
+                    <Text style={styles.noDataText}>No user activity on this date</Text>
+                  )}
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.loadStatsBtn} onPress={() => fetchStats()}>
+                <Text style={styles.loadStatsBtnText}>Load Stats</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
         {/* Reset Progress Tab */}
         {activeTab === 'reset' && (
           <View style={styles.section}>
