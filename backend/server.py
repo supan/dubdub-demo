@@ -37,6 +37,8 @@ class User(BaseModel):
     correct_answers: int = 0
     current_streak: int = 0
     best_streak: int = 0
+    selected_categories: Optional[List[str]] = None  # User's selected categories
+    onboarding_complete: bool = False  # Whether user has completed category selection
     created_at: datetime
 
 class SessionDataResponse(BaseModel):
