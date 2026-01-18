@@ -196,9 +196,6 @@ export default function OnboardingScreen() {
             );
           })
         )}
-            </TouchableOpacity>
-          );
-        })}
       </ScrollView>
 
       {/* Error Message */}
