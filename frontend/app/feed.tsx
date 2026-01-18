@@ -110,19 +110,6 @@ export default function FeedScreen() {
     });
   }, []);
 
-  const springBack = useCallback(() => {
-    Animated.spring(translateY, {
-      toValue: 0,
-      useNativeDriver: true,
-      tension: 100,
-      friction: 10,
-    }).start();
-    Animated.spring(opacity, {
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
-  }, []);
-
   const handleTransitionToNext = useCallback(() => {
     const idx = currentIndexRef.current;
     const items = playablesRef.current;
