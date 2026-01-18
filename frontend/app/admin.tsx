@@ -151,6 +151,26 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchStats = async (date?: string) => {
+    try {
+      setStatsLoading(true);
+      const targetDate = date || statsDate;
+      const response = await axios.get(`${BACKEND_URL}/api/admin/stats?date=${targetDate}`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
+      setStatsData(response.data);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  const handleDateChange = (newDate: string) => {
+    setStatsDate(newDate);
+    fetchStats(newDate);
+  };
+
   const handleResetProgress = async () => {
     if (!resetEmail) {
       setResetMessage('Please enter an email address');
