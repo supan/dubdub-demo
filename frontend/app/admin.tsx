@@ -72,6 +72,11 @@ export default function AdminDashboard() {
   const [bulkResult, setBulkResult] = useState<any>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+  // Stats State
+  const [statsDate, setStatsDate] = useState(new Date().toISOString().split('T')[0]);
+  const [statsData, setStatsData] = useState<any>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+
   const handleLogin = async () => {
     if (!username || !password) {
       setLoginError('Please enter username and password');
