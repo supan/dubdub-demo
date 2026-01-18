@@ -157,36 +157,45 @@ export default function OnboardingScreen() {
         contentContainerStyle={styles.gridContainer}
         showsVerticalScrollIndicator={false}
       >
-        {categories.map((category) => {
-          const isSelected = selectedCategories.includes(category.name);
-          return (
-            <TouchableOpacity
-              key={category.category_id}
-              style={[
-                styles.categoryCard,
-                isSelected && { borderColor: category.color, borderWidth: 3 }
-              ]}
-              onPress={() => toggleCategory(category.name)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.iconCircle, { backgroundColor: category.color + '20' }]}>
-                <Ionicons 
-                  name={getIconName(category.icon)} 
-                  size={32} 
-                  color={category.color} 
-                />
-              </View>
-              <Text style={styles.categoryName} numberOfLines={1}>
-                {category.name}
-              </Text>
-              <Text style={styles.playableCount}>
-                {category.playable_count} plays
-              </Text>
-              {isSelected && (
-                <View style={[styles.checkBadge, { backgroundColor: category.color }]}>
-                  <Ionicons name="checkmark" size={14} color="#FFF" />
+        {categories.length === 0 ? (
+          <View style={{ padding: 20, alignItems: 'center' }}>
+            <Text style={{ color: '#888' }}>Loading categories...</Text>
+          </View>
+        ) : (
+          categories.map((category) => {
+            const isSelected = selectedCategories.includes(category.name);
+            return (
+              <TouchableOpacity
+                key={category.category_id}
+                style={[
+                  styles.categoryCard,
+                  isSelected && { borderColor: category.color, borderWidth: 3 }
+                ]}
+                onPress={() => toggleCategory(category.name)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.iconCircle, { backgroundColor: category.color + '20' }]}>
+                  <Ionicons 
+                    name={getIconName(category.icon)} 
+                    size={32} 
+                    color={category.color} 
+                  />
                 </View>
-              )}
+                <Text style={styles.categoryName} numberOfLines={1}>
+                  {category.name}
+                </Text>
+                <Text style={styles.playableCount}>
+                  {category.playable_count} plays
+                </Text>
+                {isSelected && (
+                  <View style={[styles.checkBadge, { backgroundColor: category.color }]}>
+                    <Ionicons name="checkmark" size={14} color="#FFF" />
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })
+        )}
             </TouchableOpacity>
           );
         })}
