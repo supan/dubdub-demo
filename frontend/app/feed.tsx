@@ -49,6 +49,16 @@ export default function FeedScreen() {
   // Animated values
   const translateY = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(1)).current;
+  
+  // Refs to track current state for PanResponder (avoids stale closures)
+  const gameStateRef = useRef(gameState);
+  const currentIndexRef = useRef(currentIndex);
+  const playablesRef = useRef(playables);
+  
+  // Keep refs in sync with state
+  useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
+  useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
+  useEffect(() => { playablesRef.current = playables; }, [playables]);
 
   useEffect(() => {
     if (!sessionToken) {
