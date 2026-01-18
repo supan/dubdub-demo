@@ -7,7 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'expo-router';
@@ -16,8 +16,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = (SCREEN_WIDTH - 60) / 2;
 
 interface Category {
   category_id: string;
@@ -27,9 +25,31 @@ interface Category {
   playable_count: number;
 }
 
+// Icon mapping
+const ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
+  'flask': 'flask',
+  'globe': 'globe',
+  'time': 'time',
+  'book': 'book',
+  'football': 'football',
+  'musical-notes': 'musical-notes',
+  'color-palette': 'color-palette',
+  'film': 'film',
+  'hardware-chip': 'hardware-chip',
+  'restaurant': 'restaurant',
+  'leaf': 'leaf',
+  'paw': 'paw',
+  'calculator': 'calculator',
+  'language': 'language',
+  'help-circle': 'help-circle',
+};
+
 export default function OnboardingScreen() {
   const { user, sessionToken, refreshUser } = useAuth();
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const cardWidth = (width - 48) / 2 - 8;
+  
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,16 +57,14 @@ export default function OnboardingScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Wait for component to mount before navigation
-    const timer = setTimeout(() => {
+    const init = async () => {
       if (!sessionToken) {
-        router.replace('/');
+        setTimeout(() => router.replace('/'), 100);
         return;
       }
-      fetchCategories();
-    }, 100);
-    
-    return () => clearTimeout(timer);
+      await fetchCategories();
+    };
+    init();
   }, [sessionToken]);
 
   const fetchCategories = async () => {
@@ -55,7 +73,7 @@ export default function OnboardingScreen() {
       const response = await axios.get(`${BACKEND_URL}/api/categories`, {
         headers: { Authorization: `Bearer ${sessionToken}` },
       });
-      setCategories(response.data.categories);
+      setCategories(response.data.categories || []);
     } catch (err) {
       console.error('Error fetching categories:', err);
       setError('Failed to load categories');
@@ -98,110 +116,79 @@ export default function OnboardingScreen() {
     }
   };
 
-  const getIconName = (iconName: string): keyof typeof Ionicons.glyphMap => {
-    const iconMap: Record<string, keyof typeof Ionicons.glyphMap> = {
-      'flask': 'flask',
-      'globe': 'globe',
-      'time': 'time',
-      'book': 'book',
-      'football': 'football',
-      'musical-notes': 'musical-notes',
-      'color-palette': 'color-palette',
-      'film': 'film',
-      'hardware-chip': 'hardware-chip',
-      'restaurant': 'restaurant',
-      'leaf': 'leaf',
-      'paw': 'paw',
-      'calculator': 'calculator',
-      'language': 'language',
-      'help-circle': 'help-circle',
-    };
-    return iconMap[iconName] || 'help-circle';
+  const getIcon = (iconName: string): keyof typeof Ionicons.glyphMap => {
+    return ICON_MAP[iconName] || 'help-circle';
   };
 
   if (loading) {
     return (
       <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
-        <ActivityIndicator size="large" color="#00FF87" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#00FF87" />
+          <Text style={styles.loadingText}>Loading categories...</Text>
+        </View>
       </LinearGradient>
     );
   }
+
+  const canContinue = selectedCategories.length >= 3;
 
   return (
     <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          <Ionicons name="infinite" size={40} color="#00FF87" />
-        </View>
+        <Ionicons name="infinite" size={48} color="#00FF87" />
         <Text style={styles.title}>What interests you?</Text>
         <Text style={styles.subtitle}>
-          Select at least 3 categories to personalize your experience
+          Select at least 3 categories to personalize your feed
         </Text>
+        <View style={styles.counterBadge}>
+          <Text style={[styles.counterText, canContinue && styles.counterTextGreen]}>
+            {selectedCategories.length} / 3+ selected
+          </Text>
+        </View>
       </View>
 
-      {/* Selection Counter */}
-      <View style={styles.counterContainer}>
-        <Text style={[
-          styles.counterText,
-          selectedCategories.length >= 3 && styles.counterTextValid
-        ]}>
-          {selectedCategories.length} selected
-          {selectedCategories.length < 3 && ` (${3 - selectedCategories.length} more needed)`}
-        </Text>
-      </View>
-
-      {/* Categories Grid */}
+      {/* Categories List */}
       <ScrollView 
         style={styles.scrollView}
-        contentContainerStyle={styles.gridContainer}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {categories.length === 0 ? (
-          <View style={{ padding: 20, alignItems: 'center' }}>
-            <Text style={{ color: '#888' }}>Loading categories...</Text>
-          </View>
-        ) : (
-          categories.map((category) => {
+        <View style={styles.grid}>
+          {categories.map((category) => {
             const isSelected = selectedCategories.includes(category.name);
             return (
               <TouchableOpacity
                 key={category.category_id}
                 style={[
-                  styles.categoryCard,
-                  isSelected && { borderColor: category.color, borderWidth: 3 }
+                  styles.card,
+                  { width: cardWidth },
+                  isSelected && { borderColor: category.color }
                 ]}
                 onPress={() => toggleCategory(category.name)}
                 activeOpacity={0.7}
               >
-                <View style={[styles.iconCircle, { backgroundColor: category.color + '20' }]}>
-                  <Ionicons 
-                    name={getIconName(category.icon)} 
-                    size={32} 
-                    color={category.color} 
-                  />
-                </View>
-                <Text style={styles.categoryName} numberOfLines={1}>
-                  {category.name}
-                </Text>
-                <Text style={styles.playableCount}>
-                  {category.playable_count} plays
-                </Text>
                 {isSelected && (
-                  <View style={[styles.checkBadge, { backgroundColor: category.color }]}>
-                    <Ionicons name="checkmark" size={14} color="#FFF" />
+                  <View style={[styles.checkmark, { backgroundColor: category.color }]}>
+                    <Ionicons name="checkmark" size={12} color="#FFF" />
                   </View>
                 )}
+                <View style={[styles.iconBg, { backgroundColor: `${category.color}25` }]}>
+                  <Ionicons name={getIcon(category.icon)} size={28} color={category.color} />
+                </View>
+                <Text style={styles.cardTitle}>{category.name}</Text>
+                <Text style={styles.cardCount}>{category.playable_count} plays</Text>
               </TouchableOpacity>
             );
-          })
-        )}
+          })}
+        </View>
       </ScrollView>
 
-      {/* Error Message */}
+      {/* Error */}
       {error && (
-        <View style={styles.errorContainer}>
-          <Ionicons name="warning" size={18} color="#FF6B6B" />
+        <View style={styles.errorBox}>
+          <Ionicons name="alert-circle" size={16} color="#FF6B6B" />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
@@ -209,34 +196,27 @@ export default function OnboardingScreen() {
       {/* Continue Button */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[
-            styles.continueButton,
-            selectedCategories.length < 3 && styles.continueButtonDisabled
-          ]}
+          style={[styles.continueBtn, !canContinue && styles.continueBtnDisabled]}
           onPress={handleContinue}
-          disabled={selectedCategories.length < 3 || submitting}
-          activeOpacity={0.8}
+          disabled={!canContinue || submitting}
         >
           <LinearGradient
-            colors={selectedCategories.length >= 3 ? ['#00FF87', '#00D9FF'] : ['#3A3A4A', '#2A2A3A']}
+            colors={canContinue ? ['#00FF87', '#00D9FF'] : ['#333', '#222']}
             style={styles.continueGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
             {submitting ? (
-              <ActivityIndicator size="small" color="#0F0F1E" />
+              <ActivityIndicator size="small" color={canContinue ? '#0F0F1E' : '#666'} />
             ) : (
               <>
-                <Text style={[
-                  styles.continueText,
-                  selectedCategories.length < 3 && styles.continueTextDisabled
-                ]}>
+                <Text style={[styles.continueBtnText, !canContinue && { color: '#666' }]}>
                   Continue
                 </Text>
                 <Ionicons 
                   name="arrow-forward" 
-                  size={20} 
-                  color={selectedCategories.length >= 3 ? '#0F0F1E' : '#666'} 
+                  size={18} 
+                  color={canContinue ? '#0F0F1E' : '#666'} 
                 />
               </>
             )}
@@ -251,128 +231,131 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+  },
+  loadingText: {
+    color: '#888',
+    fontSize: 14,
+  },
   header: {
-    paddingTop: Platform.OS === 'ios' ? 60 : 50,
+    paddingTop: Platform.OS === 'ios' ? 60 : 48,
     paddingHorizontal: 24,
     alignItems: 'center',
-  },
-  logoContainer: {
-    marginBottom: 16,
+    paddingBottom: 16,
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '700',
-    color: '#FFFFFF',
-    textAlign: 'center',
+    color: '#FFF',
+    marginTop: 12,
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#888',
+    marginTop: 6,
     textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 22,
   },
-  counterContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    alignItems: 'center',
+  counterBadge: {
+    marginTop: 12,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
   counterText: {
-    fontSize: 14,
     color: '#FF6B6B',
+    fontSize: 13,
     fontWeight: '600',
   },
-  counterTextValid: {
+  counterTextGreen: {
     color: '#00FF87',
   },
   scrollView: {
     flex: 1,
   },
-  gridContainer: {
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    paddingBottom: 20,
-    justifyContent: 'space-between',
+    gap: 12,
   },
-  categoryCard: {
-    width: CARD_WIDTH,
+  card: {
     backgroundColor: '#1E1E2E',
     borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
-    marginHorizontal: 4,
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'transparent',
-    position: 'relative',
   },
-  iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  categoryName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  playableCount: {
-    fontSize: 12,
-    color: '#666',
-  },
-  checkBadge: {
+  checkmark: {
     position: 'absolute',
     top: 8,
     right: 8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  errorContainer: {
+  iconBg: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  cardTitle: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  cardCount: {
+    color: '#666',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    gap: 6,
     paddingVertical: 8,
-    gap: 8,
   },
   errorText: {
     color: '#FF6B6B',
-    fontSize: 14,
+    fontSize: 13,
   },
   footer: {
     paddingHorizontal: 24,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 24,
-    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 32 : 20,
+    paddingTop: 8,
   },
-  continueButton: {
+  continueBtn: {
     borderRadius: 12,
     overflow: 'hidden',
   },
-  continueButtonDisabled: {
-    opacity: 0.7,
+  continueBtnDisabled: {
+    opacity: 0.8,
   },
   continueGradient: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
+    alignItems: 'center',
     gap: 8,
+    paddingVertical: 16,
   },
-  continueText: {
+  continueBtnText: {
+    color: '#0F0F1E',
     fontSize: 16,
     fontWeight: '700',
-    color: '#0F0F1E',
-  },
-  continueTextDisabled: {
-    color: '#666',
   },
 });
