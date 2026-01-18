@@ -144,7 +144,7 @@ export default function OnboardingScreen() {
         </Text>
         <View style={styles.counterBadge}>
           <Text style={[styles.counterText, canContinue && styles.counterTextGreen]}>
-            {selectedCategories.length} / 3+ selected
+            {selectedCategories.length} selected
           </Text>
         </View>
       </View>
