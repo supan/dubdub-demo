@@ -13,6 +13,15 @@ export default function LoginScreen() {
   const router = useRouter();
   const [devLoading, setDevLoading] = useState(false);
 
+  const navigateAfterLogin = (userData: any) => {
+    // Check if user has completed onboarding
+    if (!userData.onboarding_complete) {
+      router.replace('/onboarding');
+    } else {
+      router.replace('/feed');
+    }
+  };
+
   const devLogin = async () => {
     try {
       setDevLoading(true);
@@ -27,7 +36,7 @@ export default function LoginScreen() {
       });
       
       setUser(userResponse.data);
-      router.replace('/feed');
+      navigateAfterLogin(userResponse.data);
     } catch (error) {
       console.error('Dev login error:', error);
       alert('Dev login failed');
@@ -38,7 +47,7 @@ export default function LoginScreen() {
 
   useEffect(() => {
     if (user && !loading) {
-      router.replace('/feed');
+      navigateAfterLogin(user);
     }
   }, [user, loading]);
 
