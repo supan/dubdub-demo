@@ -278,6 +278,97 @@ async def logout(authorization: Optional[str] = Header(None)):
     
     return {"message": "Logged out successfully"}
 
+# ==================== CATEGORY ENDPOINTS ====================
+
+# Default category icons and colors mapping
+CATEGORY_STYLES = {
+    "SCIENCE": {"icon": "flask", "color": "#4CAF50"},
+    "GEOGRAPHY": {"icon": "globe", "color": "#2196F3"},
+    "HISTORY": {"icon": "time", "color": "#FF9800"},
+    "LITERATURE": {"icon": "book", "color": "#9C27B0"},
+    "SPORTS": {"icon": "football", "color": "#F44336"},
+    "MUSIC": {"icon": "musical-notes", "color": "#E91E63"},
+    "ART": {"icon": "color-palette", "color": "#00BCD4"},
+    "MOVIES": {"icon": "film", "color": "#795548"},
+    "TECHNOLOGY": {"icon": "hardware-chip", "color": "#607D8B"},
+    "FOOD": {"icon": "restaurant", "color": "#FF5722"},
+    "NATURE": {"icon": "leaf", "color": "#8BC34A"},
+    "ANIMALS": {"icon": "paw", "color": "#FFEB3B"},
+    "MATHEMATICS": {"icon": "calculator", "color": "#3F51B5"},
+    "LANGUAGES": {"icon": "language", "color": "#009688"},
+    "GENERAL": {"icon": "help-circle", "color": "#9E9E9E"},
+}
+
+def get_category_style(category_name: str) -> dict:
+    """Get icon and color for a category"""
+    upper_name = category_name.upper()
+    if upper_name in CATEGORY_STYLES:
+        return CATEGORY_STYLES[upper_name]
+    # Default style for unknown categories
+    return {"icon": "help-circle", "color": "#00FF87"}
+
+@api_router.get("/categories")
+async def get_categories(current_user: User = Depends(require_auth)):
+    """Get all available categories with their counts, icons, and colors"""
+    try:
+        # Get distinct categories from playables
+        pipeline = [
+            {"$group": {"_id": "$category", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}}
+        ]
+        
+        category_counts = await db.playables.aggregate(pipeline).to_list(100)
+        
+        categories = []
+        for cat in category_counts:
+            cat_name = cat["_id"]
+            style = get_category_style(cat_name)
+            categories.append({
+                "category_id": cat_name.lower().replace(" ", "_"),
+                "name": cat_name,
+                "icon": style["icon"],
+                "color": style["color"],
+                "playable_count": cat["count"]
+            })
+        
+        return {"categories": categories}
+    except Exception as e:
+        logging.error(f"Error fetching categories: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/categories/select")
+async def select_categories(
+    request: CategorySelectionRequest,
+    current_user: User = Depends(require_auth)
+):
+    """Save user's selected categories (minimum 3 required)"""
+    try:
+        if len(request.categories) < 3:
+            raise HTTPException(
+                status_code=400, 
+                detail="Please select at least 3 categories"
+            )
+        
+        # Update user with selected categories
+        await db.users.update_one(
+            {"user_id": current_user.user_id},
+            {"$set": {
+                "selected_categories": request.categories,
+                "onboarding_complete": True
+            }}
+        )
+        
+        return {
+            "success": True,
+            "message": "Categories saved successfully",
+            "selected_categories": request.categories
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error saving categories: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ==================== PLAYABLE ENDPOINTS ====================
 
 @api_router.get("/playables/feed")
