@@ -37,7 +37,7 @@ interface Playable {
 type GameState = 'LOADING' | 'PLAYING' | 'SUBMITTING' | 'SHOWING_FEEDBACK' | 'TRANSITIONING';
 
 export default function FeedScreen() {
-  const { user, sessionToken, logout, refreshUser } = useAuth();
+  const { user, sessionToken, logout, refreshUser, loading } = useAuth();
   const router = useRouter();
   const [playables, setPlayables] = useState<Playable[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
