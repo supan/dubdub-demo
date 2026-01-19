@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   inputContainer: {
-    marginBottom: 20,
+    // No margin needed - answerSection handles spacing
   },
   textInput: {
     backgroundColor: '#1E1E2E',
