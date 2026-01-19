@@ -763,6 +763,7 @@ class AddPlayableRequest(BaseModel):
     video_url: Optional[str] = None
     options: Optional[List[str]] = None  # For MCQ (4 options)
     correct_answer: str
+    answer_explanation: Optional[str] = None  # Brief explanation of the answer
     difficulty: str = "medium"
 
 @api_router.post("/admin/login")
