@@ -1086,6 +1086,19 @@ export default function AdminDashboard() {
                   <Text style={styles.playableAnswer}>
                     Answer: {playable.correct_answer}
                   </Text>
+                  {playable.alternate_answers && playable.alternate_answers.length > 0 && (
+                    <Text style={styles.playableAlternates}>
+                      Also accepts: {playable.alternate_answers.join(', ')}
+                    </Text>
+                  )}
+                  {playable.answer_explanation && (
+                    <View style={styles.playableExplanationBox}>
+                      <Ionicons name="bulb" size={14} color="#FFB800" />
+                      <Text style={styles.playableExplanation} numberOfLines={3}>
+                        {playable.answer_explanation}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               ))
             )}
