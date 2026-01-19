@@ -1252,6 +1252,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: 8,
   },
+  hintText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: -4,
+    marginBottom: 8,
+    fontStyle: 'italic',
+  },
   typeSelector: {
     flexDirection: 'row',
     flexWrap: 'wrap',
