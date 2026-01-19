@@ -210,7 +210,17 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 8,
-    justifyContent: 'flex-start',
+  },
+  contentSection: {
+    // Top section - takes only needed space
+  },
+  answerSection: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  submitSection: {
+    paddingBottom: 8,
   },
   categoryBadge: {
     alignSelf: 'flex-start',
