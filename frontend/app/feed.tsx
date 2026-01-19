@@ -535,6 +535,30 @@ const styles = StyleSheet.create({
     color: '#888',
     marginBottom: 16,
   },
+  explanationContainer: {
+    backgroundColor: 'rgba(255, 184, 0, 0.1)',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    marginBottom: 8,
+    width: '100%',
+  },
+  explanationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  explanationLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FFB800',
+  },
+  explanationText: {
+    fontSize: 14,
+    color: '#CCC',
+    lineHeight: 20,
+  },
   streakBadge: {
     flexDirection: 'row',
     alignItems: 'center',
