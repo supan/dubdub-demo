@@ -220,9 +220,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Helper to save token to both state and storage
+  const saveSessionToken = async (token: string | null) => {
+    if (token) {
+      await AsyncStorage.setItem(SESSION_TOKEN_KEY, token);
+    } else {
+      await AsyncStorage.removeItem(SESSION_TOKEN_KEY);
+    }
+    setSessionToken(token);
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, sessionToken, login, logout, loading, refreshUser, setUser, setSessionToken }}
+      value={{ user, sessionToken, login, logout, loading, refreshUser, setUser, setSessionToken: saveSessionToken }}
     >
       {children}
     </AuthContext.Provider>
