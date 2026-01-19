@@ -267,7 +267,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    marginBottom: 20,
   },
   optionButton: {
     width: '48%',
