@@ -30,6 +30,7 @@ interface Playable {
   question: any;
   options?: string[];
   correct_answer: string;
+  alternate_answers?: string[];
   answer_explanation?: string;
   difficulty: string;
   created_at: string;
