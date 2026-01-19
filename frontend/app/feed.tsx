@@ -392,6 +392,19 @@ export default function FeedScreen() {
                 </Text>
               )}
               
+              {/* Answer Explanation */}
+              {feedbackData.answer_explanation && (
+                <View style={styles.explanationContainer}>
+                  <View style={styles.explanationHeader}>
+                    <Ionicons name="bulb" size={16} color="#FFB800" />
+                    <Text style={styles.explanationLabel}>Did you know?</Text>
+                  </View>
+                  <Text style={styles.explanationText}>
+                    {feedbackData.answer_explanation}
+                  </Text>
+                </View>
+              )}
+              
               <View style={styles.streakBadge}>
                 <Ionicons name="flame" size={18} color="#FF6B00" />
                 <Text style={styles.streakBadgeText}>
