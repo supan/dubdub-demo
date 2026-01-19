@@ -253,6 +253,9 @@ export default function AdminDashboard() {
       if (answerType === 'mcq') {
         payload.options = options.filter(o => o.trim());
       }
+      if (answerType === 'text_input' && alternateAnswers.trim()) {
+        payload.alternate_answers = alternateAnswers.split(',').map(a => a.trim()).filter(a => a);
+      }
 
       const response = await axios.post(
         `${BACKEND_URL}/api/admin/add-playable`,
@@ -270,6 +273,7 @@ export default function AdminDashboard() {
       setVideoUrl('');
       setOptions(['', '', '', '']);
       setCorrectAnswer('');
+      setAlternateAnswers('');
       setAnswerExplanation('');
       
       // Refresh playables list
