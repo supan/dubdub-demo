@@ -143,41 +143,49 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Category Badge */}
-      <View style={styles.categoryBadge}>
-        <LinearGradient
-          colors={['#00FF87', '#00D9FF']}
-          style={styles.categoryGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-        >
-          <Text style={styles.categoryText}>{playable.category}</Text>
-        </LinearGradient>
+      {/* Top Content Section */}
+      <View style={styles.contentSection}>
+        {/* Category Badge */}
+        <View style={styles.categoryBadge}>
+          <LinearGradient
+            colors={['#00FF87', '#00D9FF']}
+            style={styles.categoryGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Text style={styles.categoryText}>{playable.category}</Text>
+          </LinearGradient>
+        </View>
+
+        {/* Title */}
+        <Text style={styles.title} numberOfLines={2}>{playable.title}</Text>
+
+        {/* Media (Image/Video) */}
+        {renderMedia()}
+
+        {/* Question Text */}
+        {playable.question.text && (
+          <Text style={styles.questionText} numberOfLines={3}>
+            {playable.question.text}
+          </Text>
+        )}
       </View>
 
-      {/* Title */}
-      <Text style={styles.title} numberOfLines={2}>{playable.title}</Text>
+      {/* Answer Section - Takes remaining space */}
+      <View style={styles.answerSection}>
+        {/* Answer Options or Text Input */}
+        {renderMCQOptions()}
+        {renderTextInput()}
+      </View>
 
-      {/* Media (Image/Video) */}
-      {renderMedia()}
-
-      {/* Question Text */}
-      {playable.question.text && (
-        <Text style={styles.questionText} numberOfLines={3}>
-          {playable.question.text}
-        </Text>
-      )}
-
-      {/* Answer Options or Text Input */}
-      {renderMCQOptions()}
-      {renderTextInput()}
-
-      {/* Submit Button */}
-      <TouchableOpacity
-        style={styles.submitButton}
-        onPress={handleSubmit}
-        disabled={!canSubmit || submitting}
-        activeOpacity={0.8}
+      {/* Submit Button - Always at bottom */}
+      <View style={styles.submitSection}>
+        <TouchableOpacity
+          style={styles.submitButton}
+          onPress={handleSubmit}
+          disabled={!canSubmit || submitting}
+          activeOpacity={0.8}
+        >
       >
         <LinearGradient
           colors={canSubmit && !submitting ? ['#00FF87', '#00D9FF'] : ['#3A3A4A', '#2A2A3A']}
