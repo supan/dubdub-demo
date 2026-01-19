@@ -100,6 +100,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       );
 
       const { session_token, user: userData } = response.data;
+      
+      // Save token to persistent storage
+      await AsyncStorage.setItem(SESSION_TOKEN_KEY, session_token);
       setSessionToken(session_token);
       
       // Fetch full user data
