@@ -1383,6 +1383,27 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#00FF87',
   },
+  playableAlternates: {
+    fontSize: 11,
+    color: '#888',
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
+  playableExplanationBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(255, 184, 0, 0.1)',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 8,
+    gap: 8,
+  },
+  playableExplanation: {
+    flex: 1,
+    fontSize: 12,
+    color: '#CCC',
+    lineHeight: 18,
+  },
   // Bulk Upload Styles
   bulkStep: {
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
