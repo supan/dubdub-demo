@@ -772,6 +772,7 @@ class AddPlayableRequest(BaseModel):
     video_url: Optional[str] = None
     options: Optional[List[str]] = None  # For MCQ (4 options)
     correct_answer: str
+    alternate_answers: Optional[List[str]] = None  # For text_input: spelling variants, short forms
     answer_explanation: Optional[str] = None  # Brief explanation of the answer
     difficulty: str = "medium"
 
