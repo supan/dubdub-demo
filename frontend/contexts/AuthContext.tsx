@@ -118,9 +118,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const checkExistingSession = async () => {
-    // For now, we're using Authorization header, not cookies
-    // In a production app, you might store the token in SecureStore
-    setLoading(false);
+    try {
+      // Restore token from persistent storage
+      const storedToken = await AsyncStorage.getItem(SESSION_TOKEN_KEY);
+      
+      if (storedToken) {
+        // Verify the token is still valid by calling /api/auth/me
+        try {
+          const response = await axios.get(`${BACKEND_URL}/api/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${storedToken}`,
+            },
+          });
+          
+          // Token is valid, restore the session
+          setSessionToken(storedToken);
+          setUser(response.data);
+          console.log('Session restored successfully');
+        } catch (error: any) {
+          // Token is invalid or expired, clear it
+          console.log('Stored token invalid, clearing...');
+          await AsyncStorage.removeItem(SESSION_TOKEN_KEY);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking existing session:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const login = async () => {
