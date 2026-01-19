@@ -912,6 +912,7 @@ async def admin_add_playable(
             "question": question,
             "options": request.options if request.answer_type == "mcq" else None,
             "correct_answer": request.correct_answer,
+            "answer_explanation": request.answer_explanation,
             "difficulty": request.difficulty,
             "created_at": datetime.now(timezone.utc)
         }
