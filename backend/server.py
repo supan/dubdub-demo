@@ -167,7 +167,7 @@ async def dev_login():
         session_doc = {
             "user_id": user_id_to_use,
             "session_token": dev_session_token,
-            "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
+            "expires_at": datetime.now(timezone.utc) + timedelta(days=180),
             "created_at": datetime.now(timezone.utc)
         }
         await db.user_sessions.insert_one(session_doc)
@@ -242,7 +242,7 @@ async def exchange_session(request: Request, response: Response):
         session_doc = {
             "user_id": user_id_to_use,
             "session_token": session_data.session_token,
-            "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
+            "expires_at": datetime.now(timezone.utc) + timedelta(days=180),
             "created_at": datetime.now(timezone.utc)
         }
         await db.user_sessions.insert_one(session_doc)
