@@ -706,6 +706,25 @@ export default function AdminDashboard() {
               onChangeText={setCorrectAnswer}
             />
 
+            {/* Alternate Answers - Only for text_input */}
+            {answerType === 'text_input' && (
+              <>
+                <Text style={styles.label}>Alternate Answers (Optional)</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Comma-separated list of acceptable answers (e.g., 'Paris, paris, Paree')"
+                  placeholderTextColor="#666"
+                  value={alternateAnswers}
+                  onChangeText={setAlternateAnswers}
+                  multiline
+                  numberOfLines={2}
+                />
+                <Text style={styles.hintText}>
+                  Include common spelling mistakes, short forms, or variations
+                </Text>
+              </>
+            )}
+
             {/* Answer Explanation */}
             <Text style={styles.label}>Answer Explanation (Optional)</Text>
             <TextInput
