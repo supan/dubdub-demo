@@ -186,21 +186,21 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
           disabled={!canSubmit || submitting}
           activeOpacity={0.8}
         >
-      >
-        <LinearGradient
-          colors={canSubmit && !submitting ? ['#00FF87', '#00D9FF'] : ['#3A3A4A', '#2A2A3A']}
-          style={styles.submitGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-        >
-          <Text style={[
-            styles.submitButtonText,
-            { color: canSubmit && !submitting ? '#0F0F1E' : '#888' }
-          ]}>
-            {submitting ? 'Checking...' : 'Submit'}
-          </Text>
-        </LinearGradient>
-      </TouchableOpacity>
+          <LinearGradient
+            colors={canSubmit && !submitting ? ['#00FF87', '#00D9FF'] : ['#3A3A4A', '#2A2A3A']}
+            style={styles.submitGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Text style={[
+              styles.submitButtonText,
+              { color: canSubmit && !submitting ? '#0F0F1E' : '#888' }
+            ]}>
+              {submitting ? 'Checking...' : 'Submit'}
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
     </KeyboardAvoidingView>
   );
 }
