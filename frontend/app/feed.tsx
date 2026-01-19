@@ -61,6 +61,9 @@ export default function FeedScreen() {
   useEffect(() => { playablesRef.current = playables; }, [playables]);
 
   useEffect(() => {
+    // Don't navigate while auth is still loading
+    if (loading) return;
+    
     if (!sessionToken) {
       router.replace('/');
       return;
@@ -71,7 +74,7 @@ export default function FeedScreen() {
       setTotalPlayed(user?.total_played || 0);
       fetchPlayables();
     }
-  }, [sessionToken]);
+  }, [sessionToken, loading]);
 
   const fetchPlayables = async () => {
     try {
