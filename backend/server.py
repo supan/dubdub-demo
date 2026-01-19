@@ -1081,9 +1081,9 @@ SAMPLE_DATA = {
     ],
     "text_input": [
         {"category": "Geography", "title": "World Capitals", "question_text": "What is the capital of France?", 
-         "correct_answer": "Paris", "answer_explanation": "Paris has been the capital of France since 987 AD and is known as the 'City of Light'.", "difficulty": "easy"},
+         "correct_answer": "Paris", "alternate_answers": "paris, Paree, paree", "answer_explanation": "Paris has been the capital of France since 987 AD and is known as the 'City of Light'.", "difficulty": "easy"},
         {"category": "Literature", "title": "Famous Authors", "question_text": "Who wrote 'Hamlet'?", 
-         "correct_answer": "Shakespeare", "answer_explanation": "William Shakespeare wrote Hamlet around 1600. It's considered one of the greatest plays ever written.", "difficulty": "medium"},
+         "correct_answer": "Shakespeare", "alternate_answers": "William Shakespeare, shakespear, Shakespear, W. Shakespeare", "answer_explanation": "William Shakespeare wrote Hamlet around 1600. It's considered one of the greatest plays ever written.", "difficulty": "medium"},
     ],
     "image_mcq": [
         {"category": "Art", "title": "Famous Paintings", "image_url": "https://example.com/image1.jpg", 
@@ -1094,7 +1094,7 @@ SAMPLE_DATA = {
     "image_text_input": [
         {"category": "Geography", "title": "Landmarks", "image_url": "https://example.com/landmark.jpg", 
          "question_text": "Name this famous landmark", 
-         "correct_answer": "Eiffel Tower", "answer_explanation": "The Eiffel Tower was built in 1889 for the World's Fair and stands 330 meters tall in Paris.", "difficulty": "easy"},
+         "correct_answer": "Eiffel Tower", "alternate_answers": "eiffel tower, The Eiffel Tower, Tour Eiffel, Eiffel", "answer_explanation": "The Eiffel Tower was built in 1889 for the World's Fair and stands 330 meters tall in Paris.", "difficulty": "easy"},
     ],
     "video_mcq": [
         {"category": "Science", "title": "Physics Demo", "video_url": "https://example.com/video.mp4", 
@@ -1105,7 +1105,7 @@ SAMPLE_DATA = {
     "video_text_input": [
         {"category": "Music", "title": "Instruments", "video_url": "https://example.com/music.mp4", 
          "question_text": "What instrument is being played?", 
-         "correct_answer": "Piano", "answer_explanation": "The piano was invented around 1700 and is known for its wide range and expressive capabilities.", "difficulty": "easy"},
+         "correct_answer": "Piano", "alternate_answers": "piano, Grand Piano, grand piano, Keyboard", "answer_explanation": "The piano was invented around 1700 and is known for its wide range and expressive capabilities.", "difficulty": "easy"},
     ],
 }
 
