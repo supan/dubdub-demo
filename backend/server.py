@@ -1063,38 +1063,38 @@ SAMPLE_DATA = {
     "text_mcq": [
         {"category": "Science", "title": "Chemistry Basics", "question_text": "What is H2O commonly known as?", 
          "option_1": "Salt", "option_2": "Water", "option_3": "Sugar", "option_4": "Oil", 
-         "correct_answer": "Water", "difficulty": "easy"},
+         "correct_answer": "Water", "answer_explanation": "H2O is the chemical formula for water, consisting of 2 hydrogen atoms and 1 oxygen atom.", "difficulty": "easy"},
         {"category": "History", "title": "Ancient Civilizations", "question_text": "Which civilization built the pyramids?", 
          "option_1": "Roman", "option_2": "Greek", "option_3": "Egyptian", "option_4": "Persian", 
-         "correct_answer": "Egyptian", "difficulty": "easy"},
+         "correct_answer": "Egyptian", "answer_explanation": "The ancient Egyptians built the pyramids around 2500 BCE as tombs for their pharaohs.", "difficulty": "easy"},
     ],
     "text_input": [
         {"category": "Geography", "title": "World Capitals", "question_text": "What is the capital of France?", 
-         "correct_answer": "Paris", "difficulty": "easy"},
+         "correct_answer": "Paris", "answer_explanation": "Paris has been the capital of France since 987 AD and is known as the 'City of Light'.", "difficulty": "easy"},
         {"category": "Literature", "title": "Famous Authors", "question_text": "Who wrote 'Hamlet'?", 
-         "correct_answer": "Shakespeare", "difficulty": "medium"},
+         "correct_answer": "Shakespeare", "answer_explanation": "William Shakespeare wrote Hamlet around 1600. It's considered one of the greatest plays ever written.", "difficulty": "medium"},
     ],
     "image_mcq": [
         {"category": "Art", "title": "Famous Paintings", "image_url": "https://example.com/image1.jpg", 
          "question_text": "Who painted this artwork?", 
          "option_1": "Van Gogh", "option_2": "Picasso", "option_3": "Da Vinci", "option_4": "Monet", 
-         "correct_answer": "Da Vinci", "difficulty": "medium"},
+         "correct_answer": "Da Vinci", "answer_explanation": "Leonardo da Vinci was an Italian Renaissance polymath known for masterpieces like the Mona Lisa.", "difficulty": "medium"},
     ],
     "image_text_input": [
         {"category": "Geography", "title": "Landmarks", "image_url": "https://example.com/landmark.jpg", 
          "question_text": "Name this famous landmark", 
-         "correct_answer": "Eiffel Tower", "difficulty": "easy"},
+         "correct_answer": "Eiffel Tower", "answer_explanation": "The Eiffel Tower was built in 1889 for the World's Fair and stands 330 meters tall in Paris.", "difficulty": "easy"},
     ],
     "video_mcq": [
         {"category": "Science", "title": "Physics Demo", "video_url": "https://example.com/video.mp4", 
          "question_text": "What principle is demonstrated in this video?", 
          "option_1": "Gravity", "option_2": "Magnetism", "option_3": "Electricity", "option_4": "Sound", 
-         "correct_answer": "Gravity", "difficulty": "medium"},
+         "correct_answer": "Gravity", "answer_explanation": "Gravity is the force that attracts objects with mass toward each other, as demonstrated by falling objects.", "difficulty": "medium"},
     ],
     "video_text_input": [
         {"category": "Music", "title": "Instruments", "video_url": "https://example.com/music.mp4", 
          "question_text": "What instrument is being played?", 
-         "correct_answer": "Piano", "difficulty": "easy"},
+         "correct_answer": "Piano", "answer_explanation": "The piano was invented around 1700 and is known for its wide range and expressive capabilities.", "difficulty": "easy"},
     ],
 }
 
