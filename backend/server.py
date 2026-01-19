@@ -57,6 +57,7 @@ class Playable(BaseModel):
     question: Dict[str, Any]  # {text?, video_url?, image_base64?}
     options: Optional[List[str]] = None  # For MCQ
     correct_answer: str
+    answer_explanation: Optional[str] = None  # Brief explanation of the answer
     difficulty: str = "medium"
     created_at: datetime
 
