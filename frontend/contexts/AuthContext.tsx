@@ -198,6 +198,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Clear stored token
+      await AsyncStorage.removeItem(SESSION_TOKEN_KEY);
       setUser(null);
       setSessionToken(null);
     }
