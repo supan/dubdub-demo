@@ -1337,6 +1337,12 @@ async def bulk_upload_playables(
                 playable_id = f"play_{uuid.uuid4().hex[:12]}"
                 answer_explanation = row.get('answer_explanation', '').strip() or None
                 
+                # Parse alternate answers (comma-separated string to list)
+                alternate_answers_str = row.get('alternate_answers', '').strip()
+                alternate_answers = None
+                if alternate_answers_str and answer_type == "text_input":
+                    alternate_answers = [a.strip() for a in alternate_answers_str.split(',') if a.strip()]
+                
                 playable_doc = {
                     "playable_id": playable_id,
                     "type": playable_type,
@@ -1346,6 +1352,7 @@ async def bulk_upload_playables(
                     "question": question,
                     "options": options,
                     "correct_answer": correct_answer,
+                    "alternate_answers": alternate_answers,
                     "answer_explanation": answer_explanation,
                     "difficulty": difficulty if difficulty in ["easy", "medium", "hard"] else "medium",
                     "created_at": datetime.now(timezone.utc)
