@@ -464,6 +464,7 @@ async def submit_answer(
         return {
             "correct": is_correct,
             "correct_answer": playable["correct_answer"],
+            "answer_explanation": playable.get("answer_explanation"),
             "current_streak": new_current_streak,
             "best_streak": new_best_streak,
             "total_played": new_total_played,
