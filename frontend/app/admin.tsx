@@ -57,6 +57,7 @@ export default function AdminDashboard() {
   const [videoUrl, setVideoUrl] = useState('');
   const [options, setOptions] = useState(['', '', '', '']);
   const [correctAnswer, setCorrectAnswer] = useState('');
+  const [answerExplanation, setAnswerExplanation] = useState('');
   const [difficulty, setDifficulty] = useState('medium');
   const [addLoading, setAddLoading] = useState(false);
   const [addMessage, setAddMessage] = useState('');
