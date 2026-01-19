@@ -1324,6 +1324,8 @@ async def bulk_upload_playables(
                 
                 # Create playable document
                 playable_id = f"play_{uuid.uuid4().hex[:12]}"
+                answer_explanation = row.get('answer_explanation', '').strip() or None
+                
                 playable_doc = {
                     "playable_id": playable_id,
                     "type": playable_type,
@@ -1333,6 +1335,7 @@ async def bulk_upload_playables(
                     "question": question,
                     "options": options,
                     "correct_answer": correct_answer,
+                    "answer_explanation": answer_explanation,
                     "difficulty": difficulty if difficulty in ["easy", "medium", "hard"] else "medium",
                     "created_at": datetime.now(timezone.utc)
                 }
