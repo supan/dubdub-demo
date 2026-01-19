@@ -429,6 +429,14 @@ async def submit_answer(
         # Check answer
         is_correct = submission.answer.strip().lower() == playable["correct_answer"].strip().lower()
         
+        # Also check alternate answers for text input questions
+        if not is_correct and playable.get("alternate_answers"):
+            user_answer = submission.answer.strip().lower()
+            for alt in playable["alternate_answers"]:
+                if user_answer == alt.strip().lower():
+                    is_correct = True
+                    break
+        
         # Save progress
         progress = {
             "user_id": current_user.user_id,
