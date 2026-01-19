@@ -308,8 +308,6 @@ const styles = StyleSheet.create({
   submitButton: {
     borderRadius: 12,
     overflow: 'hidden',
-    marginTop: 'auto',
-    marginBottom: 8,
   },
   submitGradient: {
     flexDirection: 'row',
