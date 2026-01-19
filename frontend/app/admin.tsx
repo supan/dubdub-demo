@@ -701,6 +701,18 @@ export default function AdminDashboard() {
               onChangeText={setCorrectAnswer}
             />
 
+            {/* Answer Explanation */}
+            <Text style={styles.label}>Answer Explanation (Optional)</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Brief explanation shown after answering (e.g., 'Carbon dioxide is released during photosynthesis...')"
+              placeholderTextColor="#666"
+              value={answerExplanation}
+              onChangeText={setAnswerExplanation}
+              multiline
+              numberOfLines={3}
+            />
+
             {/* Difficulty */}
             <Text style={styles.label}>Difficulty</Text>
             <View style={styles.typeSelector}>
