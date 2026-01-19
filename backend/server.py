@@ -1116,17 +1116,17 @@ def get_template_columns(format_type: str) -> List[str]:
     if format_type == "text_mcq":
         return base_cols + ["question_text", "option_1", "option_2", "option_3", "option_4", "correct_answer", "answer_explanation"]
     elif format_type == "text_input":
-        return base_cols + ["question_text", "correct_answer", "answer_explanation"]
+        return base_cols + ["question_text", "correct_answer", "alternate_answers", "answer_explanation"]
     elif format_type == "image_mcq":
         return base_cols + ["image_url", "question_text", "option_1", "option_2", "option_3", "option_4", "correct_answer", "answer_explanation"]
     elif format_type == "image_text_input":
-        return base_cols + ["image_url", "question_text", "correct_answer", "answer_explanation"]
+        return base_cols + ["image_url", "question_text", "correct_answer", "alternate_answers", "answer_explanation"]
     elif format_type == "video_mcq":
         return base_cols + ["video_url", "question_text", "option_1", "option_2", "option_3", "option_4", "correct_answer", "answer_explanation"]
     elif format_type == "video_text_input":
-        return base_cols + ["video_url", "question_text", "correct_answer", "answer_explanation"]
+        return base_cols + ["video_url", "question_text", "correct_answer", "alternate_answers", "answer_explanation"]
     else:
-        return base_cols + ["question_text", "correct_answer", "answer_explanation"]
+        return base_cols + ["question_text", "correct_answer", "alternate_answers", "answer_explanation"]
 
 @api_router.get("/admin/template/{format_type}")
 async def download_template(format_type: str, file_format: str = "xlsx", _: bool = Depends(verify_admin_token)):
