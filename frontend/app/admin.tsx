@@ -242,6 +242,7 @@ export default function AdminDashboard() {
         category,
         title,
         correct_answer: correctAnswer,
+        answer_explanation: answerExplanation || undefined,
         difficulty,
       };
 
@@ -268,6 +269,7 @@ export default function AdminDashboard() {
       setVideoUrl('');
       setOptions(['', '', '', '']);
       setCorrectAnswer('');
+      setAnswerExplanation('');
       
       // Refresh playables list
       if (adminToken) fetchPlayables(adminToken);
