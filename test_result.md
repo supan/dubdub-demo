@@ -216,11 +216,11 @@ frontend:
   
   - task: "Playable Card Component"
     implemented: true
-    working: "NA"
+    working: false
     file: "components/PlayableCard.tsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -228,6 +228,9 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "Added immersive UI layout for image/video questions with full-screen media background, glassmorphism cards, and overlay content. Used HTML5 video element for web compatibility."
+      - working: false
+        agent: "testing"
+        comment: "Cannot fully test PlayableCard component due to navigation issue. Successfully tested standard layout (World War II TEXT question with MCQ) - works correctly with proper styling, category badge, and submit functionality. However, cannot access IMAGE questions to test immersive layout due to swipe navigation bug that redirects to login screen."
   
   - task: "Immersive UI Layout for Media Questions"
     implemented: true
