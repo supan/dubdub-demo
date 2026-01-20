@@ -453,46 +453,61 @@ export default function FeedScreen() {
                 playable={currentPlayable}
                 onAnswer={handleAnswer}
                 submitting={isSubmitting}
+                currentIndex={currentIndex}
+                totalCount={playables.length}
               />
             )}
           </>
         )}
       </Animated.View>
       
-      {/* Swipe hint */}
-      <View style={styles.swipeHintBottom}>
-        {showFeedback ? (
-          // Show a tappable Next button on feedback screen
-          <TouchableOpacity 
-            style={styles.nextButton}
-            onPress={() => {
-              animateToNext(handleTransitionToNext);
-            }}
-          >
-            <LinearGradient
-              colors={['#00FF87', '#00D9FF']}
-              style={styles.nextButtonGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <Text style={styles.nextButtonText}>Next</Text>
-              <Ionicons name="chevron-forward" size={20} color="#0F0F1E" />
-            </LinearGradient>
-          </TouchableOpacity>
-        ) : (
+      {/* Swipe hint & Progress - Hidden for immersive media questions (shown inside PlayableCard) */}
+      {(() => {
+        const isMediaQuestion = currentPlayable && 
+          (currentPlayable.type === 'video' || currentPlayable.type === 'video_text' || 
+           currentPlayable.type === 'image' || currentPlayable.type === 'image_text') &&
+          (currentPlayable.question?.video_url || currentPlayable.question?.image_base64 || currentPlayable.question?.image_url);
+        
+        // Don't show external hints for immersive media questions (except feedback)
+        if (isMediaQuestion && !showFeedback) return null;
+        
+        return (
           <>
-            <Ionicons name="chevron-up" size={24} color="#444" />
-            <Text style={styles.swipeHintText}>Swipe up to skip</Text>
+            <View style={styles.swipeHintBottom}>
+              {showFeedback ? (
+                <TouchableOpacity 
+                  style={styles.nextButton}
+                  onPress={() => {
+                    animateToNext(handleTransitionToNext);
+                  }}
+                >
+                  <LinearGradient
+                    colors={['#00FF87', '#00D9FF']}
+                    style={styles.nextButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <Text style={styles.nextButtonText}>Next</Text>
+                    <Ionicons name="chevron-forward" size={20} color="#0F0F1E" />
+                  </LinearGradient>
+                </TouchableOpacity>
+              ) : (
+                <>
+                  <Ionicons name="chevron-up" size={24} color="#444" />
+                  <Text style={styles.swipeHintText}>Swipe up to skip</Text>
+                </>
+              )}
+            </View>
+            {!showFeedback && (
+              <View style={styles.progressBar}>
+                <Text style={styles.progressText}>
+                  {currentIndex + 1} / {playables.length}
+                </Text>
+              </View>
+            )}
           </>
-        )}
-      </View>
-
-      {/* Progress indicator */}
-      <View style={styles.progressBar}>
-        <Text style={styles.progressText}>
-          {currentIndex + 1} / {playables.length}
-        </Text>
-      </View>
+        );
+      })()}
     </LinearGradient>
   );
 }
