@@ -261,8 +261,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Authentication Context and Flow"
-    - "Feed Screen with Playables"
+    - "Immersive UI Layout for Media Questions"
+    - "Playable Card Component"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -272,3 +272,5 @@ agent_communication:
     message: "Initial implementation complete. All backend endpoints created with Emergent Google Auth, playables feed, answer submission, and streak tracking. Frontend has complete auth flow, login screen, feed screen with playable cards supporting all content formats (video, image, text, combinations) and answer types (MCQ, text input), and animated feedback modal. Database seeded with 8 sample playables. Ready for comprehensive backend testing. Please test authentication flow, all API endpoints with proper authorization, and verify streak tracking logic."
   - agent: "testing"
     message: "Backend testing completed successfully. All core APIs working correctly: ✅ Authentication (auth/me, logout), ✅ Playables Feed (8 playables, pagination, filtering), ✅ Answer Submission (correct/incorrect validation, duplicate handling), ✅ User Stats (complete statistics), ✅ Streak Tracking (increment on correct, reset on incorrect). Minor issue: auth/session endpoint fails due to Emergent Auth service 404 (expected in test environment). All protected endpoints properly reject unauthorized access. Backend is fully functional for the playable feed app."
+  - agent: "main"
+    message: "Testing immersive UI layout for media questions. The layout has been implemented in PlayableCard.tsx with: 1) Full-screen media background (ImageBackground for images, HTML5 video for web + expo-av Video for native), 2) Top gradient with category badge, 3) Center glass card with question, 4) Bottom gradient with 2x2 MCQ grid using glassmorphism. ISSUES FOUND: Video doesn't load on web due to CORS/autoplay restrictions. Need to test IMAGE questions to verify layout. Test sequence: 1) Login with Dev Login, 2) Navigate to an IMAGE question (3rd in feed: 'World Capitals'), 3) Verify immersive layout shows with image background"
