@@ -74,11 +74,13 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
       );
     }
 
-    if ((type === 'image' || type === 'image_text') && question.image_base64) {
+    // Check for both image_base64 and image_url
+    const imageSource = question.image_base64 || question.image_url;
+    if ((type === 'image' || type === 'image_text') && imageSource) {
       return (
         <View style={styles.mediaContainer}>
           <Image
-            source={{ uri: question.image_base64 }}
+            source={{ uri: imageSource }}
             style={styles.media}
             resizeMode="cover"
           />
