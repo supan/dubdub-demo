@@ -23,6 +23,8 @@ interface PlayableCardProps {
   playable: any;
   onAnswer: (answer: string) => void;
   submitting: boolean;
+  currentIndex?: number;
+  totalCount?: number;
 }
 
 export default function PlayableCard({ playable, onAnswer, submitting }: PlayableCardProps) {
