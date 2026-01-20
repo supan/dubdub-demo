@@ -461,10 +461,30 @@ export default function FeedScreen() {
       
       {/* Swipe hint */}
       <View style={styles.swipeHintBottom}>
-        <Ionicons name="chevron-up" size={24} color="#444" />
-        <Text style={styles.swipeHintText}>
-          {showFeedback ? "Swipe up for next" : "Swipe up to skip"}
-        </Text>
+        {showFeedback ? (
+          // Show a tappable Next button on feedback screen
+          <TouchableOpacity 
+            style={styles.nextButton}
+            onPress={() => {
+              animateToNext(handleTransitionToNext);
+            }}
+          >
+            <LinearGradient
+              colors={['#00FF87', '#00D9FF']}
+              style={styles.nextButtonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Text style={styles.nextButtonText}>Next</Text>
+              <Ionicons name="chevron-forward" size={20} color="#0F0F1E" />
+            </LinearGradient>
+          </TouchableOpacity>
+        ) : (
+          <>
+            <Ionicons name="chevron-up" size={24} color="#444" />
+            <Text style={styles.swipeHintText}>Swipe up to skip</Text>
+          </>
+        )}
       </View>
 
       {/* Progress indicator */}
