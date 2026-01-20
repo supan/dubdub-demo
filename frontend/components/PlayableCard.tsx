@@ -185,11 +185,8 @@ export default function PlayableCard({ playable, onAnswer, submitting, currentIn
   function renderImmersiveOverlay() {
     return (
       <View style={styles.immersiveOverlay}>
-        {/* Top Gradient */}
-        <LinearGradient
-          colors={['rgba(0,0,0,0.6)', 'transparent']}
-          style={styles.topGradient}
-        >
+        {/* Top Section - Category & Title */}
+        <View style={styles.topSection}>
           {/* Category Badge */}
           <View style={styles.immersiveCategoryBadge}>
             <LinearGradient
@@ -201,24 +198,20 @@ export default function PlayableCard({ playable, onAnswer, submitting, currentIn
               <Text style={styles.categoryText}>{playable.category}</Text>
             </LinearGradient>
           </View>
-        </LinearGradient>
-
-        {/* Center Content - Question */}
-        <View style={styles.centerContent}>
-          <BlurView intensity={80} tint="dark" style={styles.glassCard}>
-            <Text style={styles.immersiveTitle}>{playable.title}</Text>
-            {playable.question.text && (
-              <Text style={styles.immersiveQuestion}>{playable.question.text}</Text>
-            )}
-          </BlurView>
+          {/* Title right after category */}
+          <Text style={styles.immersiveTitle}>{playable.title}</Text>
         </View>
 
-        {/* Bottom Section - Options & Submit */}
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0.95)']}
-          style={styles.bottomGradient}
-        >
-          {/* MCQ Options with Glassmorphism */}
+        {/* Bottom Half - Question, Options, Progress */}
+        <View style={styles.bottomHalf}>
+          {/* Question Card - More transparent */}
+          {playable.question.text && (
+            <View style={styles.questionCard}>
+              <Text style={styles.immersiveQuestion}>{playable.question.text}</Text>
+            </View>
+          )}
+
+          {/* MCQ Options with reduced opacity */}
           {playable.answer_type === 'mcq' && playable.options && (
             <View style={styles.immersiveOptionsGrid}>
               {playable.options.map((option: string, index: number) => (
@@ -231,11 +224,7 @@ export default function PlayableCard({ playable, onAnswer, submitting, currentIn
                   onPress={() => setSelectedOption(option)}
                   activeOpacity={0.8}
                 >
-                  <BlurView 
-                    intensity={selectedOption === option ? 100 : 60} 
-                    tint="dark" 
-                    style={styles.glassOptionInner}
-                  >
+                  <View style={styles.glassOptionInner}>
                     <Text
                       style={[
                         styles.glassOptionText,
@@ -245,16 +234,16 @@ export default function PlayableCard({ playable, onAnswer, submitting, currentIn
                     >
                       {option}
                     </Text>
-                  </BlurView>
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
           )}
 
-          {/* Text Input */}
+          {/* Text Input with reduced opacity */}
           {playable.answer_type === 'text_input' && (
             <View style={styles.immersiveInputContainer}>
-              <BlurView intensity={80} tint="dark" style={styles.glassInputWrapper}>
+              <View style={styles.glassInputWrapper}>
                 <TextInput
                   style={styles.immersiveTextInput}
                   placeholder="Type your answer..."
@@ -265,7 +254,7 @@ export default function PlayableCard({ playable, onAnswer, submitting, currentIn
                   returnKeyType="done"
                   onSubmitEditing={() => Keyboard.dismiss()}
                 />
-              </BlurView>
+              </View>
             </View>
           )}
 
@@ -273,7 +262,20 @@ export default function PlayableCard({ playable, onAnswer, submitting, currentIn
           <View style={styles.immersiveSubmitSection}>
             {renderSubmitButton()}
           </View>
-        </LinearGradient>
+
+          {/* Swipe hint & Progress - Overlaid on media */}
+          <View style={styles.overlayHints}>
+            <View style={styles.swipeHint}>
+              <Ionicons name="chevron-up" size={20} color="rgba(255,255,255,0.6)" />
+              <Text style={styles.swipeHintText}>Swipe up to skip</Text>
+            </View>
+            {totalCount > 0 && (
+              <Text style={styles.progressText}>
+                {currentIndex + 1} / {totalCount}
+              </Text>
+            )}
+          </View>
+        </View>
       </View>
     );
   }
