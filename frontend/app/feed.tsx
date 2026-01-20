@@ -94,6 +94,30 @@ export default function FeedScreen() {
     }
   };
 
+  // Check if dev user (for special testing features)
+  const isDevUser = user?.email?.includes('supanshah51191');
+
+  // Reset progress and reload (for dev testing)
+  const handleResetAndReload = async () => {
+    try {
+      setGameState('LOADING');
+      // Reset progress via API
+      await axios.post(
+        `${BACKEND_URL}/api/dev/reset-progress?email=${user?.email}`,
+        {},
+        { headers: { Authorization: `Bearer ${sessionToken}` } }
+      );
+      // Refresh user data
+      await refreshUser();
+      // Fetch fresh playables
+      setInitialLoadDone(false);
+      await fetchPlayables();
+    } catch (error) {
+      console.error('Error resetting progress:', error);
+      setGameState('PLAYING');
+    }
+  };
+
   const animateToNext = useCallback((onComplete: () => void) => {
     Animated.parallel([
       Animated.timing(translateY, {
