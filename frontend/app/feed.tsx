@@ -346,7 +346,7 @@ export default function FeedScreen() {
           
           <TouchableOpacity 
             style={styles.refreshBtn}
-            onPress={() => {
+            onPress={isDevUser ? handleResetAndReload : () => {
               setInitialLoadDone(false);
               fetchPlayables();
             }}
@@ -356,7 +356,9 @@ export default function FeedScreen() {
               style={styles.refreshGradient}
             >
               <Ionicons name="refresh" size={20} color="#0F0F1E" />
-              <Text style={styles.refreshText}>Check for New</Text>
+              <Text style={styles.refreshText}>
+                {isDevUser ? 'Reset & Reload' : 'Check for New'}
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
