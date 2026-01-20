@@ -64,9 +64,15 @@ export default function FeedScreen() {
     // Don't navigate while auth is still loading
     if (loading) return;
     
+    // Give a small buffer to ensure session is restored from storage
     if (!sessionToken) {
-      router.replace('/');
-      return;
+      // Only redirect if we've given time for the session to be restored
+      const timer = setTimeout(() => {
+        if (!sessionToken) {
+          router.replace('/');
+        }
+      }, 100);
+      return () => clearTimeout(timer);
     }
     
     if (!initialLoadDone) {
