@@ -225,6 +225,21 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "Created PlayableCard component supporting all content types (video, image, text, combinations) and answer types (MCQ, text input)"
+      - working: "NA"
+        agent: "main"
+        comment: "Added immersive UI layout for image/video questions with full-screen media background, glassmorphism cards, and overlay content. Used HTML5 video element for web compatibility."
+  
+  - task: "Immersive UI Layout for Media Questions"
+    implemented: true
+    working: "NA"
+    file: "components/PlayableCard.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented immersive full-screen layout for image/video questions. Layout shows: 1) Category badge at top with gradient fade, 2) Glass card with question in center, 3) MCQ options in 2x2 grid with glassmorphism at bottom, 4) Full media background. Using HTML5 video for web and expo-av Video for native."
   
   - task: "Feedback Modal Component"
     implemented: true
