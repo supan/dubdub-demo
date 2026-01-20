@@ -27,7 +27,7 @@ interface PlayableCardProps {
   totalCount?: number;
 }
 
-export default function PlayableCard({ playable, onAnswer, submitting }: PlayableCardProps) {
+export default function PlayableCard({ playable, onAnswer, submitting, currentIndex = 0, totalCount = 0 }: PlayableCardProps) {
   const [userAnswer, setUserAnswer] = useState('');
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
