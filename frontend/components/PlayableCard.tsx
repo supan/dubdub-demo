@@ -591,6 +591,4 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
     fontWeight: '600',
   },
-    paddingHorizontal: 4,
-  },
 });
