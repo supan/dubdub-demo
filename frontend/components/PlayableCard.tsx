@@ -91,15 +91,37 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
           </ImageBackground>
         ) : (
           <View style={styles.fullScreenMedia}>
-            <Video
-              source={{ uri: mediaSource.uri }}
-              style={StyleSheet.absoluteFillObject}
-              useNativeControls={false}
-              resizeMode={ResizeMode.COVER}
-              shouldPlay={true}
-              isLooping={true}
-              isMuted={false}
-            />
+            {Platform.OS === 'web' ? (
+              // Web: Use native HTML5 video for better compatibility
+              <View style={[StyleSheet.absoluteFillObject, styles.videoContainer]}>
+                <video
+                  src={mediaSource.uri}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                  }}
+                />
+              </View>
+            ) : (
+              // Native: Use expo-av Video
+              <Video
+                source={{ uri: mediaSource.uri }}
+                style={StyleSheet.absoluteFillObject}
+                useNativeControls={false}
+                resizeMode={ResizeMode.COVER}
+                shouldPlay={true}
+                isLooping={true}
+                isMuted={true}
+              />
+            )}
             {renderImmersiveOverlay()}
           </View>
         )}
