@@ -6,16 +6,13 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
   Keyboard,
+  ScrollView,
 } from 'react-native';
 import { Video, ResizeMode } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface PlayableCardProps {
   playable: any;
@@ -55,6 +52,15 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
     ? selectedOption !== null 
     : userAnswer.trim().length > 0;
 
+  // Check if this question has media
+  const hasMedia = () => {
+    const { question, type } = playable;
+    if ((type === 'video' || type === 'video_text') && question.video_url) return true;
+    const imageSource = question.image_base64 || question.image_url;
+    if ((type === 'image' || type === 'image_text') && imageSource) return true;
+    return false;
+  };
+
   const renderMedia = () => {
     const { question, type } = playable;
 
@@ -74,7 +80,6 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
       );
     }
 
-    // Check for both image_base64 and image_url
     const imageSource = question.image_base64 || question.image_url;
     if ((type === 'image' || type === 'image_text') && imageSource) {
       return (
@@ -145,8 +150,13 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Top Content Section */}
-      <View style={styles.contentSection}>
+      {/* Scrollable content area */}
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
         {/* Category Badge */}
         <View style={styles.categoryBadge}>
           <LinearGradient
@@ -162,25 +172,25 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
         {/* Title */}
         <Text style={styles.title} numberOfLines={2}>{playable.title}</Text>
 
-        {/* Media (Image/Video) */}
+        {/* Media (Image/Video) - only if present */}
         {renderMedia()}
 
         {/* Question Text */}
         {playable.question.text && (
-          <Text style={styles.questionText} numberOfLines={3}>
+          <Text style={styles.questionText}>
             {playable.question.text}
           </Text>
         )}
-      </View>
 
-      {/* Answer Section - Takes remaining space */}
-      <View style={styles.answerSection}>
+        {/* Spacer - adaptive based on whether there's media */}
+        <View style={hasMedia() ? styles.spacerSmall : styles.spacerLarge} />
+
         {/* Answer Options or Text Input */}
         {renderMCQOptions()}
         {renderTextInput()}
-      </View>
+      </ScrollView>
 
-      {/* Submit Button - Always at bottom */}
+      {/* Submit Button - Fixed at bottom */}
       <View style={styles.submitSection}>
         <TouchableOpacity
           style={styles.submitButton}
@@ -210,19 +220,14 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 8,
-  },
-  contentSection: {
-    // Top section - takes only needed space
-  },
-  answerSection: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingVertical: 8,
-  },
-  submitSection: {
-    paddingBottom: 8,
+    paddingBottom: 16,
   },
   categoryBadge: {
     alignSelf: 'flex-start',
@@ -241,15 +246,15 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '700',
     color: '#FFFFFF',
     marginBottom: 16,
-    lineHeight: 28,
+    lineHeight: 30,
   },
   mediaContainer: {
     width: '100%',
-    height: 160,
+    height: 180,
     backgroundColor: '#1E1E2E',
     borderRadius: 12,
     overflow: 'hidden',
@@ -260,24 +265,29 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   questionText: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#E0E0E0',
-    lineHeight: 24,
-    marginBottom: 20,
+    lineHeight: 26,
+  },
+  spacerSmall: {
+    height: 20,
+  },
+  spacerLarge: {
+    height: 32,
   },
   optionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 12,
   },
   optionButton: {
-    width: '48%',
+    width: '47%',
     backgroundColor: '#1E1E2E',
     borderRadius: 12,
-    padding: 14,
+    padding: 16,
     borderWidth: 2,
     borderColor: '#2A2A3E',
-    minHeight: 56,
+    minHeight: 60,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -286,7 +296,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(91, 141, 239, 0.15)',
   },
   optionText: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#E0E0E0',
     textAlign: 'center',
     fontWeight: '500',
@@ -296,7 +306,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   inputContainer: {
-    // No margin needed - answerSection handles spacing
+    marginTop: 8,
   },
   textInput: {
     backgroundColor: '#1E1E2E',
@@ -306,6 +316,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     borderWidth: 2,
     borderColor: '#2A2A3E',
+  },
+  submitSection: {
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+    paddingTop: 12,
   },
   submitButton: {
     borderRadius: 12,
