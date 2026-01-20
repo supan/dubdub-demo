@@ -231,15 +231,18 @@ frontend:
   
   - task: "Immersive UI Layout for Media Questions"
     implemented: true
-    working: "NA"
+    working: false
     file: "components/PlayableCard.tsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented immersive full-screen layout for image/video questions. Layout shows: 1) Category badge at top with gradient fade, 2) Glass card with question in center, 3) MCQ options in 2x2 grid with glassmorphism at bottom, 4) Full media background. Using HTML5 video for web and expo-av Video for native."
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL ISSUE: Cannot access IMAGE question (World Capitals) to test immersive layout. Swipe navigation appears broken - swiping takes user back to login screen instead of progressing through questions. Verified that World Capitals IMAGE question exists in seed data (3rd question, image type with text_input). The immersive layout code is implemented correctly in PlayableCard.tsx but cannot be tested due to navigation issue. Need to fix swipe gesture handling in feed.tsx PanResponder."
   
   - task: "Feedback Modal Component"
     implemented: true
