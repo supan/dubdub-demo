@@ -10,9 +10,14 @@ import {
   Platform,
   Keyboard,
   ScrollView,
+  Dimensions,
+  ImageBackground,
 } from 'react-native';
 import { Video, ResizeMode } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface PlayableCardProps {
   playable: any;
@@ -53,50 +58,203 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
     : userAnswer.trim().length > 0;
 
   // Check if this question has media
-  const hasMedia = () => {
+  const getMediaSource = () => {
     const { question, type } = playable;
-    if ((type === 'video' || type === 'video_text') && question.video_url) return true;
-    const imageSource = question.image_base64 || question.image_url;
-    if ((type === 'image' || type === 'image_text') && imageSource) return true;
-    return false;
-  };
-
-  const renderMedia = () => {
-    const { question, type } = playable;
-
     if ((type === 'video' || type === 'video_text') && question.video_url) {
-      return (
-        <View style={styles.mediaContainer}>
-          <Video
-            source={{ uri: question.video_url }}
-            style={styles.media}
-            useNativeControls
-            resizeMode={ResizeMode.CONTAIN}
-            shouldPlay={true}
-            isLooping={false}
-            isMuted={false}
-          />
-        </View>
-      );
+      return { type: 'video', uri: question.video_url };
     }
-
     const imageSource = question.image_base64 || question.image_url;
     if ((type === 'image' || type === 'image_text') && imageSource) {
-      return (
-        <View style={styles.mediaContainer}>
-          <Image
-            source={{ uri: imageSource }}
-            style={styles.media}
-            resizeMode="cover"
-          />
-        </View>
-      );
+      return { type: 'image', uri: imageSource };
     }
-
     return null;
   };
 
-  const renderMCQOptions = () => {
+  const mediaSource = getMediaSource();
+  const isImmersive = mediaSource !== null;
+
+  // ============ IMMERSIVE LAYOUT (Image/Video) ============
+  if (isImmersive) {
+    return (
+      <KeyboardAvoidingView 
+        style={styles.immersiveContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        {/* Full-screen Media Background */}
+        {mediaSource.type === 'image' ? (
+          <ImageBackground
+            source={{ uri: mediaSource.uri }}
+            style={styles.fullScreenMedia}
+            resizeMode="cover"
+          >
+            {renderImmersiveOverlay()}
+          </ImageBackground>
+        ) : (
+          <View style={styles.fullScreenMedia}>
+            <Video
+              source={{ uri: mediaSource.uri }}
+              style={StyleSheet.absoluteFillObject}
+              useNativeControls={false}
+              resizeMode={ResizeMode.COVER}
+              shouldPlay={true}
+              isLooping={true}
+              isMuted={false}
+            />
+            {renderImmersiveOverlay()}
+          </View>
+        )}
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // ============ STANDARD LAYOUT (Text only) ============
+  return (
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        {/* Category Badge */}
+        <View style={styles.categoryBadge}>
+          <LinearGradient
+            colors={['#00FF87', '#00D9FF']}
+            style={styles.categoryGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Text style={styles.categoryText}>{playable.category}</Text>
+          </LinearGradient>
+        </View>
+
+        {/* Title */}
+        <Text style={styles.title} numberOfLines={2}>{playable.title}</Text>
+
+        {/* Question Text */}
+        {playable.question.text && (
+          <Text style={styles.questionText}>
+            {playable.question.text}
+          </Text>
+        )}
+
+        {/* Spacer */}
+        <View style={styles.spacerLarge} />
+
+        {/* Answer Options or Text Input */}
+        {renderMCQOptions()}
+        {renderTextInput()}
+      </ScrollView>
+
+      {/* Submit Button */}
+      <View style={styles.submitSection}>
+        {renderSubmitButton()}
+      </View>
+    </KeyboardAvoidingView>
+  );
+
+  // ============ RENDER FUNCTIONS ============
+
+  function renderImmersiveOverlay() {
+    return (
+      <View style={styles.immersiveOverlay}>
+        {/* Top Gradient */}
+        <LinearGradient
+          colors={['rgba(0,0,0,0.6)', 'transparent']}
+          style={styles.topGradient}
+        >
+          {/* Category Badge */}
+          <View style={styles.immersiveCategoryBadge}>
+            <LinearGradient
+              colors={['#00FF87', '#00D9FF']}
+              style={styles.categoryGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Text style={styles.categoryText}>{playable.category}</Text>
+            </LinearGradient>
+          </View>
+        </LinearGradient>
+
+        {/* Center Content - Question */}
+        <View style={styles.centerContent}>
+          <BlurView intensity={80} tint="dark" style={styles.glassCard}>
+            <Text style={styles.immersiveTitle}>{playable.title}</Text>
+            {playable.question.text && (
+              <Text style={styles.immersiveQuestion}>{playable.question.text}</Text>
+            )}
+          </BlurView>
+        </View>
+
+        {/* Bottom Section - Options & Submit */}
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0.95)']}
+          style={styles.bottomGradient}
+        >
+          {/* MCQ Options with Glassmorphism */}
+          {playable.answer_type === 'mcq' && playable.options && (
+            <View style={styles.immersiveOptionsGrid}>
+              {playable.options.map((option: string, index: number) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.glassOption,
+                    selectedOption === option && styles.glassOptionSelected,
+                  ]}
+                  onPress={() => setSelectedOption(option)}
+                  activeOpacity={0.8}
+                >
+                  <BlurView 
+                    intensity={selectedOption === option ? 100 : 60} 
+                    tint="dark" 
+                    style={styles.glassOptionInner}
+                  >
+                    <Text
+                      style={[
+                        styles.glassOptionText,
+                        selectedOption === option && styles.glassOptionTextSelected,
+                      ]}
+                      numberOfLines={2}
+                    >
+                      {option}
+                    </Text>
+                  </BlurView>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {/* Text Input */}
+          {playable.answer_type === 'text_input' && (
+            <View style={styles.immersiveInputContainer}>
+              <BlurView intensity={80} tint="dark" style={styles.glassInputWrapper}>
+                <TextInput
+                  style={styles.immersiveTextInput}
+                  placeholder="Type your answer..."
+                  placeholderTextColor="rgba(255,255,255,0.5)"
+                  value={userAnswer}
+                  onChangeText={setUserAnswer}
+                  autoCapitalize="words"
+                  returnKeyType="done"
+                  onSubmitEditing={() => Keyboard.dismiss()}
+                />
+              </BlurView>
+            </View>
+          )}
+
+          {/* Submit Button */}
+          <View style={styles.immersiveSubmitSection}>
+            {renderSubmitButton()}
+          </View>
+        </LinearGradient>
+      </View>
+    );
+  }
+
+  function renderMCQOptions() {
     if (playable.answer_type !== 'mcq' || !playable.options) return null;
 
     return (
@@ -124,9 +282,9 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
         ))}
       </View>
     );
-  };
+  }
 
-  const renderTextInput = () => {
+  function renderTextInput() {
     if (playable.answer_type !== 'text_input') return null;
 
     return (
@@ -143,81 +301,36 @@ export default function PlayableCard({ playable, onAnswer, submitting }: Playabl
         />
       </View>
     );
-  };
+  }
 
-  return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      {/* Scrollable content area */}
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        bounces={false}
+  function renderSubmitButton() {
+    return (
+      <TouchableOpacity
+        style={styles.submitButton}
+        onPress={handleSubmit}
+        disabled={!canSubmit || submitting}
+        activeOpacity={0.8}
       >
-        {/* Category Badge */}
-        <View style={styles.categoryBadge}>
-          <LinearGradient
-            colors={['#00FF87', '#00D9FF']}
-            style={styles.categoryGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <Text style={styles.categoryText}>{playable.category}</Text>
-          </LinearGradient>
-        </View>
-
-        {/* Title */}
-        <Text style={styles.title} numberOfLines={2}>{playable.title}</Text>
-
-        {/* Media (Image/Video) - only if present */}
-        {renderMedia()}
-
-        {/* Question Text */}
-        {playable.question.text && (
-          <Text style={styles.questionText}>
-            {playable.question.text}
-          </Text>
-        )}
-
-        {/* Spacer - adaptive based on whether there's media */}
-        <View style={hasMedia() ? styles.spacerSmall : styles.spacerLarge} />
-
-        {/* Answer Options or Text Input */}
-        {renderMCQOptions()}
-        {renderTextInput()}
-      </ScrollView>
-
-      {/* Submit Button - Fixed at bottom */}
-      <View style={styles.submitSection}>
-        <TouchableOpacity
-          style={styles.submitButton}
-          onPress={handleSubmit}
-          disabled={!canSubmit || submitting}
-          activeOpacity={0.8}
+        <LinearGradient
+          colors={canSubmit && !submitting ? ['#00FF87', '#00D9FF'] : ['#3A3A4A', '#2A2A3A']}
+          style={styles.submitGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
         >
-          <LinearGradient
-            colors={canSubmit && !submitting ? ['#00FF87', '#00D9FF'] : ['#3A3A4A', '#2A2A3A']}
-            style={styles.submitGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <Text style={[
-              styles.submitButtonText,
-              { color: canSubmit && !submitting ? '#0F0F1E' : '#888' }
-            ]}>
-              {submitting ? 'Checking...' : 'Submit'}
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
-  );
+          <Text style={[
+            styles.submitButtonText,
+            { color: canSubmit && !submitting ? '#0F0F1E' : '#888' }
+          ]}>
+            {submitting ? 'Checking...' : 'Submit'}
+          </Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
+  // ============ STANDARD LAYOUT STYLES ============
   container: {
     flex: 1,
   },
@@ -252,25 +365,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     lineHeight: 30,
   },
-  mediaContainer: {
-    width: '100%',
-    height: 180,
-    backgroundColor: '#1E1E2E',
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginBottom: 16,
-  },
-  media: {
-    width: '100%',
-    height: '100%',
-  },
   questionText: {
     fontSize: 18,
     color: '#E0E0E0',
     lineHeight: 26,
-  },
-  spacerSmall: {
-    height: 20,
   },
   spacerLarge: {
     height: 32,
@@ -336,5 +434,115 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: 16,
     fontWeight: '700',
+  },
+
+  // ============ IMMERSIVE LAYOUT STYLES ============
+  immersiveContainer: {
+    flex: 1,
+  },
+  fullScreenMedia: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  immersiveOverlay: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  topGradient: {
+    paddingTop: Platform.OS === 'ios' ? 50 : 40,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  immersiveCategoryBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  centerContent: {
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  glassCard: {
+    borderRadius: 20,
+    padding: 20,
+    width: '100%',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  immersiveTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 8,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  immersiveQuestion: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+    lineHeight: 22,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  bottomGradient: {
+    paddingTop: 40,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 16,
+    paddingHorizontal: 16,
+  },
+  immersiveOptionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 16,
+  },
+  glassOption: {
+    width: '48%',
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  glassOptionSelected: {
+    borderColor: '#00FF87',
+    borderWidth: 2,
+  },
+  glassOptionInner: {
+    padding: 16,
+    minHeight: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  glassOptionText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  glassOptionTextSelected: {
+    color: '#00FF87',
+    fontWeight: '700',
+  },
+  immersiveInputContainer: {
+    marginBottom: 16,
+  },
+  glassInputWrapper: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  immersiveTextInput: {
+    padding: 16,
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  immersiveSubmitSection: {
+    paddingHorizontal: 4,
   },
 });
