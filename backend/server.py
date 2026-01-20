@@ -399,7 +399,9 @@ async def get_playables_feed(
             query["playable_id"] = {"$nin": answered_ids}
         
         # Filter by user's selected categories if they have completed onboarding
-        if current_user.selected_categories and len(current_user.selected_categories) > 0:
+        # SKIP category filter for dev users (email contains "supanshah51191")
+        is_dev_user = "supanshah51191" in current_user.email
+        if not is_dev_user and current_user.selected_categories and len(current_user.selected_categories) > 0:
             query["category"] = {"$in": current_user.selected_categories}
         
         playables = await db.playables.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
