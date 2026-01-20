@@ -269,7 +269,8 @@ test_plan:
   current_focus:
     - "Immersive UI Layout for Media Questions"
     - "Playable Card Component"
-  stuck_tasks: []
+  stuck_tasks:
+    - "Immersive UI Layout for Media Questions"
   test_all: false
   test_priority: "high_first"
 
