@@ -467,6 +467,9 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  videoContainer: {
+    backgroundColor: '#000',
+  },
   immersiveOverlay: {
     flex: 1,
     justifyContent: 'space-between',
