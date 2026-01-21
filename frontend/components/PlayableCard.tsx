@@ -588,10 +588,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   glassOptionText: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.9)',
+    fontSize: 15,
+    color: '#FFFFFF',
     textAlign: 'center',
-    fontWeight: '600',
+    fontWeight: '700',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   glassOptionTextSelected: {
     color: '#00FF87',
