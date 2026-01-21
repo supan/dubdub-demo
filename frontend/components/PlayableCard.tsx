@@ -485,11 +485,29 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 12 : 8,
     paddingHorizontal: 16,
   },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   immersiveCategoryBadge: {
     alignSelf: 'flex-start',
     borderRadius: 12,
     overflow: 'hidden',
-    marginBottom: 8,
+  },
+  progressBadge: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  progressBadgeText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   immersiveTitle: {
     fontSize: 20,
@@ -503,7 +521,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     paddingHorizontal: 16,
-    paddingBottom: Platform.OS === 'ios' ? 8 : 4,
+    paddingBottom: Platform.OS === 'ios' ? 16 : 12,
   },
   questionCard: {
     backgroundColor: 'rgba(0,0,0,0.35)',
@@ -574,24 +592,15 @@ const styles = StyleSheet.create({
   immersiveSubmitSection: {
     marginBottom: 8,
   },
-  overlayHints: {
+  swipeHintOverlay: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
     paddingVertical: 8,
   },
-  swipeHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  swipeHintText: {
+  swipeHintOverlayText: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
-  },
-  progressText: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
-    fontWeight: '600',
+    color: 'rgba(255,255,255,0.5)',
   },
 });
