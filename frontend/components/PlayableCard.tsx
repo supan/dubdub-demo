@@ -184,18 +184,28 @@ export default function PlayableCard({ playable, onAnswer, submitting, currentIn
   function renderImmersiveOverlay() {
     return (
       <View style={styles.immersiveOverlay}>
-        {/* Top Section - Category & Title */}
+        {/* Top Section - Category & Progress on same line, Title below */}
         <View style={styles.topSection}>
-          {/* Category Badge */}
-          <View style={styles.immersiveCategoryBadge}>
-            <LinearGradient
-              colors={['#00FF87', '#00D9FF']}
-              style={styles.categoryGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <Text style={styles.categoryText}>{playable.category}</Text>
-            </LinearGradient>
+          <View style={styles.topRow}>
+            {/* Category Badge */}
+            <View style={styles.immersiveCategoryBadge}>
+              <LinearGradient
+                colors={['#00FF87', '#00D9FF']}
+                style={styles.categoryGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.categoryText}>{playable.category}</Text>
+              </LinearGradient>
+            </View>
+            {/* Progress Badge - Black with white text */}
+            {totalCount > 0 && (
+              <View style={styles.progressBadge}>
+                <Text style={styles.progressBadgeText}>
+                  {currentIndex + 1} / {totalCount}
+                </Text>
+              </View>
+            )}
           </View>
           {/* Title right after category */}
           <Text style={styles.immersiveTitle}>{playable.title}</Text>
