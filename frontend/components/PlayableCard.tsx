@@ -11,7 +11,6 @@ import {
   Keyboard,
   ScrollView,
   Dimensions,
-  ImageBackground,
 } from 'react-native';
 import { Video, ResizeMode } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
