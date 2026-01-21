@@ -532,12 +532,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   immersiveTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '900',
     color: '#FFFFFF',
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 6,
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
   },
   bottomHalf: {
     flex: 1,
