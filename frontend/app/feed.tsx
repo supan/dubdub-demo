@@ -448,8 +448,8 @@ export default function FeedScreen() {
                 </Text>
               )}
               
-              {/* Answer Explanation */}
-              {feedbackData.answer_explanation && (
+              {/* Answer Explanation - Only show when incorrect */}
+              {!feedbackData.correct && feedbackData.answer_explanation && (
                 <View style={styles.explanationContainer}>
                   <View style={styles.explanationHeader}>
                     <Ionicons name="bulb" size={16} color="#FFB800" />
