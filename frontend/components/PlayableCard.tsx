@@ -476,14 +476,18 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  backgroundImage: {
+    flex: 1,
+  },
   videoContainer: {
     backgroundColor: '#000',
   },
   immersiveOverlay: {
     flex: 1,
+    zIndex: 10,
   },
   topSection: {
-    paddingTop: Platform.OS === 'ios' ? 12 : 8,
+    paddingTop: Platform.OS === 'ios' ? 20 : 16,
     paddingHorizontal: 16,
   },
   topRow: {
@@ -498,12 +502,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   progressBadge: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   progressBadgeText: {
     fontSize: 14,
@@ -601,7 +605,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   swipeHintOverlayText: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.5)',
+    fontSize: 13,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.6)',
   },
 });
