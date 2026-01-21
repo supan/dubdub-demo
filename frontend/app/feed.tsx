@@ -565,6 +565,24 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  progressBadgeHeader: {
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+  },
+  progressBadgeHeaderText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#00FF87',
+  },
   logoutButton: {
     padding: 8,
   },
