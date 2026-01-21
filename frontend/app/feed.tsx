@@ -500,7 +500,7 @@ export default function FeedScreen() {
         )}
       </Animated.View>
       
-      {/* Swipe hint & Progress - Hidden for immersive media questions (shown inside PlayableCard) */}
+      {/* Swipe hint - Only show for text questions (immersive layouts have their own) */}
       {(() => {
         const isMediaQuestion = currentPlayable && 
           (currentPlayable.type === 'video' || currentPlayable.type === 'video_text' || 
@@ -511,21 +511,12 @@ export default function FeedScreen() {
         if (isMediaQuestion) return null;
         
         return (
-          <>
-            {/* Swipe hint at bottom */}
-            <View style={styles.swipeHintBottom}>
-              <Ionicons name="chevron-up" size={24} color="#444" />
-              <Text style={styles.swipeHintText}>
-                {showFeedback ? "Swipe up for next" : "Swipe up to skip"}
-              </Text>
-            </View>
-            {/* Progress indicator */}
-            <View style={styles.progressBar}>
-              <Text style={styles.progressText}>
-                {currentIndex + 1} / {playables.length}
-              </Text>
-            </View>
-          </>
+          <View style={styles.swipeHintBottom}>
+            <Ionicons name="chevron-up" size={24} color="#444" />
+            <Text style={styles.swipeHintText}>
+              {showFeedback ? "Swipe up for next" : "Swipe up to skip"}
+            </Text>
+          </View>
         );
       })()}
     </LinearGradient>
