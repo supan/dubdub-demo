@@ -468,43 +468,24 @@ export default function FeedScreen() {
            currentPlayable.type === 'image' || currentPlayable.type === 'image_text') &&
           (currentPlayable.question?.video_url || currentPlayable.question?.image_base64 || currentPlayable.question?.image_url);
         
-        // Don't show external hints for immersive media questions (except feedback)
-        if (isMediaQuestion && !showFeedback) return null;
+        // Don't show external hints for immersive media questions
+        if (isMediaQuestion) return null;
         
         return (
           <>
+            {/* Swipe hint at bottom */}
             <View style={styles.swipeHintBottom}>
-              {showFeedback ? (
-                <TouchableOpacity 
-                  style={styles.nextButton}
-                  onPress={() => {
-                    animateToNext(handleTransitionToNext);
-                  }}
-                >
-                  <LinearGradient
-                    colors={['#00FF87', '#00D9FF']}
-                    style={styles.nextButtonGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                  >
-                    <Text style={styles.nextButtonText}>Next</Text>
-                    <Ionicons name="chevron-forward" size={20} color="#0F0F1E" />
-                  </LinearGradient>
-                </TouchableOpacity>
-              ) : (
-                <>
-                  <Ionicons name="chevron-up" size={24} color="#444" />
-                  <Text style={styles.swipeHintText}>Swipe up to skip</Text>
-                </>
-              )}
+              <Ionicons name="chevron-up" size={24} color="#444" />
+              <Text style={styles.swipeHintText}>
+                {showFeedback ? "Swipe up for next" : "Swipe up to skip"}
+              </Text>
             </View>
-            {!showFeedback && (
-              <View style={styles.progressBar}>
-                <Text style={styles.progressText}>
-                  {currentIndex + 1} / {playables.length}
-                </Text>
-              </View>
-            )}
+            {/* Progress indicator */}
+            <View style={styles.progressBar}>
+              <Text style={styles.progressText}>
+                {currentIndex + 1} / {playables.length}
+              </Text>
+            </View>
           </>
         );
       })()}
