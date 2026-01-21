@@ -452,7 +452,7 @@ export default function FeedScreen() {
         ) : (
           // Question View
           <>
-            {currentPlayable && (
+            {currentPlayable ? (
               <PlayableCard
                 playable={currentPlayable}
                 onAnswer={handleAnswer}
@@ -460,6 +460,11 @@ export default function FeedScreen() {
                 currentIndex={currentIndex}
                 totalCount={playables.length}
               />
+            ) : (
+              // Fallback during transition - show loading indicator
+              <View style={styles.transitionContainer}>
+                <Ionicons name="infinite" size={48} color="#00FF87" />
+              </View>
             )}
           </>
         )}
