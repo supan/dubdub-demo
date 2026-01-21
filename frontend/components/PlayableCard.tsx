@@ -186,24 +186,34 @@ export default function PlayableCard({ playable, onAnswer, submitting, currentIn
   function renderImmersiveOverlay() {
     return (
       <View style={styles.immersiveOverlay}>
-        {/* Top Section - Category & Title */}
+        {/* Top Section - Category, Title & Progress */}
         <View style={styles.topSection}>
-          {/* Category Badge */}
-          <View style={styles.immersiveCategoryBadge}>
-            <LinearGradient
-              colors={['#00FF87', '#00D9FF']}
-              style={styles.categoryGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <Text style={styles.categoryText}>{playable.category}</Text>
-            </LinearGradient>
+          <View style={styles.topRow}>
+            {/* Category Badge */}
+            <View style={styles.immersiveCategoryBadge}>
+              <LinearGradient
+                colors={['#00FF87', '#00D9FF']}
+                style={styles.categoryGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.categoryText}>{playable.category}</Text>
+              </LinearGradient>
+            </View>
+            {/* Progress - Top Right */}
+            {totalCount > 0 && (
+              <View style={styles.progressBadge}>
+                <Text style={styles.progressBadgeText}>
+                  {currentIndex + 1} / {totalCount}
+                </Text>
+              </View>
+            )}
           </View>
           {/* Title right after category */}
           <Text style={styles.immersiveTitle}>{playable.title}</Text>
         </View>
 
-        {/* Bottom Half - Question, Options, Progress */}
+        {/* Bottom Half - Question, Options */}
         <View style={styles.bottomHalf}>
           {/* Question Card - More transparent */}
           {playable.question.text && (
@@ -264,17 +274,10 @@ export default function PlayableCard({ playable, onAnswer, submitting, currentIn
             {renderSubmitButton()}
           </View>
 
-          {/* Swipe hint & Progress - Overlaid on media */}
-          <View style={styles.overlayHints}>
-            <View style={styles.swipeHint}>
-              <Ionicons name="chevron-up" size={20} color="rgba(255,255,255,0.6)" />
-              <Text style={styles.swipeHintText}>Swipe up to skip</Text>
-            </View>
-            {totalCount > 0 && (
-              <Text style={styles.progressText}>
-                {currentIndex + 1} / {totalCount}
-              </Text>
-            )}
+          {/* Swipe hint - Bottom center */}
+          <View style={styles.swipeHintOverlay}>
+            <Ionicons name="chevron-up" size={20} color="rgba(255,255,255,0.5)" />
+            <Text style={styles.swipeHintOverlayText}>Swipe up to skip</Text>
           </View>
         </View>
       </View>
