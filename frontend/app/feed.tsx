@@ -148,13 +148,17 @@ export default function FeedScreen() {
     const items = playablesRef.current;
     
     if (idx < items.length - 1) {
+      // Move to next question
       setCurrentIndex(idx + 1);
       setFeedbackData(null);
       setGameState('PLAYING');
     } else {
+      // No more questions - show empty state
+      // Set gameState first to trigger the empty state render
+      setGameState('PLAYING');
       setPlayables([]);
       setFeedbackData(null);
-      setGameState('PLAYING');
+      setCurrentIndex(0);
     }
   }, []);
 
