@@ -137,9 +137,14 @@ export default function FeedScreen() {
         useNativeDriver: true,
       }),
     ]).start(() => {
-      translateY.setValue(0);
-      opacity.setValue(1);
+      // First update state (while content is still hidden)
       onComplete();
+      // Then reset animation values to bring new content into view
+      // Use a small delay to ensure state update completes
+      setTimeout(() => {
+        translateY.setValue(0);
+        opacity.setValue(1);
+      }, 50);
     });
   }, []);
 
