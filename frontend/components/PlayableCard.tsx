@@ -89,6 +89,7 @@ export default function PlayableCard({ playable, onAnswer, submitting, currentIn
             source={{ uri: mediaSource.uri }}
             style={styles.fullScreenMedia}
             resizeMode="cover"
+            imageStyle={styles.backgroundImage}
           >
             {renderImmersiveOverlay()}
           </ImageBackground>
