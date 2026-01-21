@@ -626,8 +626,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   swipeHintOverlayText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
-    color: 'rgba(255,255,255,0.6)',
+    color: '#FFFFFF',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
 });
