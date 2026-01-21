@@ -484,19 +484,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     borderRadius: 12,
     overflow: 'hidden',
-  },
-  progressBadge: {
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  progressBadgeText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    marginBottom: 8,
   },
   immersiveTitle: {
     fontSize: 20,
