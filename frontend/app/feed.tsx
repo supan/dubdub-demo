@@ -541,6 +541,11 @@ const styles = StyleSheet.create({
   cardWrapper: {
     flex: 1,
   },
+  transitionContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   progressBar: {
     paddingVertical: 12,
     alignItems: 'center',
