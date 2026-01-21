@@ -484,11 +484,27 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 20 : 16,
     paddingHorizontal: 16,
   },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   immersiveCategoryBadge: {
     alignSelf: 'flex-start',
     borderRadius: 12,
     overflow: 'hidden',
-    marginBottom: 8,
+  },
+  progressBadge: {
+    backgroundColor: '#000000',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+  },
+  progressBadgeText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   immersiveTitle: {
     fontSize: 20,
