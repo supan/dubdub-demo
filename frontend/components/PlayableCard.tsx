@@ -142,16 +142,26 @@ export default function PlayableCard({ playable, onAnswer, submitting, currentIn
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
-        {/* Category Badge */}
-        <View style={styles.categoryBadge}>
-          <LinearGradient
-            colors={['#00FF87', '#00D9FF']}
-            style={styles.categoryGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <Text style={styles.categoryText}>{playable.category}</Text>
-          </LinearGradient>
+        {/* Top Row - Category Badge & Progress */}
+        <View style={styles.standardTopRow}>
+          <View style={styles.categoryBadge}>
+            <LinearGradient
+              colors={['#00FF87', '#00D9FF']}
+              style={styles.categoryGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Text style={styles.categoryText}>{playable.category}</Text>
+            </LinearGradient>
+          </View>
+          {/* Progress Badge - Black with white text */}
+          {totalCount > 0 && (
+            <View style={styles.standardProgressBadge}>
+              <Text style={styles.standardProgressText}>
+                {currentIndex + 1} / {totalCount}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Title */}
