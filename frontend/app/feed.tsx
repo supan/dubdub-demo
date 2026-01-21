@@ -408,9 +408,19 @@ export default function FeedScreen() {
             <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
           </View>
           <Text style={styles.headerTitle}>Invin</Text>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={24} color="#B0B0C8" />
-          </TouchableOpacity>
+          <View style={styles.headerRight}>
+            {/* Progress Counter - Always visible */}
+            {playables.length > 0 && (
+              <View style={styles.progressBadgeHeader}>
+                <Text style={styles.progressBadgeHeaderText}>
+                  {currentIndex + 1} / {playables.length}
+                </Text>
+              </View>
+            )}
+            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+              <Ionicons name="log-out-outline" size={24} color="#B0B0C8" />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
