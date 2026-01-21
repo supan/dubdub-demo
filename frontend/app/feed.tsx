@@ -184,6 +184,8 @@ export default function FeedScreen() {
 
   const doSwipeTransition = useCallback(() => {
     const state = gameStateRef.current;
+    const idx = currentIndexRef.current;
+    const items = playablesRef.current;
     
     // Only skip if in PLAYING state (not in feedback)
     if (state === 'PLAYING') {
@@ -191,8 +193,21 @@ export default function FeedScreen() {
     }
     
     // Animate and transition to next
-    animateToNext(handleTransitionToNext);
-  }, [handleSkip, animateToNext, handleTransitionToNext]);
+    animateToNext(() => {
+      // Use captured values from refs
+      if (idx < items.length - 1) {
+        setCurrentIndex(idx + 1);
+        setFeedbackData(null);
+        setGameState('PLAYING');
+      } else {
+        // No more questions - show empty state
+        setGameState('PLAYING');
+        setPlayables([]);
+        setFeedbackData(null);
+        setCurrentIndex(0);
+      }
+    });
+  }, [handleSkip, animateToNext]);
 
   const handleAnswer = useCallback(async (answer: string) => {
     if (gameState !== 'PLAYING' || !playables[currentIndex]) return;
