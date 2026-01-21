@@ -84,51 +84,49 @@ export default function PlayableCard({ playable, onAnswer, submitting, currentIn
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {/* Full-screen Media Background */}
-        {mediaSource.type === 'image' ? (
-          <ImageBackground
-            source={{ uri: mediaSource.uri }}
-            style={styles.fullScreenMedia}
-            resizeMode="cover"
-            imageStyle={styles.backgroundImage}
-          >
-            {renderImmersiveOverlay()}
-          </ImageBackground>
-        ) : (
-          <View style={styles.fullScreenMedia}>
-            {Platform.OS === 'web' ? (
-              // Web: Use native HTML5 video for better compatibility
-              <View style={[StyleSheet.absoluteFillObject, styles.videoContainer]}>
-                <video
-                  src={mediaSource.uri}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                  }}
-                />
-              </View>
-            ) : (
-              // Native: Use expo-av Video
-              <Video
-                source={{ uri: mediaSource.uri }}
-                style={StyleSheet.absoluteFillObject}
-                useNativeControls={false}
-                resizeMode={ResizeMode.COVER}
-                shouldPlay={true}
-                isLooping={true}
-                isMuted={true}
+        <View style={styles.fullScreenMedia}>
+          {/* Background Media - Absolute positioned */}
+          {mediaSource.type === 'image' ? (
+            <Image
+              source={{ uri: mediaSource.uri }}
+              style={StyleSheet.absoluteFillObject}
+              resizeMode="cover"
+            />
+          ) : Platform.OS === 'web' ? (
+            // Web: Use native HTML5 video for better compatibility
+            <View style={[StyleSheet.absoluteFillObject, styles.videoContainer]}>
+              <video
+                src={mediaSource.uri}
+                autoPlay
+                loop
+                muted
+                playsInline
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                }}
               />
-            )}
-            {renderImmersiveOverlay()}
-          </View>
-        )}
+            </View>
+          ) : (
+            // Native: Use expo-av Video
+            <Video
+              source={{ uri: mediaSource.uri }}
+              style={StyleSheet.absoluteFillObject}
+              useNativeControls={false}
+              resizeMode={ResizeMode.COVER}
+              shouldPlay={true}
+              isLooping={true}
+              isMuted={true}
+            />
+          )}
+          
+          {/* Overlay Content - On top of media */}
+          {renderImmersiveOverlay()}
+        </View>
       </KeyboardAvoidingView>
     );
   }
