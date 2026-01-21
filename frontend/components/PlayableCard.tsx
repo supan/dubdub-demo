@@ -474,12 +474,6 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 20 : 16,
     paddingHorizontal: 16,
   },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
   immersiveCategoryBadge: {
     alignSelf: 'flex-start',
     borderRadius: 12,
