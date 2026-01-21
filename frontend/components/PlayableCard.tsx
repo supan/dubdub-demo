@@ -380,11 +380,26 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 16,
   },
+  standardTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   categoryBadge: {
-    alignSelf: 'flex-start',
     borderRadius: 16,
     overflow: 'hidden',
-    marginBottom: 12,
+  },
+  standardProgressBadge: {
+    backgroundColor: '#000000',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+  },
+  standardProgressText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   categoryGradient: {
     paddingVertical: 6,
