@@ -554,12 +554,13 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
   },
   immersiveQuestion: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.95)',
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFFFFF',
     textAlign: 'left',
-    lineHeight: 22,
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
+    lineHeight: 24,
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
   },
   immersiveOptionsGrid: {
