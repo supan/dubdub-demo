@@ -550,22 +550,6 @@ const styles = StyleSheet.create({
     color: '#555',
     marginTop: 2,
   },
-  nextButton: {
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  nextButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    gap: 8,
-  },
-  nextButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F0F1E',
-  },
   // Feedback styles
   feedbackContainer: {
     flex: 1,
