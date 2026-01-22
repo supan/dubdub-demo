@@ -223,7 +223,7 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
                   onChangeText={setUserAnswer}
                   autoCapitalize="words"
                   returnKeyType="done"
-                  onSubmitEditing={handleGuessSubmit}
+                  blurOnSubmit={true}
                 />
               </View>
               <TouchableOpacity
