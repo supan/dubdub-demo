@@ -62,6 +62,7 @@ export default function AdminDashboard() {
   const [correctAnswer, setCorrectAnswer] = useState('');
   const [alternateAnswers, setAlternateAnswers] = useState('');
   const [answerExplanation, setAnswerExplanation] = useState('');
+  const [hints, setHints] = useState(['', '', '']);  // For guess_the_x: 3-5 hints
   const [difficulty, setDifficulty] = useState('medium');
   const [addLoading, setAddLoading] = useState(false);
   const [addMessage, setAddMessage] = useState('');
