@@ -901,6 +901,7 @@ const styles = StyleSheet.create({
   },
   hintsContainer: {
     marginTop: 16,
+    marginBottom: 24,
     gap: 10,
   },
   hintCard: {
