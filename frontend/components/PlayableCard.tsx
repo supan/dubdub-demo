@@ -842,4 +842,191 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
+
+  // ============ GUESS THE X STYLES ============
+  guessTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  guessTopRowImmersive: {
+    paddingTop: Platform.OS === 'ios' ? 12 : 8,
+    paddingHorizontal: 16,
+  },
+  guessCounters: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  hintCounter: {
+    backgroundColor: '#FF6B00',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  hintCounterText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  guessTitleImmersive: {
+    paddingHorizontal: 16,
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
+  },
+  hintsContainer: {
+    marginTop: 16,
+    gap: 12,
+  },
+  hintCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    gap: 12,
+  },
+  hintCardImmersive: {
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    marginHorizontal: 16,
+  },
+  hintCardCurrent: {
+    borderColor: '#00FF87',
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+  },
+  hintNumberBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#00FF87',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  hintNumberText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0F0F1E',
+  },
+  hintText: {
+    flex: 1,
+    fontSize: 15,
+    color: '#FFFFFF',
+    lineHeight: 22,
+  },
+  hintTextImmersive: {
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  guessSuccessCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+  },
+  guessSuccessText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#00FF87',
+  },
+  guessFailCard: {
+    backgroundColor: 'rgba(255, 107, 107, 0.15)',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 107, 107, 0.3)',
+    alignItems: 'center',
+  },
+  guessFailLabel: {
+    fontSize: 14,
+    color: '#FF6B6B',
+    marginBottom: 4,
+  },
+  guessFailAnswer: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  guessInputSection: {
+    marginTop: 20,
+    gap: 12,
+  },
+  guessInputWrapper: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  guessInputWrapperImmersive: {
+    marginHorizontal: 16,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  guessInput: {
+    padding: 14,
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  guessInputImmersive: {
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  guessSubmitButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  guessSubmitButtonDisabled: {
+    opacity: 0.6,
+  },
+  guessSubmitGradient: {
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  guessSubmitText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F0F1E',
+  },
+  guessSwipeHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    marginTop: 16,
+    paddingVertical: 8,
+  },
+  guessSwipeText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#555',
+  },
+  guessSwipeTextImmersive: {
+    color: 'rgba(255,255,255,0.6)',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  guessOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 10,
+  },
+  guessScrollView: {
+    flex: 1,
+  },
+  guessScrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
 });
