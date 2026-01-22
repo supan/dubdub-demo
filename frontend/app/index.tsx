@@ -67,7 +67,7 @@ export default function LoginScreen() {
       <View style={styles.content}>
         <View style={styles.header}>
           <Ionicons name="infinite" size={100} color="#00FF87" />
-          <Text style={styles.title}>Invin</Text>
+          <Text style={styles.title}>DubDub</Text>
           <Text style={styles.tagline}>Quick Play. Infinite Wins</Text>
         </View>
 

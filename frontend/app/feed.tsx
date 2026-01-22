@@ -346,7 +346,7 @@ export default function FeedScreen() {
           </Animated.View>
           
           {/* App Name */}
-          <Text style={styles.loadingTitle}>Invin</Text>
+          <Text style={styles.loadingTitle}>DubDub</Text>
           
           {/* Loading Message */}
           <Text style={styles.loadingSubtitle}>Loading your questions...</Text>
@@ -384,7 +384,7 @@ export default function FeedScreen() {
               <Ionicons name="flame" size={24} color="#FF6B00" />
               <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
             </View>
-            <Text style={styles.headerTitle}>Invin</Text>
+            <Text style={styles.headerTitle}>DubDub</Text>
             <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
               <Ionicons name="log-out-outline" size={24} color="#B0B0C8" />
             </TouchableOpacity>
@@ -446,7 +446,7 @@ export default function FeedScreen() {
             <Ionicons name="flame" size={24} color="#FF6B00" />
             <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
           </View>
-          <Text style={styles.headerTitle}>Invin</Text>
+          <Text style={styles.headerTitle}>DubDub</Text>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
             <Ionicons name="log-out-outline" size={24} color="#B0B0C8" />
           </TouchableOpacity>
