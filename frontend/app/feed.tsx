@@ -533,12 +533,13 @@ export default function FeedScreen() {
         )}
       </Animated.View>
       
-      {/* Swipe hint - Only show for text questions (immersive layouts have their own) */}
+      {/* Swipe hint - Only show for text questions (immersive layouts and guess_the_x have their own) */}
       {(() => {
         const isMediaQuestion = currentPlayable && 
           (currentPlayable.type === 'video' || currentPlayable.type === 'video_text' || 
-           currentPlayable.type === 'image' || currentPlayable.type === 'image_text') &&
-          (currentPlayable.question?.video_url || currentPlayable.question?.image_base64 || currentPlayable.question?.image_url);
+           currentPlayable.type === 'image' || currentPlayable.type === 'image_text' ||
+           currentPlayable.type === 'guess_the_x') &&
+          (currentPlayable.question?.video_url || currentPlayable.question?.image_base64 || currentPlayable.question?.image_url || currentPlayable.hints);
         
         // Don't show external hints for immersive media questions
         if (isMediaQuestion) return null;
