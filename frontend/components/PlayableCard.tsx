@@ -130,24 +130,20 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
     
     // Render with or without immersive background
     const renderGuessContent = () => (
-      <>
-        {/* Top Row - Category, Progress, Hint Counter */}
-        <View style={[styles.guessTopRow, hasImage && styles.guessTopRowImmersive]}>
-          <View style={styles.categoryBadge}>
-            <LinearGradient
-              colors={['#00FF87', '#00D9FF']}
-              style={styles.categoryGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <Text style={styles.categoryText}>{playable.category}</Text>
-            </LinearGradient>
-          </View>
-          <View style={styles.guessCounters}>
-            <View style={styles.hintCounter}>
-              <Text style={styles.hintCounterText}>
-                Hint {currentHintIndex + 1} of {totalHints}
-              </Text>
+      <View style={styles.guessContentWrapper}>
+        {/* Top Section - Category, Progress, Title */}
+        <View style={styles.guessTopSection}>
+          {/* Top Row - Category & Progress */}
+          <View style={[styles.guessTopRow, hasImage && styles.guessTopRowImmersive]}>
+            <View style={styles.categoryBadge}>
+              <LinearGradient
+                colors={['#00FF87', '#00D9FF']}
+                style={styles.categoryGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.categoryText}>{playable.category}</Text>
+              </LinearGradient>
             </View>
             {totalCount > 0 && (
               <View style={styles.standardProgressBadge}>
@@ -157,91 +153,110 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
               </View>
             )}
           </View>
-        </View>
 
-        {/* Title */}
-        <Text style={[styles.title, hasImage && styles.guessTitleImmersive]}>
-          {playable.title}
-        </Text>
-
-        {/* Hints Display */}
-        <View style={styles.hintsContainer}>
-          {hints.slice(0, currentHintIndex + 1).map((hint: string, index: number) => (
-            <View key={index} style={[
-              styles.hintCard,
-              hasImage && styles.hintCardImmersive,
-              index === currentHintIndex && styles.hintCardCurrent
-            ]}>
-              <View style={styles.hintNumberBadge}>
-                <Text style={styles.hintNumberText}>{index + 1}</Text>
-              </View>
-              <Text style={[styles.hintText, hasImage && styles.hintTextImmersive]}>
-                {hint}
-              </Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Result Display */}
-        {guessResult?.correct && (
-          <View style={styles.guessSuccessCard}>
-            <Ionicons name="checkmark-circle" size={32} color="#00FF87" />
-            <Text style={styles.guessSuccessText}>{guessResult.feedback_message}</Text>
-          </View>
-        )}
-        
-        {showCorrectAnswer && !guessResult?.correct && (
-          <View style={styles.guessFailCard}>
-            <Text style={styles.guessFailLabel}>The answer was:</Text>
-            <Text style={styles.guessFailAnswer}>{playable.correct_answer}</Text>
-          </View>
-        )}
-
-        {/* Input and Submit - Only show if not finished */}
-        {!guessResult?.correct && !showCorrectAnswer && (
-          <View style={styles.guessInputSection}>
-            <View style={[styles.guessInputWrapper, hasImage && styles.guessInputWrapperImmersive]}>
-              <TextInput
-                style={[styles.guessInput, hasImage && styles.guessInputImmersive]}
-                placeholder="Type your guess..."
-                placeholderTextColor={hasImage ? "rgba(255,255,255,0.5)" : "#666"}
-                value={userAnswer}
-                onChangeText={setUserAnswer}
-                autoCapitalize="words"
-                returnKeyType="done"
-                onSubmitEditing={handleGuessSubmit}
-              />
-            </View>
-            <TouchableOpacity
-              style={[
-                styles.guessSubmitButton,
-                (!userAnswer.trim() || submitting) && styles.guessSubmitButtonDisabled
-              ]}
-              onPress={handleGuessSubmit}
-              disabled={!userAnswer.trim() || submitting}
-            >
-              <LinearGradient
-                colors={userAnswer.trim() && !submitting ? ['#00FF87', '#00D9FF'] : ['#444', '#555']}
-                style={styles.guessSubmitGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Text style={styles.guessSubmitText}>
-                  {submitting ? 'Checking...' : 'Guess'}
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Swipe hint */}
-        <View style={styles.guessSwipeHint}>
-          <Ionicons name="chevron-up" size={20} color={hasImage ? "rgba(255,255,255,0.5)" : "#444"} />
-          <Text style={[styles.guessSwipeText, hasImage && styles.guessSwipeTextImmersive]}>
-            Swipe up to skip
+          {/* Title */}
+          <Text style={[styles.title, hasImage && styles.guessTitleImmersive]}>
+            {playable.title}
           </Text>
+
+          {/* All Hints Display - Shows all hints, revealed or locked */}
+          <View style={styles.hintsContainer}>
+            {hints.map((hint: string, index: number) => {
+              const isRevealed = index <= currentHintIndex;
+              const isCurrent = index === currentHintIndex;
+              
+              return (
+                <View key={index} style={[
+                  styles.hintCard,
+                  hasImage && styles.hintCardImmersive,
+                  isCurrent && styles.hintCardCurrent,
+                  !isRevealed && styles.hintCardLocked
+                ]}>
+                  <View style={[
+                    styles.hintNumberBadge,
+                    !isRevealed && styles.hintNumberBadgeLocked
+                  ]}>
+                    <Text style={[
+                      styles.hintNumberText,
+                      !isRevealed && styles.hintNumberTextLocked
+                    ]}>{index + 1}</Text>
+                  </View>
+                  {isRevealed ? (
+                    <Text style={[styles.hintText, hasImage && styles.hintTextImmersive]}>
+                      {hint}
+                    </Text>
+                  ) : (
+                    <Text style={styles.hintLockedText}>Hint {index + 1}</Text>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+
+          {/* Result Display */}
+          {guessResult?.correct && (
+            <View style={styles.guessSuccessCard}>
+              <Ionicons name="checkmark-circle" size={32} color="#00FF87" />
+              <Text style={styles.guessSuccessText}>{guessResult.feedback_message}</Text>
+            </View>
+          )}
+          
+          {showCorrectAnswer && !guessResult?.correct && (
+            <View style={styles.guessFailCard}>
+              <Text style={styles.guessFailLabel}>The answer was:</Text>
+              <Text style={styles.guessFailAnswer}>{playable.correct_answer}</Text>
+            </View>
+          )}
         </View>
-      </>
+
+        {/* Bottom Section - Input, Submit, Swipe Hint */}
+        <View style={[styles.guessBottomSection, hasImage && styles.guessBottomSectionImmersive]}>
+          {/* Input and Submit - Only show if not finished */}
+          {!guessResult?.correct && !showCorrectAnswer && (
+            <>
+              <View style={[styles.guessInputWrapper, hasImage && styles.guessInputWrapperImmersive]}>
+                <TextInput
+                  style={[styles.guessInput, hasImage && styles.guessInputImmersive]}
+                  placeholder="Type your guess..."
+                  placeholderTextColor={hasImage ? "rgba(255,255,255,0.5)" : "#666"}
+                  value={userAnswer}
+                  onChangeText={setUserAnswer}
+                  autoCapitalize="words"
+                  returnKeyType="done"
+                  onSubmitEditing={handleGuessSubmit}
+                />
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.guessSubmitButton,
+                  (!userAnswer.trim() || submitting || hasSubmitted) && styles.guessSubmitButtonDisabled
+                ]}
+                onPress={handleGuessSubmit}
+                disabled={!userAnswer.trim() || submitting || hasSubmitted}
+              >
+                <LinearGradient
+                  colors={userAnswer.trim() && !submitting && !hasSubmitted ? ['#00FF87', '#00D9FF'] : ['#444', '#555']}
+                  style={styles.guessSubmitGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={styles.guessSubmitText}>
+                    {hasSubmitted ? 'Checking...' : 'Guess'}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {/* Swipe hint */}
+          <View style={styles.guessSwipeHint}>
+            <Ionicons name="chevron-up" size={20} color={hasImage ? "rgba(255,255,255,0.5)" : "#444"} />
+            <Text style={[styles.guessSwipeText, hasImage && styles.guessSwipeTextImmersive]}>
+              Swipe up to skip
+            </Text>
+          </View>
+        </View>
+      </View>
     );
     
     // Immersive version with background image
