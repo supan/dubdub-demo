@@ -66,6 +66,10 @@ class Playable(BaseModel):
 class AnswerSubmission(BaseModel):
     answer: str
 
+class GuessAnswerSubmission(BaseModel):
+    answer: str
+    hint_number: int  # Which hint the user is on (1-based)
+
 class UserProgress(BaseModel):
     user_id: str
     playable_id: str
