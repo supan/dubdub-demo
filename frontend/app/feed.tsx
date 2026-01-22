@@ -518,6 +518,7 @@ export default function FeedScreen() {
               <PlayableCard
                 playable={currentPlayable}
                 onAnswer={handleAnswer}
+                onGuessAnswer={handleGuessAnswer}
                 submitting={isSubmitting}
                 currentIndex={currentIndex}
                 totalCount={playables.length}
