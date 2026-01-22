@@ -100,6 +100,13 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
       if (onGuessAnswer) {
         try {
           const result = await onGuessAnswer(userAnswer, currentHintIndex + 1);
+          
+          if (!result) {
+            // API call failed
+            setHasSubmitted(false);
+            return;
+          }
+          
           setGuessResult(result);
           
           if (result.correct) {
@@ -107,10 +114,12 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
             // Parent will handle transition
           } else if (result.reveal_next_hint) {
             // Wrong, but more hints available - reveal next hint
-            setCurrentHintIndex(prev => prev + 1);
-            setUserAnswer('');
-            setHasSubmitted(false);
-            setGuessResult(null);
+            setTimeout(() => {
+              setCurrentHintIndex(prev => prev + 1);
+              setUserAnswer('');
+              setHasSubmitted(false);
+              setGuessResult(null);
+            }, 500);  // Small delay for UX
           } else if (result.all_hints_exhausted) {
             // All hints used, show correct answer
             setShowCorrectAnswer(true);
