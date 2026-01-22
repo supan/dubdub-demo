@@ -209,6 +209,15 @@ export default function AdminDashboard() {
       return;
     }
 
+    // Validation for guess_the_x
+    if (contentType === 'guess_the_x') {
+      const filledHints = hints.filter(h => h.trim());
+      if (filledHints.length < 3) {
+        setAddMessage('❌ Please provide at least 3 hints for Guess the X');
+        return;
+      }
+    }
+
     if ((contentType === 'text' || contentType === 'image_text' || contentType === 'video_text') && !questionText) {
       setAddMessage('❌ Please enter question text');
       return;
@@ -224,7 +233,7 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (answerType === 'mcq') {
+    if (answerType === 'mcq' && contentType !== 'guess_the_x') {
       const filledOptions = options.filter(o => o.trim());
       if (filledOptions.length < 2) {
         setAddMessage('❌ Please fill at least 2 options for MCQ');
@@ -242,7 +251,7 @@ export default function AdminDashboard() {
 
       const payload: any = {
         type: contentType,
-        answer_type: answerType,
+        answer_type: contentType === 'guess_the_x' ? 'text_input' : answerType,
         category,
         title,
         correct_answer: correctAnswer,
@@ -253,11 +262,19 @@ export default function AdminDashboard() {
       if (questionText) payload.question_text = questionText;
       if (imageUrl) payload.image_url = imageUrl;
       if (videoUrl) payload.video_url = videoUrl;
-      if (answerType === 'mcq') {
+      
+      if (answerType === 'mcq' && contentType !== 'guess_the_x') {
         payload.options = options.filter(o => o.trim());
       }
-      if (answerType === 'text_input' && alternateAnswers.trim()) {
+      
+      // Handle alternate answers for text_input OR guess_the_x
+      if ((answerType === 'text_input' || contentType === 'guess_the_x') && alternateAnswers.trim()) {
         payload.alternate_answers = alternateAnswers.split(',').map(a => a.trim()).filter(a => a);
+      }
+      
+      // Handle hints for guess_the_x
+      if (contentType === 'guess_the_x') {
+        payload.hints = hints.filter(h => h.trim());
       }
 
       const response = await axios.post(
@@ -278,6 +295,7 @@ export default function AdminDashboard() {
       setCorrectAnswer('');
       setAlternateAnswers('');
       setAnswerExplanation('');
+      setHints(['', '', '']);
       
       // Refresh playables list
       if (adminToken) fetchPlayables(adminToken);
