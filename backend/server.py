@@ -493,6 +493,119 @@ async def submit_answer(
         logging.error(f"Error submitting answer: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/playables/{playable_id}/guess-answer")
+async def submit_guess_answer(
+    playable_id: str,
+    submission: GuessAnswerSubmission,
+    current_user: User = Depends(require_auth)
+):
+    """Submit answer for a 'Guess the X' playable - returns feedback based on hint number"""
+    try:
+        # Get playable
+        playable = await db.playables.find_one(
+            {"playable_id": playable_id},
+            {"_id": 0}
+        )
+        
+        if not playable:
+            raise HTTPException(status_code=404, detail="Playable not found")
+        
+        if playable.get("type") != "guess_the_x":
+            raise HTTPException(status_code=400, detail="This endpoint is only for 'Guess the X' playables")
+        
+        # Check answer
+        is_correct = submission.answer.strip().lower() == playable["correct_answer"].strip().lower()
+        
+        # Also check alternate answers
+        if not is_correct and playable.get("alternate_answers"):
+            user_answer = submission.answer.strip().lower()
+            for alt in playable["alternate_answers"]:
+                if user_answer == alt.strip().lower():
+                    is_correct = True
+                    break
+        
+        hints = playable.get("hints", [])
+        total_hints = len(hints)
+        hint_number = submission.hint_number
+        
+        # Generate feedback message based on which hint they got it on
+        feedback_messages = [
+            "Incredible! You're a mind reader! 🧠",  # 1st hint
+            "Impressive! You've got sharp instincts! 🎯",  # 2nd hint
+            "Well done! You really know your stuff! 💪",  # 3rd hint
+            "Nice work! You figured it out! 👏",  # 4th hint
+            "Got it! Better late than never! ✓"  # 5th hint
+        ]
+        
+        feedback_message = ""
+        if is_correct and hint_number <= len(feedback_messages):
+            feedback_message = feedback_messages[hint_number - 1]
+        
+        # Only save progress and update stats if correct or all hints exhausted
+        if is_correct or hint_number >= total_hints:
+            progress = {
+                "user_id": current_user.user_id,
+                "playable_id": playable_id,
+                "answered": True,
+                "correct": is_correct,
+                "hints_used": hint_number,
+                "timestamp": datetime.now(timezone.utc)
+            }
+            await db.user_progress.insert_one(progress)
+            
+            # Update user stats
+            user_doc = await db.users.find_one({"user_id": current_user.user_id}, {"_id": 0})
+            
+            new_total_played = user_doc["total_played"] + 1
+            new_correct_answers = user_doc["correct_answers"] + (1 if is_correct else 0)
+            
+            if is_correct:
+                new_current_streak = user_doc["current_streak"] + 1
+                new_best_streak = max(user_doc["best_streak"], new_current_streak)
+            else:
+                new_current_streak = 0
+                new_best_streak = user_doc["best_streak"]
+            
+            await db.users.update_one(
+                {"user_id": current_user.user_id},
+                {"$set": {
+                    "total_played": new_total_played,
+                    "correct_answers": new_correct_answers,
+                    "current_streak": new_current_streak,
+                    "best_streak": new_best_streak
+                }}
+            )
+            
+            return {
+                "correct": is_correct,
+                "correct_answer": playable["correct_answer"],
+                "feedback_message": feedback_message,
+                "hints_used": hint_number,
+                "total_hints": total_hints,
+                "all_hints_exhausted": hint_number >= total_hints and not is_correct,
+                "current_streak": new_current_streak,
+                "best_streak": new_best_streak,
+                "total_played": new_total_played,
+                "correct_answers": new_correct_answers
+            }
+        else:
+            # Wrong answer but more hints available
+            return {
+                "correct": False,
+                "correct_answer": None,  # Don't reveal yet
+                "feedback_message": "",
+                "hints_used": hint_number,
+                "total_hints": total_hints,
+                "all_hints_exhausted": False,
+                "reveal_next_hint": True
+            }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error submitting guess answer: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/user/stats")
 async def get_user_stats(current_user: User = Depends(require_auth)):
     """Get user statistics"""
