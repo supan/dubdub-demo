@@ -22,15 +22,21 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 interface PlayableCardProps {
   playable: any;
   onAnswer: (answer: string) => void;
+  onGuessAnswer?: (answer: string, hintNumber: number) => Promise<any>;  // For guess_the_x
   submitting: boolean;
   currentIndex?: number;
   totalCount?: number;
 }
 
-export default function PlayableCard({ playable, onAnswer, submitting, currentIndex = 0, totalCount = 0 }: PlayableCardProps) {
+export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIndex = 0, totalCount = 0 }: PlayableCardProps) {
   const [userAnswer, setUserAnswer] = useState('');
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  
+  // Guess the X specific state
+  const [currentHintIndex, setCurrentHintIndex] = useState(0);
+  const [guessResult, setGuessResult] = useState<any>(null);
+  const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
 
   // Safety check
   if (!playable) {
@@ -42,6 +48,9 @@ export default function PlayableCard({ playable, onAnswer, submitting, currentIn
     setHasSubmitted(false);
     setUserAnswer('');
     setSelectedOption(null);
+    setCurrentHintIndex(0);
+    setGuessResult(null);
+    setShowCorrectAnswer(false);
   }, [playable.playable_id]);
 
   const handleSubmit = () => {
