@@ -865,6 +865,13 @@ const styles = StyleSheet.create({
   },
 
   // ============ GUESS THE X STYLES ============
+  guessContentWrapper: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  guessTopSection: {
+    flex: 1,
+  },
   guessTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -879,17 +886,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-  hintCounter: {
-    backgroundColor: '#FF6B00',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-  },
-  hintCounterText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
   guessTitleImmersive: {
     paddingHorizontal: 16,
     fontSize: 22,
@@ -901,11 +897,11 @@ const styles = StyleSheet.create({
   },
   hintsContainer: {
     marginTop: 16,
-    gap: 12,
+    gap: 10,
   },
   hintCard: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 12,
     padding: 14,
@@ -921,18 +917,29 @@ const styles = StyleSheet.create({
     borderColor: '#00FF87',
     backgroundColor: 'rgba(0, 255, 135, 0.1)',
   },
+  hintCardLocked: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderColor: 'rgba(255,255,255,0.05)',
+    borderStyle: 'dashed',
+  },
   hintNumberBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#00FF87',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  hintNumberBadgeLocked: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
   hintNumberText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: '#0F0F1E',
+  },
+  hintNumberTextLocked: {
+    color: 'rgba(255,255,255,0.3)',
   },
   hintText: {
     flex: 1,
@@ -944,6 +951,12 @@ const styles = StyleSheet.create({
     textShadowColor: '#000000',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
+  },
+  hintLockedText: {
+    flex: 1,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.3)',
+    fontStyle: 'italic',
   },
   guessSuccessCard: {
     flexDirection: 'row',
@@ -981,9 +994,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  guessInputSection: {
-    marginTop: 20,
+  guessBottomSection: {
+    paddingTop: 16,
     gap: 12,
+  },
+  guessBottomSectionImmersive: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
   guessInputWrapper: {
     borderRadius: 12,
@@ -992,7 +1009,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.05)',
   },
   guessInputWrapperImmersive: {
-    marginHorizontal: 16,
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   guessInput: {
@@ -1025,7 +1041,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    marginTop: 16,
     paddingVertical: 8,
   },
   guessSwipeText: {
