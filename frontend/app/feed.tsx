@@ -16,6 +16,7 @@ import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import PlayableCard from '../components/PlayableCard';
+import FeedbackOverlay from '../components/FeedbackOverlay';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
