@@ -600,39 +600,49 @@ export default function AdminDashboard() {
             {/* Content Type Selector */}
             <Text style={styles.label}>Content Type</Text>
             <View style={styles.typeSelector}>
-              {(['text', 'image', 'video', 'image_text', 'video_text'] as ContentType[]).map((type) => (
+              {(['text', 'image', 'video', 'image_text', 'video_text', 'guess_the_x'] as ContentType[]).map((type) => (
                 <TouchableOpacity
                   key={type}
                   style={[styles.typeOption, contentType === type && styles.typeOptionSelected]}
-                  onPress={() => setContentType(type)}
+                  onPress={() => {
+                    setContentType(type);
+                    // Auto-set answer type for guess_the_x
+                    if (type === 'guess_the_x') {
+                      setAnswerType('text_input');
+                    }
+                  }}
                 >
                   <Text style={[styles.typeOptionText, contentType === type && styles.typeOptionTextSelected]}>
-                    {type.replace('_', ' + ').toUpperCase()}
+                    {type === 'guess_the_x' ? 'GUESS THE X' : type.replace('_', ' + ').toUpperCase()}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            {/* Answer Type Selector */}
-            <Text style={styles.label}>Answer Type</Text>
-            <View style={styles.typeSelector}>
-              <TouchableOpacity
-                style={[styles.typeOption, answerType === 'mcq' && styles.typeOptionSelected]}
-                onPress={() => setAnswerType('mcq')}
-              >
-                <Text style={[styles.typeOptionText, answerType === 'mcq' && styles.typeOptionTextSelected]}>
-                  MCQ (Multiple Choice)
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.typeOption, answerType === 'text_input' && styles.typeOptionSelected]}
-                onPress={() => setAnswerType('text_input')}
-              >
-                <Text style={[styles.typeOptionText, answerType === 'text_input' && styles.typeOptionTextSelected]}>
-                  Text Input
-                </Text>
-              </TouchableOpacity>
-            </View>
+            {/* Answer Type Selector - Hide for guess_the_x */}
+            {contentType !== 'guess_the_x' && (
+              <>
+                <Text style={styles.label}>Answer Type</Text>
+                <View style={styles.typeSelector}>
+                  <TouchableOpacity
+                    style={[styles.typeOption, answerType === 'mcq' && styles.typeOptionSelected]}
+                    onPress={() => setAnswerType('mcq')}
+                  >
+                    <Text style={[styles.typeOptionText, answerType === 'mcq' && styles.typeOptionTextSelected]}>
+                      MCQ (Multiple Choice)
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.typeOption, answerType === 'text_input' && styles.typeOptionSelected]}
+                    onPress={() => setAnswerType('text_input')}
+                  >
+                    <Text style={[styles.typeOptionText, answerType === 'text_input' && styles.typeOptionTextSelected]}>
+                      Text Input
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
 
             {/* Category */}
             <Text style={styles.label}>Category</Text>
