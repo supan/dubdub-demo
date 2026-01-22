@@ -1358,6 +1358,31 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontStyle: 'italic',
   },
+  hintButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 8,
+  },
+  addHintButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  addHintText: {
+    fontSize: 14,
+    color: '#00FF87',
+    fontWeight: '600',
+  },
+  removeHintButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  removeHintText: {
+    fontSize: 14,
+    color: '#FF6B6B',
+    fontWeight: '600',
+  },
   typeSelector: {
     flexDirection: 'row',
     flexWrap: 'wrap',
