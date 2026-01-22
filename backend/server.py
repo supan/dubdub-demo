@@ -883,7 +883,7 @@ class AdminResetProgressRequest(BaseModel):
     email: str
 
 class AddPlayableRequest(BaseModel):
-    type: str  # "text", "image", "video", "image_text", "video_text"
+    type: str  # "text", "image", "video", "image_text", "video_text", "guess_the_x"
     answer_type: str  # "mcq", "text_input"
     category: str
     title: str
@@ -894,6 +894,7 @@ class AddPlayableRequest(BaseModel):
     correct_answer: str
     alternate_answers: Optional[List[str]] = None  # For text_input: spelling variants, short forms
     answer_explanation: Optional[str] = None  # Brief explanation of the answer
+    hints: Optional[List[str]] = None  # For guess_the_x: 3-5 hints
     difficulty: str = "medium"
 
 @api_router.post("/admin/login")
