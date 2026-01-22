@@ -711,7 +711,7 @@ export default function AdminDashboard() {
             )}
 
             {/* MCQ Options */}
-            {answerType === 'mcq' && (
+            {answerType === 'mcq' && contentType !== 'guess_the_x' && (
               <>
                 <Text style={styles.label}>Options (at least 2)</Text>
                 {options.map((option, index) => (
@@ -724,6 +724,61 @@ export default function AdminDashboard() {
                     onChangeText={(value) => updateOption(index, value)}
                   />
                 ))}
+              </>
+            )}
+
+            {/* Hints for Guess the X */}
+            {contentType === 'guess_the_x' && (
+              <>
+                <Text style={styles.label}>Hints (3-5 hints, revealed progressively)</Text>
+                {hints.map((hint, index) => (
+                  <TextInput
+                    key={index}
+                    style={styles.input}
+                    placeholder={`Hint ${index + 1}${index < 3 ? ' (required)' : ' (optional)'}`}
+                    placeholderTextColor="#666"
+                    value={hint}
+                    onChangeText={(value) => {
+                      const newHints = [...hints];
+                      newHints[index] = value;
+                      setHints(newHints);
+                    }}
+                  />
+                ))}
+                <View style={styles.hintButtonsRow}>
+                  {hints.length < 5 && (
+                    <TouchableOpacity
+                      style={styles.addHintButton}
+                      onPress={() => setHints([...hints, ''])}
+                    >
+                      <Ionicons name="add-circle" size={18} color="#00FF87" />
+                      <Text style={styles.addHintText}>Add Hint</Text>
+                    </TouchableOpacity>
+                  )}
+                  {hints.length > 3 && (
+                    <TouchableOpacity
+                      style={styles.removeHintButton}
+                      onPress={() => setHints(hints.slice(0, -1))}
+                    >
+                      <Ionicons name="remove-circle" size={18} color="#FF6B6B" />
+                      <Text style={styles.removeHintText}>Remove</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                <Text style={styles.hintText}>
+                  Users will see hints one at a time. If wrong, next hint is revealed.
+                </Text>
+                
+                {/* Optional Image for Guess the X */}
+                <Text style={styles.label}>Image URL (Optional)</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="https://example.com/image.jpg (for immersive background)"
+                  placeholderTextColor="#666"
+                  value={imageUrl}
+                  onChangeText={setImageUrl}
+                  autoCapitalize="none"
+                />
               </>
             )}
 
