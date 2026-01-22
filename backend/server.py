@@ -50,15 +50,16 @@ class SessionDataResponse(BaseModel):
 
 class Playable(BaseModel):
     playable_id: str
-    type: str  # "video", "image", "text", "video_text", "image_text", "chess"
+    type: str  # "video", "image", "text", "video_text", "image_text", "chess", "guess_the_x"
     answer_type: str  # "mcq", "text_input"
     category: str
     title: str
-    question: Dict[str, Any]  # {text?, video_url?, image_base64?}
+    question: Dict[str, Any]  # {text?, video_url?, image_base64?, image_url?}
     options: Optional[List[str]] = None  # For MCQ
     correct_answer: str
     alternate_answers: Optional[List[str]] = None  # For text_input: spelling variants, short forms
     answer_explanation: Optional[str] = None  # Brief explanation of the answer
+    hints: Optional[List[str]] = None  # For guess_the_x: 3-5 hints revealed progressively
     difficulty: str = "medium"
     created_at: datetime
 
