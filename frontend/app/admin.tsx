@@ -792,8 +792,8 @@ export default function AdminDashboard() {
               onChangeText={setCorrectAnswer}
             />
 
-            {/* Alternate Answers - Only for text_input */}
-            {answerType === 'text_input' && (
+            {/* Alternate Answers - For text_input OR guess_the_x */}
+            {(answerType === 'text_input' || contentType === 'guess_the_x') && (
               <>
                 <Text style={styles.label}>Alternate Answers (Optional)</Text>
                 <TextInput
