@@ -465,70 +465,32 @@ export default function FeedScreen() {
         ]}
         {...panResponder.panHandlers}
       >
-        {showFeedback && feedbackData ? (
-          // Feedback View
-          <View style={styles.feedbackContainer}>
-            <View style={[
-              styles.feedbackCard,
-              feedbackData.correct ? styles.feedbackCorrect : styles.feedbackIncorrect
-            ]}>
-              <Ionicons 
-                name={feedbackData.correct ? "checkmark-circle" : "close-circle"} 
-                size={72} 
-                color={feedbackData.correct ? "#00FF87" : "#FF6B6B"} 
-              />
-              
-              <Text style={styles.feedbackTitle}>
-                {feedbackData.correct ? "Correct!" : "Wrong"}
-              </Text>
-              
-              {!feedbackData.correct && (
-                <Text style={styles.correctAnswerText}>
-                  Answer: {feedbackData.correct_answer}
-                </Text>
-              )}
-              
-              {/* Answer Explanation - Only show when incorrect */}
-              {!feedbackData.correct && feedbackData.answer_explanation && (
-                <View style={styles.explanationContainer}>
-                  <View style={styles.explanationHeader}>
-                    <Ionicons name="bulb" size={16} color="#FFB800" />
-                    <Text style={styles.explanationLabel}>Did you know?</Text>
-                  </View>
-                  <Text style={styles.explanationText}>
-                    {feedbackData.answer_explanation}
-                  </Text>
-                </View>
-              )}
-              
-              <View style={styles.streakBadge}>
-                <Ionicons name="flame" size={18} color="#FF6B00" />
-                <Text style={styles.streakBadgeText}>
-                  {feedbackData.current_streak} streak
-                </Text>
-              </View>
-            </View>
-          </View>
+        {/* Question View - Always visible */}
+        {currentPlayable ? (
+          <PlayableCard
+            playable={currentPlayable}
+            onAnswer={handleAnswer}
+            onGuessAnswer={handleGuessAnswer}
+            submitting={isSubmitting}
+            currentIndex={currentIndex}
+            totalCount={playables.length}
+          />
         ) : (
-          // Question View
-          <>
-            {currentPlayable ? (
-              <PlayableCard
-                playable={currentPlayable}
-                onAnswer={handleAnswer}
-                onGuessAnswer={handleGuessAnswer}
-                submitting={isSubmitting}
-                currentIndex={currentIndex}
-                totalCount={playables.length}
-              />
-            ) : (
-              // Fallback during transition - show loading indicator
-              <View style={styles.transitionContainer}>
-                <Ionicons name="infinite" size={48} color="#00FF87" />
-              </View>
-            )}
-          </>
+          // Fallback during transition - show loading indicator
+          <View style={styles.transitionContainer}>
+            <Ionicons name="infinite" size={48} color="#00FF87" />
+          </View>
         )}
+
+        {/* Feedback Overlay - Appears on top of question */}
+        <FeedbackOverlay
+          visible={showFeedback && feedbackData !== null}
+          correct={feedbackData?.correct || false}
+          correctAnswer={feedbackData?.correct_answer}
+          answerExplanation={feedbackData?.answer_explanation}
+          currentStreak={feedbackData?.current_streak || user?.current_streak || 0}
+          hintsUsed={feedbackData?.hints_used}
+        />
       </Animated.View>
       
       {/* Swipe hint - Only show for text questions (immersive layouts and guess_the_x have their own) */}
