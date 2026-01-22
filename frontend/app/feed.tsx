@@ -237,6 +237,48 @@ export default function FeedScreen() {
     }
   }, [gameState, playables, currentIndex, sessionToken]);
 
+  // Handle "Guess the X" answer submission
+  const handleGuessAnswer = useCallback(async (answer: string, hintNumber: number) => {
+    if (!playables[currentIndex]) return null;
+
+    try {
+      setIsSubmitting(true);
+      const playable = playables[currentIndex];
+
+      const response = await axios.post(
+        `${BACKEND_URL}/api/playables/${playable.playable_id}/guess-answer`,
+        { answer, hint_number: hintNumber },
+        { headers: { Authorization: `Bearer ${sessionToken}` } }
+      );
+
+      const result = response.data;
+      
+      // If correct, show feedback then transition
+      if (result.correct) {
+        setFeedbackData({
+          correct: true,
+          correct_answer: result.correct_answer,
+          feedback_message: result.feedback_message,
+          hints_used: result.hints_used,
+        });
+        setTotalPlayed(prev => prev + 1);
+        setGameState('SHOWING_FEEDBACK');
+        refreshUser().catch(console.error);
+      } else if (result.all_hints_exhausted) {
+        // All hints used, no feedback screen - just show answer and allow swipe
+        setTotalPlayed(prev => prev + 1);
+        refreshUser().catch(console.error);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Error submitting guess:', error);
+      return null;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [playables, currentIndex, sessionToken, refreshUser]);
+
   // Ref for the transition function so PanResponder can access it
   const doSwipeRef = useRef(doSwipeTransition);
   useEffect(() => { doSwipeRef.current = doSwipeTransition; }, [doSwipeTransition]);
