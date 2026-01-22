@@ -242,7 +242,6 @@ export default function FeedScreen() {
     if (!playables[currentIndex]) return null;
 
     try {
-      setIsSubmitting(true);
       const playable = playables[currentIndex];
 
       const response = await axios.post(
@@ -274,8 +273,6 @@ export default function FeedScreen() {
     } catch (error) {
       console.error('Error submitting guess:', error);
       return null;
-    } finally {
-      setIsSubmitting(false);
     }
   }, [playables, currentIndex, sessionToken, refreshUser]);
 
