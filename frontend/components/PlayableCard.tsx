@@ -107,21 +107,18 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
             return;
           }
           
-          setGuessResult(result);
-          
           if (result.correct) {
             // Correct! Show success feedback
+            setGuessResult(result);
             // Parent will handle transition
           } else if (result.reveal_next_hint) {
             // Wrong, but more hints available - reveal next hint
-            setTimeout(() => {
-              setCurrentHintIndex(prev => prev + 1);
-              setUserAnswer('');
-              setHasSubmitted(false);
-              setGuessResult(null);
-            }, 500);  // Small delay for UX
+            setCurrentHintIndex(currentHintIndex + 1);
+            setUserAnswer('');
+            setHasSubmitted(false);
           } else if (result.all_hints_exhausted) {
             // All hints used, show correct answer
+            setGuessResult(result);
             setShowCorrectAnswer(true);
           }
         } catch (error) {
