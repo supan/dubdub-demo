@@ -1025,8 +1025,15 @@ async def admin_add_playable(
         if request.type in ["video", "video_text"] and not request.video_url:
             raise HTTPException(status_code=400, detail="Video question requires video_url")
         
-        # Validate MCQ has options
-        if request.answer_type == "mcq":
+        # Validate guess_the_x has hints
+        if request.type == "guess_the_x":
+            if not request.hints or len(request.hints) < 3:
+                raise HTTPException(status_code=400, detail="Guess the X requires at least 3 hints")
+            if len(request.hints) > 5:
+                raise HTTPException(status_code=400, detail="Guess the X allows maximum 5 hints")
+        
+        # Validate MCQ has options (but not for guess_the_x)
+        if request.answer_type == "mcq" and request.type != "guess_the_x":
             if not request.options or len(request.options) < 2:
                 raise HTTPException(status_code=400, detail="MCQ requires at least 2 options")
             if request.correct_answer not in request.options:
@@ -1037,14 +1044,15 @@ async def admin_add_playable(
         playable_doc = {
             "playable_id": playable_id,
             "type": request.type,
-            "answer_type": request.answer_type,
+            "answer_type": "text_input" if request.type == "guess_the_x" else request.answer_type,
             "category": request.category,
             "title": request.title,
             "question": question,
-            "options": request.options if request.answer_type == "mcq" else None,
+            "options": request.options if request.answer_type == "mcq" and request.type != "guess_the_x" else None,
             "correct_answer": request.correct_answer,
-            "alternate_answers": request.alternate_answers if request.answer_type == "text_input" else None,
+            "alternate_answers": request.alternate_answers if (request.answer_type == "text_input" or request.type == "guess_the_x") else None,
             "answer_explanation": request.answer_explanation,
+            "hints": request.hints if request.type == "guess_the_x" else None,
             "difficulty": request.difficulty,
             "created_at": datetime.now(timezone.utc)
         }
