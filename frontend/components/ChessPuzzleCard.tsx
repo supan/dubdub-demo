@@ -15,10 +15,10 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BOARD_SIZE = Math.min(SCREEN_WIDTH - 40, 360);
 const SQUARE_SIZE = BOARD_SIZE / 8;
 
-// Piece unicode characters - using consistent filled symbols
-// White pieces use outline symbols, black use filled
+// Piece unicode characters - using filled symbols for both colors
+// Both use the same filled symbols, distinguished by color styling
 const PIECE_SYMBOLS: { [key: string]: string } = {
-  'wk': '♔', 'wq': '♕', 'wr': '♖', 'wb': '♗', 'wn': '♘', 'wp': '♙',
+  'wk': '♚', 'wq': '♛', 'wr': '♜', 'wb': '♝', 'wn': '♞', 'wp': '♟',
   'bk': '♚', 'bq': '♛', 'br': '♜', 'bb': '♝', 'bn': '♞', 'bp': '♟',
 };
 
