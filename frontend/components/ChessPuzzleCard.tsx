@@ -423,9 +423,14 @@ const styles = StyleSheet.create({
   messageTextFailed: {
     color: '#FF6B6B',
   },
+  boardWrapper: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
   boardContainer: {
     alignItems: 'center',
-    marginBottom: 12,
   },
   board: {
     width: BOARD_SIZE,
@@ -445,7 +450,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   selectedSquare: {
-    backgroundColor: '#7B61FF !important',
+    backgroundColor: '#7B61FF',
     opacity: 0.9,
   },
   lastMoveSquare: {
@@ -484,22 +489,28 @@ const styles = StyleSheet.create({
   fileLabels: {
     flexDirection: 'row',
     width: BOARD_SIZE,
-    justifyContent: 'space-around',
     marginTop: 4,
   },
-  rankLabels: {
-    position: 'absolute',
-    left: 8,
-    top: 180,
-    height: BOARD_SIZE,
-    justifyContent: 'space-around',
-  },
-  label: {
-    fontSize: 11,
-    color: '#666',
-    fontWeight: '600',
+  fileLabel: {
     width: SQUARE_SIZE,
+    fontSize: 11,
+    color: '#888',
+    fontWeight: '600',
     textAlign: 'center',
+  },
+  rankLabels: {
+    justifyContent: 'space-around',
+    height: BOARD_SIZE,
+    marginRight: 6,
+    paddingVertical: 2,
+  },
+  rankLabel: {
+    fontSize: 11,
+    color: '#888',
+    fontWeight: '600',
+    textAlign: 'center',
+    height: SQUARE_SIZE,
+    lineHeight: SQUARE_SIZE,
   },
   instructionsContainer: {
     flexDirection: 'row',
