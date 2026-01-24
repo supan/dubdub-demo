@@ -312,25 +312,27 @@ export default function ChessPuzzleCard({
         ]}>{message}</Text>
       </View>
 
-      {/* Chess Board */}
-      <View style={styles.boardContainer}>
-        <View style={styles.board}>
-          {renderBoard()}
-        </View>
-        
-        {/* File labels (a-h) */}
-        <View style={styles.fileLabels}>
-          {['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map(file => (
-            <Text key={file} style={styles.label}>{file}</Text>
+      {/* Chess Board with labels */}
+      <View style={styles.boardWrapper}>
+        {/* Rank labels (8-1) on the left */}
+        <View style={styles.rankLabels}>
+          {[8, 7, 6, 5, 4, 3, 2, 1].map(rank => (
+            <Text key={rank} style={styles.rankLabel}>{rank}</Text>
           ))}
         </View>
-      </View>
-
-      {/* Rank labels (1-8) */}
-      <View style={styles.rankLabels}>
-        {[8, 7, 6, 5, 4, 3, 2, 1].map(rank => (
-          <Text key={rank} style={styles.label}>{rank}</Text>
-        ))}
+        
+        <View style={styles.boardContainer}>
+          <View style={styles.board}>
+            {renderBoard()}
+          </View>
+          
+          {/* File labels (a-h) at bottom */}
+          <View style={styles.fileLabels}>
+            {['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map(file => (
+              <Text key={file} style={styles.fileLabel}>{file}</Text>
+            ))}
+          </View>
+        </View>
       </View>
 
       {/* Instructions */}
