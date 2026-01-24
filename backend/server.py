@@ -409,7 +409,7 @@ async def get_playables_feed(
         if not is_dev_user and current_user.selected_categories and len(current_user.selected_categories) > 0:
             query["category"] = {"$in": current_user.selected_categories}
         
-        playables = await db.playables.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
+        playables = await db.playables.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
         
         return playables
     except Exception as e:
