@@ -220,6 +220,19 @@ export default function AdminDashboard() {
       }
     }
 
+    // Validation for chess_mate_in_2
+    if (contentType === 'chess_mate_in_2') {
+      if (!fenPosition.trim()) {
+        setAddMessage('❌ Please provide a FEN position for the chess puzzle');
+        return;
+      }
+      const filledMoves = solutionMoves.filter(m => m.trim());
+      if (filledMoves.length < 1) {
+        setAddMessage('❌ Please provide at least 1 solution move');
+        return;
+      }
+    }
+
     if ((contentType === 'text' || contentType === 'image_text' || contentType === 'video_text') && !questionText) {
       setAddMessage('❌ Please enter question text');
       return;
