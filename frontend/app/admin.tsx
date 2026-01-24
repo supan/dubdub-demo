@@ -33,6 +33,8 @@ interface Playable {
   alternate_answers?: string[];
   answer_explanation?: string;
   hints?: string[];
+  fen?: string;
+  solution?: string[];
   difficulty: string;
   created_at: string;
 }
