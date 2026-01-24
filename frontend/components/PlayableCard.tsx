@@ -577,6 +577,159 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
     );
   }
 
+  // ============ VIDEO OVERLAY - Watch first, then answer ============
+  function renderVideoOverlay() {
+    // Before video finishes: Show only minimal info (category, progress, watching indicator)
+    if (!videoFinished) {
+      return (
+        <View style={styles.immersiveOverlay}>
+          {/* Top Section - Category & Progress */}
+          <View style={styles.topSection}>
+            <View style={styles.topRow}>
+              <View style={styles.immersiveCategoryBadge}>
+                <LinearGradient
+                  colors={['#00FF87', '#00D9FF']}
+                  style={styles.categoryGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={styles.categoryText}>{playable.category}</Text>
+                </LinearGradient>
+              </View>
+              {totalCount > 0 && (
+                <View style={styles.progressBadge}>
+                  <Text style={styles.progressBadgeText}>
+                    {currentIndex + 1} / {totalCount}
+                  </Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.immersiveTitle}>{playable.title}</Text>
+          </View>
+
+          {/* Bottom - Watching indicator */}
+          <View style={styles.videoWatchingContainer}>
+            <View style={styles.watchingBadge}>
+              <Ionicons name="eye" size={18} color="#FFFFFF" />
+              <Text style={styles.watchingText}>Watch the video...</Text>
+            </View>
+            {/* Swipe hint */}
+            <View style={styles.swipeHintOverlay}>
+              <Ionicons name="chevron-up" size={20} color="rgba(255,255,255,0.5)" />
+              <Text style={styles.swipeHintOverlayText}>Swipe up to skip</Text>
+            </View>
+          </View>
+        </View>
+      );
+    }
+
+    // After video finishes: Show question, options, and replay button
+    return (
+      <View style={styles.immersiveOverlay}>
+        {/* Top Section */}
+        <View style={styles.topSection}>
+          <View style={styles.topRow}>
+            <View style={styles.immersiveCategoryBadge}>
+              <LinearGradient
+                colors={['#00FF87', '#00D9FF']}
+                style={styles.categoryGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.categoryText}>{playable.category}</Text>
+              </LinearGradient>
+            </View>
+            {/* Replay Button */}
+            <TouchableOpacity 
+              style={styles.replayButton}
+              onPress={handleReplay}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="refresh" size={18} color="#FFFFFF" />
+              <Text style={styles.replayButtonText}>Replay</Text>
+            </TouchableOpacity>
+            {totalCount > 0 && (
+              <View style={styles.progressBadge}>
+                <Text style={styles.progressBadgeText}>
+                  {currentIndex + 1} / {totalCount}
+                </Text>
+              </View>
+            )}
+          </View>
+          <Text style={styles.immersiveTitle}>{playable.title}</Text>
+        </View>
+
+        {/* Bottom Half - Question & Options appear after video ends */}
+        <View style={styles.bottomHalf}>
+          {/* Question Card */}
+          {playable.question.text && (
+            <View style={styles.questionCard}>
+              <Text style={styles.immersiveQuestion}>{playable.question.text}</Text>
+            </View>
+          )}
+
+          {/* MCQ Options */}
+          {playable.answer_type === 'mcq' && playable.options && (
+            <View style={styles.immersiveOptionsGrid}>
+              {playable.options.map((option: string, index: number) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.glassOption,
+                    selectedOption === option && styles.glassOptionSelected,
+                  ]}
+                  onPress={() => setSelectedOption(option)}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.glassOptionInner}>
+                    <Text
+                      style={[
+                        styles.glassOptionText,
+                        selectedOption === option && styles.glassOptionTextSelected,
+                      ]}
+                      numberOfLines={2}
+                    >
+                      {option}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {/* Text Input */}
+          {playable.answer_type === 'text_input' && (
+            <View style={styles.immersiveInputContainer}>
+              <View style={styles.glassInputWrapper}>
+                <TextInput
+                  style={styles.immersiveTextInput}
+                  placeholder="Type your answer..."
+                  placeholderTextColor="rgba(255,255,255,0.5)"
+                  value={userAnswer}
+                  onChangeText={setUserAnswer}
+                  autoCapitalize="words"
+                  returnKeyType="done"
+                  onSubmitEditing={() => Keyboard.dismiss()}
+                />
+              </View>
+            </View>
+          )}
+
+          {/* Submit Button */}
+          <View style={styles.immersiveSubmitSection}>
+            {renderSubmitButton()}
+          </View>
+
+          {/* Swipe hint */}
+          <View style={styles.swipeHintOverlay}>
+            <Ionicons name="chevron-up" size={20} color="rgba(255,255,255,0.5)" />
+            <Text style={styles.swipeHintOverlayText}>Swipe up to skip</Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
   function renderMCQOptions() {
     if (playable.answer_type !== 'mcq' || !playable.options) return null;
 
