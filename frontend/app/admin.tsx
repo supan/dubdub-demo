@@ -784,6 +784,66 @@ export default function AdminDashboard() {
               </>
             )}
 
+            {/* Chess Mate in 2 Fields */}
+            {contentType === 'chess_mate_in_2' && (
+              <>
+                <Text style={styles.label}>FEN Position (Starting position)</Text>
+                <TextInput
+                  style={[styles.input, styles.monoInput]}
+                  placeholder="e.g., r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4"
+                  placeholderTextColor="#666"
+                  value={fenPosition}
+                  onChangeText={setFenPosition}
+                  autoCapitalize="none"
+                  multiline
+                  numberOfLines={2}
+                />
+                <Text style={styles.hintText}>
+                  FEN notation for the starting position. Get from lichess.org/editor
+                </Text>
+                
+                <Text style={styles.label}>Solution Moves (Algebraic notation)</Text>
+                {solutionMoves.map((move, index) => (
+                  <TextInput
+                    key={index}
+                    style={[styles.input, styles.monoInput]}
+                    placeholder={`Move ${index + 1} (e.g., Qxf7${index === solutionMoves.length - 1 ? '#' : '+'})`}
+                    placeholderTextColor="#666"
+                    value={move}
+                    onChangeText={(value) => {
+                      const newMoves = [...solutionMoves];
+                      newMoves[index] = value;
+                      setSolutionMoves(newMoves);
+                    }}
+                    autoCapitalize="none"
+                  />
+                ))}
+                <View style={styles.hintButtonsRow}>
+                  {solutionMoves.length < 3 && (
+                    <TouchableOpacity
+                      style={styles.addHintButton}
+                      onPress={() => setSolutionMoves([...solutionMoves, ''])}
+                    >
+                      <Ionicons name="add-circle" size={18} color="#00FF87" />
+                      <Text style={styles.addHintText}>Add Move</Text>
+                    </TouchableOpacity>
+                  )}
+                  {solutionMoves.length > 1 && (
+                    <TouchableOpacity
+                      style={styles.removeHintButton}
+                      onPress={() => setSolutionMoves(solutionMoves.slice(0, -1))}
+                    >
+                      <Ionicons name="remove-circle" size={18} color="#FF6B6B" />
+                      <Text style={styles.removeHintText}>Remove</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                <Text style={styles.hintText}>
+                  User's winning moves in standard algebraic notation (e.g., Qh5, Qxf7#)
+                </Text>
+              </>
+            )}
+
             {/* Correct Answer */}
             <Text style={styles.label}>Correct Answer</Text>
             <TextInput
