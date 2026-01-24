@@ -32,6 +32,7 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
   const [userAnswer, setUserAnswer] = useState('');
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const videoRef = useRef<Video>(null);
   
   // Guess the X specific state
   const [currentHintIndex, setCurrentHintIndex] = useState(0);
@@ -42,6 +43,22 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
   if (!playable) {
     return null;
   }
+
+  // Configure audio mode for video playback (including iOS silent mode)
+  useEffect(() => {
+    const setupAudio = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,
+          shouldDuckAndroid: true,
+        });
+      } catch (error) {
+        console.log('Audio mode setup error:', error);
+      }
+    };
+    setupAudio();
+  }, []);
 
   // Reset state when playable changes
   useEffect(() => {
