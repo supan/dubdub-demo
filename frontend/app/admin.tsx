@@ -352,13 +352,26 @@ export default function AdminDashboard() {
         payload.solution = solutionMoves.filter(m => m.trim());
       }
 
-      const response = await axios.post(
-        `${BACKEND_URL}/api/admin/add-playable`,
-        payload,
-        { headers: { Authorization: `Bearer ${adminToken}` } }
-      );
-
-      setAddMessage(`✅ ${response.data.message} (ID: ${response.data.playable_id})`);
+      let response;
+      if (isEditMode && editingPlayableId) {
+        // Update existing playable
+        response = await axios.put(
+          `${BACKEND_URL}/api/admin/playables/${editingPlayableId}`,
+          payload,
+          { headers: { Authorization: `Bearer ${adminToken}` } }
+        );
+        setAddMessage(`✅ Playable updated successfully`);
+        setIsEditMode(false);
+        setEditingPlayableId(null);
+      } else {
+        // Create new playable
+        response = await axios.post(
+          `${BACKEND_URL}/api/admin/add-playable`,
+          payload,
+          { headers: { Authorization: `Bearer ${adminToken}` } }
+        );
+        setAddMessage(`✅ ${response.data.message} (ID: ${response.data.playable_id})`);
+      }
       
       // Reset form
       setCategory('');
@@ -377,7 +390,7 @@ export default function AdminDashboard() {
       // Refresh playables list
       if (adminToken) fetchPlayables(adminToken);
     } catch (error: any) {
-      setAddMessage(`❌ ${error.response?.data?.detail || 'Failed to add content'}`);
+      setAddMessage(`❌ ${error.response?.data?.detail || (isEditMode ? 'Failed to update content' : 'Failed to add content')}`);
     } finally {
       setAddLoading(false);
     }
