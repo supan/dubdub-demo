@@ -354,6 +354,9 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
     );
   }
 
+  // Check if this is a video type playable
+  const isVideoType = playable.type === 'video' || playable.type === 'video_text';
+
   // ============ IMMERSIVE LAYOUT (Image/Video) ============
   if (isImmersive) {
     return (
@@ -376,9 +379,9 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
               <video
                 src={mediaSource.uri}
                 autoPlay
-                loop
                 muted
                 playsInline
+                onEnded={() => setVideoFinished(true)}
                 style={{
                   width: '100%',
                   height: '100%',
@@ -390,7 +393,7 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
               />
             </View>
           ) : (
-            // Native: Use expo-av Video
+            // Native: Use expo-av Video - no looping, detect when finished
             <Video
               ref={videoRef}
               source={{ uri: mediaSource.uri }}
@@ -398,14 +401,15 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
               useNativeControls={false}
               resizeMode={ResizeMode.COVER}
               shouldPlay={true}
-              isLooping={true}
+              isLooping={false}
               isMuted={false}
               volume={1.0}
+              onPlaybackStatusUpdate={handleVideoPlaybackStatus}
             />
           )}
           
-          {/* Overlay Content - On top of media */}
-          {renderImmersiveOverlay()}
+          {/* Overlay Content - Show based on video state */}
+          {isVideoType ? renderVideoOverlay() : renderImmersiveOverlay()}
         </View>
       </KeyboardAvoidingView>
     );
