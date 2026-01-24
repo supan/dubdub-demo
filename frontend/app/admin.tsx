@@ -18,7 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const ADMIN_TOKEN_KEY = 'invin_admin_token';
 
-type ContentType = 'text' | 'image' | 'video' | 'image_text' | 'video_text' | 'guess_the_x';
+type ContentType = 'text' | 'image' | 'video' | 'image_text' | 'video_text' | 'guess_the_x' | 'chess_mate_in_2';
 type AnswerType = 'mcq' | 'text_input';
 
 interface Playable {
