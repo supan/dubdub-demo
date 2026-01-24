@@ -76,6 +76,28 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
     setIsReplaying(false);
   }, [playable.playable_id]);
 
+  // Handle video playback status
+  const handleVideoPlaybackStatus = (status: any) => {
+    if (status.didJustFinish && !status.isLooping) {
+      setVideoFinished(true);
+      setIsReplaying(false);
+    }
+  };
+
+  // Handle replay button press
+  const handleReplay = async () => {
+    setVideoFinished(false);
+    setIsReplaying(true);
+    if (videoRef.current) {
+      try {
+        await videoRef.current.setPositionAsync(0);
+        await videoRef.current.playAsync();
+      } catch (error) {
+        console.log('Error replaying video:', error);
+      }
+    }
+  };
+
   const handleSubmit = () => {
     if (hasSubmitted || submitting) return;
     
