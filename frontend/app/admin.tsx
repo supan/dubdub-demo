@@ -1020,8 +1020,8 @@ export default function AdminDashboard() {
                   <ActivityIndicator color="#0F0F1E" />
                 ) : (
                   <>
-                    <Ionicons name="add-circle" size={20} color="#0F0F1E" />
-                    <Text style={[styles.actionButtonText, { color: '#0F0F1E' }]}>Add Content</Text>
+                    <Ionicons name={isEditMode ? "checkmark-circle" : "add-circle"} size={20} color="#0F0F1E" />
+                    <Text style={[styles.actionButtonText, { color: '#0F0F1E' }]}>{isEditMode ? 'Update Content' : 'Add Content'}</Text>
                   </>
                 )}
               </LinearGradient>
