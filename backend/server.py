@@ -1052,15 +1052,17 @@ async def admin_add_playable(
         playable_doc = {
             "playable_id": playable_id,
             "type": request.type,
-            "answer_type": "text_input" if request.type == "guess_the_x" else request.answer_type,
+            "answer_type": "text_input" if request.type in ["guess_the_x", "chess_mate_in_2"] else request.answer_type,
             "category": request.category,
             "title": request.title,
             "question": question,
-            "options": request.options if request.answer_type == "mcq" and request.type != "guess_the_x" else None,
+            "options": request.options if request.answer_type == "mcq" and request.type not in ["guess_the_x", "chess_mate_in_2"] else None,
             "correct_answer": request.correct_answer,
-            "alternate_answers": request.alternate_answers if (request.answer_type == "text_input" or request.type == "guess_the_x") else None,
+            "alternate_answers": request.alternate_answers if (request.answer_type == "text_input" or request.type in ["guess_the_x", "chess_mate_in_2"]) else None,
             "answer_explanation": request.answer_explanation,
             "hints": request.hints if request.type == "guess_the_x" else None,
+            "fen": request.fen if request.type == "chess_mate_in_2" else None,
+            "solution": request.solution if request.type == "chess_mate_in_2" else None,
             "difficulty": request.difficulty,
             "created_at": datetime.now(timezone.utc)
         }
