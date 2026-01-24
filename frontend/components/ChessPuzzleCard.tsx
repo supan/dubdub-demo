@@ -465,18 +465,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: SQUARE_SIZE,
     height: SQUARE_SIZE,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    includeFontPadding: false,  // Android: removes extra padding
+    textAlignVertical: 'center',
   },
   whitePiece: {
     color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowColor: '#000000',
     textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
+    textShadowRadius: 2,
   },
   blackPiece: {
-    color: '#000000',
-    textShadowColor: 'rgba(255, 255, 255, 0.4)',
+    color: '#1A1A1A',
+    textShadowColor: 'rgba(255, 255, 255, 0.3)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 1,
+    textShadowRadius: 0,
   },
   legalMoveIndicator: {
     width: SQUARE_SIZE * 0.3,
