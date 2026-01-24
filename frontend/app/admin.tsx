@@ -291,6 +291,12 @@ export default function AdminDashboard() {
       if (contentType === 'guess_the_x') {
         payload.hints = hints.filter(h => h.trim());
       }
+      
+      // Handle chess_mate_in_2 fields
+      if (contentType === 'chess_mate_in_2') {
+        payload.fen = fenPosition.trim();
+        payload.solution = solutionMoves.filter(m => m.trim());
+      }
 
       const response = await axios.post(
         `${BACKEND_URL}/api/admin/add-playable`,
