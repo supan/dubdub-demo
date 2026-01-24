@@ -579,7 +579,7 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
 
   // ============ VIDEO OVERLAY - Watch first, then answer ============
   function renderVideoOverlay() {
-    // Before video finishes: Show only minimal info (category, progress, watching indicator)
+    // Before video finishes: Show only minimal info (category, progress)
     if (!videoFinished) {
       return (
         <View style={styles.immersiveOverlay}>
@@ -607,13 +607,8 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
             <Text style={styles.immersiveTitle}>{playable.title}</Text>
           </View>
 
-          {/* Bottom - Watching indicator */}
+          {/* Bottom - Just swipe hint, no watching indicator */}
           <View style={styles.videoWatchingContainer}>
-            <View style={styles.watchingBadge}>
-              <Ionicons name="eye" size={18} color="#FFFFFF" />
-              <Text style={styles.watchingText}>Watch the video...</Text>
-            </View>
-            {/* Swipe hint */}
             <View style={styles.swipeHintOverlay}>
               <Ionicons name="chevron-up" size={20} color="rgba(255,255,255,0.5)" />
               <Text style={styles.swipeHintOverlayText}>Swipe up to skip</Text>
@@ -623,7 +618,7 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
       );
     }
 
-    // After video finishes: Show question, options, and replay button
+    // After video finishes: Show question, options, and centered replay icon
     return (
       <View style={styles.immersiveOverlay}>
         {/* Top Section */}
@@ -639,15 +634,6 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
                 <Text style={styles.categoryText}>{playable.category}</Text>
               </LinearGradient>
             </View>
-            {/* Replay Button */}
-            <TouchableOpacity 
-              style={styles.replayButton}
-              onPress={handleReplay}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="refresh" size={18} color="#FFFFFF" />
-              <Text style={styles.replayButtonText}>Replay</Text>
-            </TouchableOpacity>
             {totalCount > 0 && (
               <View style={styles.progressBadge}>
                 <Text style={styles.progressBadgeText}>
@@ -659,24 +645,33 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
           <Text style={styles.immersiveTitle}>{playable.title}</Text>
         </View>
 
+        {/* Centered Replay Icon Button */}
+        <TouchableOpacity 
+          style={styles.replayButtonCentered}
+          onPress={handleReplay}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="play" size={32} color="#FFFFFF" />
+        </TouchableOpacity>
+
         {/* Bottom Half - Question & Options appear after video ends */}
         <View style={styles.bottomHalf}>
           {/* Question Card */}
           {playable.question.text && (
-            <View style={styles.questionCard}>
+            <View style={styles.questionCardVideo}>
               <Text style={styles.immersiveQuestion}>{playable.question.text}</Text>
             </View>
           )}
 
-          {/* MCQ Options */}
+          {/* MCQ Options - Higher opacity */}
           {playable.answer_type === 'mcq' && playable.options && (
             <View style={styles.immersiveOptionsGrid}>
               {playable.options.map((option: string, index: number) => (
                 <TouchableOpacity
                   key={index}
                   style={[
-                    styles.glassOption,
-                    selectedOption === option && styles.glassOptionSelected,
+                    styles.glassOptionVideo,
+                    selectedOption === option && styles.glassOptionSelectedVideo,
                   ]}
                   onPress={() => setSelectedOption(option)}
                   activeOpacity={0.8}
@@ -697,14 +692,14 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
             </View>
           )}
 
-          {/* Text Input */}
+          {/* Text Input - Higher opacity */}
           {playable.answer_type === 'text_input' && (
             <View style={styles.immersiveInputContainer}>
-              <View style={styles.glassInputWrapper}>
+              <View style={styles.glassInputWrapperVideo}>
                 <TextInput
                   style={styles.immersiveTextInput}
                   placeholder="Type your answer..."
-                  placeholderTextColor="rgba(255,255,255,0.5)"
+                  placeholderTextColor="rgba(255,255,255,0.6)"
                   value={userAnswer}
                   onChangeText={setUserAnswer}
                   autoCapitalize="words"
