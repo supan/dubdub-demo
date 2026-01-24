@@ -1339,6 +1339,10 @@ const styles = StyleSheet.create({
     minHeight: 80,
     textAlignVertical: 'top',
   },
+  monoInput: {
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 13,
+  },
   loginButton: {
     width: '100%',
     borderRadius: 12,
