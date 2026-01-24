@@ -522,14 +522,24 @@ export default function FeedScreen() {
       >
         {/* Question View - Always visible */}
         {currentPlayable ? (
-          <PlayableCard
-            playable={currentPlayable}
-            onAnswer={handleAnswer}
-            onGuessAnswer={handleGuessAnswer}
-            submitting={isSubmitting}
-            currentIndex={currentIndex}
-            totalCount={playables.length}
-          />
+          currentPlayable.type === 'chess_mate_in_2' ? (
+            <ChessPuzzleCard
+              playable={currentPlayable}
+              onPuzzleSolved={handleChessPuzzleSolved}
+              onPuzzleFailed={handleChessPuzzleFailed}
+              currentIndex={currentIndex}
+              totalCount={playables.length}
+            />
+          ) : (
+            <PlayableCard
+              playable={currentPlayable}
+              onAnswer={handleAnswer}
+              onGuessAnswer={handleGuessAnswer}
+              submitting={isSubmitting}
+              currentIndex={currentIndex}
+              totalCount={playables.length}
+            />
+          )
         ) : (
           // Fallback during transition - show loading indicator
           <View style={styles.transitionContainer}>
