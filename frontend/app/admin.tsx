@@ -317,6 +317,8 @@ export default function AdminDashboard() {
       setAlternateAnswers('');
       setAnswerExplanation('');
       setHints(['', '', '']);
+      setFenPosition('');
+      setSolutionMoves(['', '']);
       
       // Refresh playables list
       if (adminToken) fetchPlayables(adminToken);
