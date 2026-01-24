@@ -353,7 +353,7 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
               resizeMode={ResizeMode.COVER}
               shouldPlay={true}
               isLooping={true}
-              isMuted={true}
+              isMuted={false}
             />
           )}
           
