@@ -72,6 +72,8 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
     setCurrentHintIndex(0);
     setGuessResult(null);
     setShowCorrectAnswer(false);
+    setVideoFinished(false);
+    setIsReplaying(false);
   }, [playable.playable_id]);
 
   const handleSubmit = () => {
