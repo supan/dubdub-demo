@@ -243,9 +243,9 @@ export default function ChessPuzzleCard({
         {piece && (
           <Text style={[
             styles.piece,
-            { color: piece.color === 'w' ? '#FFFFFF' : '#000000' }
+            piece.color === 'w' ? styles.whitePiece : styles.blackPiece
           ]}>
-            {PIECE_SYMBOLS[piece.color === 'w' ? piece.type.toUpperCase() : piece.type]}
+            {getPieceSymbol(piece)}
           </Text>
         )}
       </TouchableOpacity>
