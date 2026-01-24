@@ -1306,12 +1306,20 @@ export default function AdminDashboard() {
                         <Text style={styles.badgeText}>{playable.answer_type}</Text>
                       </View>
                     </View>
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() => handleDeletePlayable(playable.playable_id)}
-                    >
-                      <Ionicons name="trash" size={18} color="#FF6B6B" />
-                    </TouchableOpacity>
+                    <View style={styles.playableActions}>
+                      <TouchableOpacity
+                        style={styles.editButton}
+                        onPress={() => handleEditPlayable(playable)}
+                      >
+                        <Ionicons name="pencil" size={18} color="#00D9FF" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.deleteButton}
+                        onPress={() => handleDeletePlayable(playable.playable_id)}
+                      >
+                        <Ionicons name="trash" size={18} color="#FF6B6B" />
+                      </TouchableOpacity>
+                    </View>
                   </View>
                   <Text style={styles.playableTitle}>{playable.title}</Text>
                   {playable.question.text && (
