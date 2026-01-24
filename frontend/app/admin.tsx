@@ -685,22 +685,32 @@ export default function AdminDashboard() {
         {/* Add Content Tab */}
         {activeTab === 'add' && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Add New Content</Text>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitle}>{isEditMode ? 'Edit Content' : 'Add New Content'}</Text>
+              {isEditMode && (
+                <TouchableOpacity style={styles.cancelEditButton} onPress={handleCancelEdit}>
+                  <Ionicons name="close-circle" size={20} color="#FF6B6B" />
+                  <Text style={styles.cancelEditText}>Cancel</Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
             {/* Content Type Selector */}
-            <Text style={styles.label}>Content Type</Text>
-            <View style={styles.typeSelector}>
+            <Text style={styles.label}>Content Type {isEditMode && <Text style={styles.readOnlyLabel}>(read-only)</Text>}</Text>
+            <View style={[styles.typeSelector, isEditMode && styles.typeSelectorDisabled]}>
               {(['text', 'image', 'video', 'image_text', 'video_text', 'guess_the_x', 'chess_mate_in_2'] as ContentType[]).map((type) => (
                 <TouchableOpacity
                   key={type}
                   style={[styles.typeOption, contentType === type && styles.typeOptionSelected]}
                   onPress={() => {
+                    if (isEditMode) return; // Don't allow changing type in edit mode
                     setContentType(type);
                     // Auto-set answer type for special types
                     if (type === 'guess_the_x' || type === 'chess_mate_in_2') {
                       setAnswerType('text_input');
                     }
                   }}
+                  disabled={isEditMode}
                 >
                   <Text style={[styles.typeOptionText, contentType === type && styles.typeOptionTextSelected]}>
                     {type === 'guess_the_x' ? 'GUESS THE X' : type === 'chess_mate_in_2' ? 'CHESS MATE IN 2' : type.replace('_', ' + ').toUpperCase()}
