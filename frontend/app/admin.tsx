@@ -1651,6 +1651,42 @@ const styles = StyleSheet.create({
   deleteButton: {
     padding: 4,
   },
+  editButton: {
+    padding: 4,
+    marginRight: 8,
+  },
+  playableActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  cancelEditButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  cancelEditText: {
+    color: '#FF6B6B',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  readOnlyLabel: {
+    color: '#888',
+    fontWeight: '400',
+    fontStyle: 'italic',
+  },
+  typeSelectorDisabled: {
+    opacity: 0.6,
+  },
   playableTitle: {
     fontSize: 16,
     fontWeight: '600',
