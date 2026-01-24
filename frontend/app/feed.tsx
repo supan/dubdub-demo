@@ -278,6 +278,60 @@ export default function FeedScreen() {
     }
   }, [playables, currentIndex, sessionToken, refreshUser]);
 
+  // Handle chess puzzle completion
+  const handleChessPuzzleSolved = useCallback(async (movesUsed: number) => {
+    if (!playables[currentIndex]) return;
+
+    try {
+      const playable = playables[currentIndex];
+
+      const response = await axios.post(
+        `${BACKEND_URL}/api/playables/${playable.playable_id}/chess-solved`,
+        { solved: true, moves_used: movesUsed },
+        { headers: { Authorization: `Bearer ${sessionToken}` } }
+      );
+
+      const result = response.data;
+      
+      setFeedbackData({
+        correct: true,
+        current_streak: result.current_streak,
+        moves_used: movesUsed,
+      });
+      setTotalPlayed(prev => prev + 1);
+      setGameState('SHOWING_FEEDBACK');
+      refreshUser().catch(console.error);
+    } catch (error) {
+      console.error('Error submitting chess puzzle result:', error);
+    }
+  }, [playables, currentIndex, sessionToken, refreshUser]);
+
+  const handleChessPuzzleFailed = useCallback(async () => {
+    if (!playables[currentIndex]) return;
+
+    try {
+      const playable = playables[currentIndex];
+
+      const response = await axios.post(
+        `${BACKEND_URL}/api/playables/${playable.playable_id}/chess-solved`,
+        { solved: false, moves_used: 0 },
+        { headers: { Authorization: `Bearer ${sessionToken}` } }
+      );
+
+      const result = response.data;
+      
+      setFeedbackData({
+        correct: false,
+        current_streak: result.current_streak,
+      });
+      setTotalPlayed(prev => prev + 1);
+      setGameState('SHOWING_FEEDBACK');
+      refreshUser().catch(console.error);
+    } catch (error) {
+      console.error('Error submitting chess puzzle result:', error);
+    }
+  }, [playables, currentIndex, sessionToken, refreshUser]);
+
   // Ref for the transition function so PanResponder can access it
   const doSwipeRef = useRef(doSwipeTransition);
   useEffect(() => { doSwipeRef.current = doSwipeTransition; }, [doSwipeTransition]);
