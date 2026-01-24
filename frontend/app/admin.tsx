@@ -210,6 +210,54 @@ export default function AdminDashboard() {
     }
   };
 
+  // Function to start editing a playable
+  const handleEditPlayable = (playable: Playable) => {
+    setIsEditMode(true);
+    setEditingPlayableId(playable.playable_id);
+    
+    // Populate form with playable data
+    setContentType(playable.type as ContentType);
+    setAnswerType(playable.answer_type as AnswerType);
+    setCategory(playable.category);
+    setTitle(playable.title);
+    setQuestionText(playable.question?.text || '');
+    setImageUrl(playable.question?.image_url || playable.question?.image_base64 || '');
+    setVideoUrl(playable.question?.video_url || '');
+    setOptions(playable.options || ['', '', '', '']);
+    setCorrectAnswer(playable.correct_answer);
+    setAlternateAnswers(playable.alternate_answers?.join(', ') || '');
+    setAnswerExplanation(playable.answer_explanation || '');
+    setHints(playable.hints || ['', '', '']);
+    setFenPosition(playable.fen || '');
+    setSolutionMoves(playable.solution || ['', '']);
+    setDifficulty(playable.difficulty || 'medium');
+    
+    // Switch to the add/edit tab
+    setActiveTab('add');
+    setAddMessage('');
+  };
+
+  // Function to cancel editing
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setEditingPlayableId(null);
+    
+    // Reset form
+    setCategory('');
+    setTitle('');
+    setQuestionText('');
+    setImageUrl('');
+    setVideoUrl('');
+    setOptions(['', '', '', '']);
+    setCorrectAnswer('');
+    setAlternateAnswers('');
+    setAnswerExplanation('');
+    setHints(['', '', '']);
+    setFenPosition('');
+    setSolutionMoves(['', '']);
+    setAddMessage('');
+  };
+
   const handleAddContent = async () => {
     // Validation
     if (!category || !title || !correctAnswer) {
