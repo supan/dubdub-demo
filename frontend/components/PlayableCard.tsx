@@ -364,6 +364,7 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
           ) : (
             // Native: Use expo-av Video
             <Video
+              ref={videoRef}
               source={{ uri: mediaSource.uri }}
               style={StyleSheet.absoluteFillObject}
               useNativeControls={false}
@@ -371,6 +372,7 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
               shouldPlay={true}
               isLooping={true}
               isMuted={false}
+              volume={1.0}
             />
           )}
           
