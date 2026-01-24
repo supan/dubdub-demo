@@ -602,20 +602,20 @@ export default function AdminDashboard() {
             {/* Content Type Selector */}
             <Text style={styles.label}>Content Type</Text>
             <View style={styles.typeSelector}>
-              {(['text', 'image', 'video', 'image_text', 'video_text', 'guess_the_x'] as ContentType[]).map((type) => (
+              {(['text', 'image', 'video', 'image_text', 'video_text', 'guess_the_x', 'chess_mate_in_2'] as ContentType[]).map((type) => (
                 <TouchableOpacity
                   key={type}
                   style={[styles.typeOption, contentType === type && styles.typeOptionSelected]}
                   onPress={() => {
                     setContentType(type);
-                    // Auto-set answer type for guess_the_x
-                    if (type === 'guess_the_x') {
+                    // Auto-set answer type for special types
+                    if (type === 'guess_the_x' || type === 'chess_mate_in_2') {
                       setAnswerType('text_input');
                     }
                   }}
                 >
                   <Text style={[styles.typeOptionText, contentType === type && styles.typeOptionTextSelected]}>
-                    {type === 'guess_the_x' ? 'GUESS THE X' : type.replace('_', ' + ').toUpperCase()}
+                    {type === 'guess_the_x' ? 'GUESS THE X' : type === 'chess_mate_in_2' ? 'CHESS MATE IN 2' : type.replace('_', ' + ').toUpperCase()}
                   </Text>
                 </TouchableOpacity>
               ))}
