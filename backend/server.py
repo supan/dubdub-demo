@@ -1041,8 +1041,7 @@ async def admin_add_playable(
             if not request.solution or len(request.solution) < 1:
                 raise HTTPException(status_code=400, detail="Chess puzzle requires at least 1 solution move")
         
-        # Validate MCQ has options (but not for guess_the_x or chess_mate_in_2)
-        if request.answer_type == "mcq" and request.type != "guess_the_x":
+        if request.answer_type == "mcq" and request.type not in ["guess_the_x", "chess_mate_in_2"]:
             if not request.options or len(request.options) < 2:
                 raise HTTPException(status_code=400, detail="MCQ requires at least 2 options")
             if request.correct_answer not in request.options:
