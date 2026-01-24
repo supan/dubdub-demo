@@ -245,7 +245,7 @@ export default function ChessPuzzleCard({
             styles.piece,
             piece.color === 'w' ? styles.whitePiece : styles.blackPiece
           ]}>
-            {getPieceSymbol(piece)}
+            {getPieceChar(piece)}
           </Text>
         )}
       </TouchableOpacity>
