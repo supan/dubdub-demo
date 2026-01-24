@@ -606,6 +606,81 @@ async def submit_guess_answer(
         logging.error(f"Error submitting guess answer: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+class ChessPuzzleSubmission(BaseModel):
+    solved: bool
+    moves_used: int  # Number of moves used to solve
+
+@api_router.post("/playables/{playable_id}/chess-solved")
+async def submit_chess_puzzle_result(
+    playable_id: str,
+    submission: ChessPuzzleSubmission,
+    current_user: User = Depends(require_auth)
+):
+    """Submit chess puzzle result"""
+    try:
+        # Get playable
+        playable = await db.playables.find_one(
+            {"playable_id": playable_id},
+            {"_id": 0}
+        )
+        
+        if not playable:
+            raise HTTPException(status_code=404, detail="Playable not found")
+        
+        if playable.get("type") != "chess_mate_in_2":
+            raise HTTPException(status_code=400, detail="This endpoint is for chess puzzles only")
+        
+        is_correct = submission.solved
+        
+        # Save progress
+        progress = {
+            "user_id": current_user.user_id,
+            "playable_id": playable_id,
+            "answered": True,
+            "correct": is_correct,
+            "moves_used": submission.moves_used,
+            "timestamp": datetime.now(timezone.utc)
+        }
+        await db.user_progress.insert_one(progress)
+        
+        # Update user stats
+        user_doc = await db.users.find_one({"user_id": current_user.user_id}, {"_id": 0})
+        
+        new_total_played = user_doc["total_played"] + 1
+        new_correct_answers = user_doc["correct_answers"] + (1 if is_correct else 0)
+        
+        if is_correct:
+            new_current_streak = user_doc["current_streak"] + 1
+            new_best_streak = max(user_doc["best_streak"], new_current_streak)
+        else:
+            new_current_streak = 0
+            new_best_streak = user_doc["best_streak"]
+        
+        await db.users.update_one(
+            {"user_id": current_user.user_id},
+            {"$set": {
+                "total_played": new_total_played,
+                "correct_answers": new_correct_answers,
+                "current_streak": new_current_streak,
+                "best_streak": new_best_streak
+            }}
+        )
+        
+        return {
+            "correct": is_correct,
+            "moves_used": submission.moves_used,
+            "current_streak": new_current_streak,
+            "best_streak": new_best_streak,
+            "total_played": new_total_played,
+            "correct_answers": new_correct_answers
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error submitting chess puzzle result: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/user/stats")
 async def get_user_stats(current_user: User = Depends(require_auth)):
     """Get user statistics"""
