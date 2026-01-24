@@ -15,12 +15,17 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BOARD_SIZE = Math.min(SCREEN_WIDTH - 40, 360);
 const SQUARE_SIZE = BOARD_SIZE / 8;
 
-// Piece unicode characters - using filled symbols for consistency
+// Piece unicode characters - using consistent filled symbols
+// White pieces use outline symbols, black use filled
 const PIECE_SYMBOLS: { [key: string]: string } = {
-  // White pieces (filled)
-  'wk': '♚', 'wq': '♛', 'wr': '♜', 'wb': '♝', 'wn': '♞', 'wp': '♟',
-  // Black pieces (filled)
+  'wk': '♔', 'wq': '♕', 'wr': '♖', 'wb': '♗', 'wn': '♘', 'wp': '♙',
   'bk': '♚', 'bq': '♛', 'br': '♜', 'bb': '♝', 'bn': '♞', 'bp': '♟',
+};
+
+// Helper to get piece symbol
+const getPieceSymbol = (piece: { type: string; color: string }): string => {
+  const key = `${piece.color}${piece.type}`;
+  return PIECE_SYMBOLS[key] || '';
 };
 
 interface ChessPuzzleCardProps {
