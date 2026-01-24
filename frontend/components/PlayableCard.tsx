@@ -34,6 +34,10 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const videoRef = useRef<Video>(null);
   
+  // Video playback state - for "watch first, then answer" flow
+  const [videoFinished, setVideoFinished] = useState(false);
+  const [isReplaying, setIsReplaying] = useState(false);
+  
   // Guess the X specific state
   const [currentHintIndex, setCurrentHintIndex] = useState(0);
   const [guessResult, setGuessResult] = useState<any>(null);
