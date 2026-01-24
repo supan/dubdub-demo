@@ -126,11 +126,14 @@ export default function ChessPuzzleCard({
       return;
     }
 
-    // Check if this matches the expected solution
+    // Normalize move notation for comparison (remove #, +, and compare base move)
+    const normalizeMove = (m: string) => m.replace(/[#+]/g, '').trim();
     const moveNotation = move.san;
-    const isCorrectMove = moveNotation === expectedMove || 
-                          moveNotation.replace('#', '+') === expectedMove ||
-                          moveNotation.replace('+', '') === expectedMove.replace('+', '').replace('#', '');
+    
+    // Check if this matches the expected solution (flexible comparison)
+    const isCorrectMove = normalizeMove(moveNotation) === normalizeMove(expectedMove);
+
+    console.log(`Move made: ${moveNotation}, Expected: ${expectedMove}, Match: ${isCorrectMove}`);
 
     if (!isCorrectMove) {
       // Wrong move - undo and show failure
@@ -140,7 +143,7 @@ export default function ChessPuzzleCard({
       setLegalMoves([]);
       setMessage('Wrong move! Try again.');
       
-      // Give them another chance (or fail after X attempts)
+      // Give them another chance
       setTimeout(() => {
         setMessage('Your turn - Find the winning move!');
       }, 1500);
