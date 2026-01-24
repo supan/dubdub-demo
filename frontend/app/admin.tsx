@@ -71,6 +71,10 @@ export default function AdminDashboard() {
   const [addLoading, setAddLoading] = useState(false);
   const [addMessage, setAddMessage] = useState('');
 
+  // Edit Mode State
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingPlayableId, setEditingPlayableId] = useState<string | null>(null);
+
   // Existing Content State
   const [playables, setPlayables] = useState<Playable[]>([]);
   const [loadingPlayables, setLoadingPlayables] = useState(false);
