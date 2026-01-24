@@ -15,8 +15,12 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BOARD_SIZE = Math.min(SCREEN_WIDTH - 40, 360);
 const SQUARE_SIZE = BOARD_SIZE / 8;
 
-// Chess piece characters - using FILLED symbols for both colors
-// Both white and black use the same filled symbols, distinguished by color styling
+// Chess piece characters - using FILLED symbols (♚♛♜♝♞♟) for BOTH colors
+// DO NOT CHANGE - This exact configuration produces consistent pieces across devices:
+// - Both white and black pieces use the SAME filled Unicode symbols
+// - Colors are applied via styling (white: #FFFFFF, black: #1A1A1A)
+// - White pieces have black shadow for visibility on light squares
+// - Black pieces have minimal shadow
 const PIECES: { [key: string]: string } = {
   'wk': '♚', 'wq': '♛', 'wr': '♜', 'wb': '♝', 'wn': '♞', 'wp': '♟',
   'bk': '♚', 'bq': '♛', 'br': '♜', 'bb': '♝', 'bn': '♞', 'bp': '♟',
