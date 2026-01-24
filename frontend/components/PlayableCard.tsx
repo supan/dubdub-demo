@@ -1280,4 +1280,47 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 20,
   },
+
+  // ============ VIDEO WATCH-THEN-ANSWER STYLES ============
+  videoWatchingContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingBottom: Platform.OS === 'ios' ? 16 : 12,
+  },
+  watchingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 24,
+    gap: 10,
+    marginBottom: 16,
+  },
+  watchingText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  replayButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  replayButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
 });
