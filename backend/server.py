@@ -1034,7 +1034,14 @@ async def admin_add_playable(
             if len(request.hints) > 5:
                 raise HTTPException(status_code=400, detail="Guess the X allows maximum 5 hints")
         
-        # Validate MCQ has options (but not for guess_the_x)
+        # Validate chess_mate_in_2 has FEN and solution
+        if request.type == "chess_mate_in_2":
+            if not request.fen:
+                raise HTTPException(status_code=400, detail="Chess puzzle requires a FEN position")
+            if not request.solution or len(request.solution) < 1:
+                raise HTTPException(status_code=400, detail="Chess puzzle requires at least 1 solution move")
+        
+        # Validate MCQ has options (but not for guess_the_x or chess_mate_in_2)
         if request.answer_type == "mcq" and request.type != "guess_the_x":
             if not request.options or len(request.options) < 2:
                 raise HTTPException(status_code=400, detail="MCQ requires at least 2 options")
