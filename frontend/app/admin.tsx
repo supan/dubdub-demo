@@ -621,8 +621,8 @@ export default function AdminDashboard() {
               ))}
             </View>
 
-            {/* Answer Type Selector - Hide for guess_the_x */}
-            {contentType !== 'guess_the_x' && (
+            {/* Answer Type Selector - Hide for guess_the_x and chess_mate_in_2 */}
+            {contentType !== 'guess_the_x' && contentType !== 'chess_mate_in_2' && (
               <>
                 <Text style={styles.label}>Answer Type</Text>
                 <View style={styles.typeSelector}>
