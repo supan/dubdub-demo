@@ -450,10 +450,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#CDD26A',
   },
   piece: {
-    fontSize: SQUARE_SIZE * 0.75,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    fontSize: SQUARE_SIZE * 0.8,
+    textAlign: 'center',
+  },
+  whitePiece: {
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
+  },
+  blackPiece: {
+    color: '#1A1A1A',
+    textShadowColor: 'rgba(255, 255, 255, 0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 1,
   },
   legalMoveIndicator: {
     width: SQUARE_SIZE * 0.3,
