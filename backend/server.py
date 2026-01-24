@@ -971,7 +971,7 @@ class AddPlayableRequest(BaseModel):
     answer_explanation: Optional[str] = None  # Brief explanation of the answer
     hints: Optional[List[str]] = None  # For guess_the_x: 3-5 hints
     fen: Optional[str] = None  # For chess_mate_in_2: FEN position string
-    solution: Optional[List[str]] = None  # For chess_mate_in_2: Solution moves in algebraic notation
+    solution: Optional[List[str]] = None  # For chess_mate_in_2: ALL moves in UCI format (e.g., ["e2e4", "e7e5", "d1h5"])
     difficulty: str = "medium"
 
 @api_router.post("/admin/login")
