@@ -1180,6 +1180,55 @@ async def admin_delete_playable(playable_id: str, _: bool = Depends(verify_admin
         logging.error(f"Error deleting playable: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.put("/admin/playables/{playable_id}")
+async def admin_update_playable(playable_id: str, request: AddPlayableRequest, _: bool = Depends(verify_admin_token)):
+    """Update a playable (admin only)"""
+    try:
+        # Check if playable exists
+        existing = await db.playables.find_one({"playable_id": playable_id})
+        if not existing:
+            raise HTTPException(status_code=404, detail="Playable not found")
+        
+        # Build question object based on type
+        question = {}
+        if request.question_text:
+            question["text"] = request.question_text
+        if request.image_url:
+            if request.image_url.startswith("data:"):
+                question["image_base64"] = request.image_url
+            else:
+                question["image_url"] = request.image_url
+        if request.video_url:
+            question["video_url"] = request.video_url
+        
+        # Build update document
+        update_doc = {
+            "category": request.category,
+            "title": request.title,
+            "question": question,
+            "options": request.options if request.answer_type == "mcq" and request.type not in ["guess_the_x", "chess_mate_in_2"] else None,
+            "correct_answer": request.correct_answer,
+            "alternate_answers": request.alternate_answers if (request.answer_type == "text_input" or request.type in ["guess_the_x", "chess_mate_in_2"]) else None,
+            "answer_explanation": request.answer_explanation,
+            "hints": request.hints if request.type == "guess_the_x" else None,
+            "fen": request.fen if request.type == "chess_mate_in_2" else None,
+            "solution": request.solution if request.type == "chess_mate_in_2" else None,
+            "difficulty": request.difficulty,
+            "updated_at": datetime.now(timezone.utc)
+        }
+        
+        await db.playables.update_one(
+            {"playable_id": playable_id},
+            {"$set": update_doc}
+        )
+        
+        return {"success": True, "message": "Playable updated successfully", "playable_id": playable_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating playable: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/admin/users")
 async def admin_get_users(_: bool = Depends(verify_admin_token)):
     """Get all users (admin only)"""
