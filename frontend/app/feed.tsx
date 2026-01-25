@@ -291,17 +291,36 @@ export default function FeedScreen() {
       
       // If correct, show feedback then transition
       if (result.correct) {
+        // Update session stats for Guess the X
+        setSessionStats(prev => {
+          const playable = playables[currentIndex];
+          const newStats = {
+            played: prev.played + 1,
+            correct: prev.correct + 1,
+            bestStreak: Math.max(prev.bestStreak, result.current_streak || 0),
+            categoryStats: { ...prev.categoryStats },
+          };
+          newStats.categoryStats[playable.category] = (prev.categoryStats[playable.category] || 0) + 1;
+          return newStats;
+        });
+        
         setFeedbackData({
           correct: true,
           correct_answer: result.correct_answer,
           feedback_message: result.feedback_message,
           hints_used: result.hints_used,
+          current_streak: result.current_streak,
+          category: playables[currentIndex]?.category,
         });
         setTotalPlayed(prev => prev + 1);
         setGameState('SHOWING_FEEDBACK');
         refreshUser().catch(console.error);
       } else if (result.all_hints_exhausted) {
-        // All hints used, no feedback screen - just show answer and allow swipe
+        // All hints used - count as played but not correct
+        setSessionStats(prev => ({
+          ...prev,
+          played: prev.played + 1,
+        }));
         setTotalPlayed(prev => prev + 1);
         refreshUser().catch(console.error);
       }
