@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -18,8 +18,75 @@ interface FeedbackOverlayProps {
   correctAnswer?: string;
   answerExplanation?: string;
   currentStreak?: number;
+  previousStreak?: number;
   hintsUsed?: number;
+  category?: string;
+  categoryCorrectCount?: number;
 }
+
+// Identity titles by category
+const CATEGORY_IDENTITIES: Record<string, { title: string; emoji: string }> = {
+  'Football': { title: 'Football Expert', emoji: '🏈' },
+  'Sports': { title: 'Sports Guru', emoji: '🏆' },
+  'History': { title: 'History Buff', emoji: '📚' },
+  'Science': { title: 'Science Whiz', emoji: '🔬' },
+  'Geography': { title: 'World Explorer', emoji: '🌍' },
+  'Maths': { title: 'Math Genius', emoji: '🧮' },
+  'Chess': { title: 'Chess Master', emoji: '♟️' },
+  'Entertainment': { title: 'Pop Culture Pro', emoji: '🎬' },
+  'Music': { title: 'Music Maestro', emoji: '🎵' },
+  'Art': { title: 'Art Connoisseur', emoji: '🎨' },
+  'Literature': { title: 'Literary Genius', emoji: '📖' },
+  'Technology': { title: 'Tech Wizard', emoji: '💻' },
+  'default': { title: 'Trivia Champion', emoji: '🏅' },
+};
+
+// Streak celebration messages
+const getStreakMessage = (streak: number): { text: string; emoji: string } | null => {
+  if (streak >= 10) return { text: "LEGENDARY! Top 1% of players!", emoji: "👑" };
+  if (streak >= 7) return { text: "Incredible! Top 5% territory!", emoji: "🌟" };
+  if (streak >= 5) return { text: "Unstoppable! Only top 10% reach this!", emoji: "🔥" };
+  if (streak >= 3) return { text: "Hat-trick! You're on fire!", emoji: "🎩" };
+  if (streak === 2) return { text: "Double up! Keep it rolling!", emoji: "✨" };
+  return null;
+};
+
+// Social proof messages (faked percentages)
+const SOCIAL_PROOF_CORRECT = [
+  { text: "Only 34% got this right", suffix: "you're sharp!" },
+  { text: "Faster than 78% of players", suffix: "lightning fast!" },
+  { text: "This stumped most people", suffix: "not you though!" },
+  { text: "Top 25% answer", suffix: "impressive!" },
+  { text: "Beat the average by 2x", suffix: "well done!" },
+  { text: "67% got this wrong", suffix: "you nailed it!" },
+];
+
+// Identity validation messages
+const getIdentityMessage = (category: string, count: number): { text: string; emoji: string } | null => {
+  if (count < 2) return null;
+  const identity = CATEGORY_IDENTITIES[category] || CATEGORY_IDENTITIES['default'];
+  if (count >= 5) return { text: `${identity.title}!`, emoji: identity.emoji };
+  if (count >= 3) return { text: `Rising ${identity.title}!`, emoji: identity.emoji };
+  if (count >= 2) return { text: `${category} streak building!`, emoji: "📈" };
+  return null;
+};
+
+// Incorrect answer encouragement
+const ENCOURAGEMENT_MESSAGES = [
+  { text: "Now you know!", suffix: "Knowledge +1 📈" },
+  { text: "The greats learn from every miss", suffix: "keep going!" },
+  { text: "New neural pathway formed", suffix: "brain upgraded! 🧠" },
+  { text: "Every expert was once a beginner", suffix: "you're learning!" },
+  { text: "That's how knowledge grows", suffix: "onto the next! 💪" },
+];
+
+// Streak loss softening
+const STREAK_LOSS_MESSAGES = [
+  { text: "Fresh start loading...", suffix: "Let's go!" },
+  { text: "Streak reset", suffix: "but champions bounce back!" },
+  { text: "New streak opportunity", suffix: "this could be the big one!" },
+  { text: "Clean slate", suffix: "time to build something great!" },
+];
 
 export default function FeedbackOverlay({
   visible,
@@ -27,14 +94,64 @@ export default function FeedbackOverlay({
   correctAnswer,
   answerExplanation,
   currentStreak = 0,
+  previousStreak = 0,
   hintsUsed,
+  category = '',
+  categoryCorrectCount = 0,
 }: FeedbackOverlayProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
+  // Generate two psychological messages
+  const messages = useMemo(() => {
+    const result: { text: string; highlight?: boolean; emoji?: string }[] = [];
+    
+    if (correct) {
+      // Message 1: Streak or Identity based
+      const streakMsg = getStreakMessage(currentStreak);
+      const identityMsg = getIdentityMessage(category, categoryCorrectCount);
+      
+      if (streakMsg && currentStreak > 1) {
+        result.push({ text: streakMsg.text, emoji: streakMsg.emoji, highlight: true });
+      } else if (identityMsg) {
+        result.push({ text: identityMsg.text, emoji: identityMsg.emoji, highlight: true });
+      } else if (currentStreak === 1) {
+        result.push({ text: "New streak started!", emoji: "🔥", highlight: true });
+      }
+      
+      // Message 2: Social proof
+      const socialProof = SOCIAL_PROOF_CORRECT[Math.floor(Math.random() * SOCIAL_PROOF_CORRECT.length)];
+      result.push({ text: `${socialProof.text} — ${socialProof.suffix}` });
+      
+    } else {
+      // Wrong answer messages
+      const hadStreak = previousStreak > 0;
+      
+      // Message 1: Streak loss or encouragement
+      if (hadStreak && previousStreak >= 3) {
+        const lossMsg = STREAK_LOSS_MESSAGES[Math.floor(Math.random() * STREAK_LOSS_MESSAGES.length)];
+        result.push({ text: `${lossMsg.text} ${lossMsg.suffix}`, highlight: true });
+      } else {
+        const encourageMsg = ENCOURAGEMENT_MESSAGES[Math.floor(Math.random() * ENCOURAGEMENT_MESSAGES.length)];
+        result.push({ text: `${encourageMsg.text} ${encourageMsg.suffix}`, highlight: true });
+      }
+      
+      // Message 2: Recovery motivation
+      if (!hadStreak || previousStreak < 3) {
+        const recoveryMessages = [
+          "Your next streak starts now!",
+          "The comeback is always greater!",
+          "One question at a time!",
+        ];
+        result.push({ text: recoveryMessages[Math.floor(Math.random() * recoveryMessages.length)] });
+      }
+    }
+    
+    return result;
+  }, [correct, currentStreak, previousStreak, category, categoryCorrectCount]);
+
   useEffect(() => {
     if (visible) {
-      // Animate in
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -49,7 +166,6 @@ export default function FeedbackOverlay({
         }),
       ]).start();
     } else {
-      // Reset for next time
       fadeAnim.setValue(0);
       scaleAnim.setValue(0.8);
     }
@@ -95,6 +211,24 @@ export default function FeedbackOverlay({
             {correct ? "Correct!" : "Wrong"}
           </Text>
 
+          {/* Psychological Messages */}
+          <View style={styles.messagesContainer}>
+            {messages.map((msg, index) => (
+              <View key={index} style={[
+                styles.messageRow,
+                msg.highlight && styles.messageRowHighlight
+              ]}>
+                {msg.emoji && <Text style={styles.messageEmoji}>{msg.emoji}</Text>}
+                <Text style={[
+                  styles.messageText,
+                  msg.highlight && styles.messageTextHighlight
+                ]}>
+                  {msg.text}
+                </Text>
+              </View>
+            ))}
+          </View>
+
           {/* Correct Answer (for wrong answers) */}
           {!correct && correctAnswer && (
             <View style={styles.answerRow}>
@@ -125,9 +259,21 @@ export default function FeedbackOverlay({
           )}
 
           {/* Streak Badge */}
-          <View style={styles.streakContainer}>
-            <Ionicons name="flame" size={18} color="#FF6B00" />
-            <Text style={styles.streakText}>{currentStreak} streak</Text>
+          <View style={[
+            styles.streakContainer,
+            currentStreak >= 5 && styles.streakContainerHot
+          ]}>
+            <Ionicons 
+              name="flame" 
+              size={18} 
+              color={currentStreak >= 5 ? "#FFD700" : "#FF6B00"} 
+            />
+            <Text style={[
+              styles.streakText,
+              currentStreak >= 5 && styles.streakTextHot
+            ]}>
+              {currentStreak} streak
+            </Text>
           </View>
 
           {/* Swipe Hint */}
@@ -162,7 +308,7 @@ const styles = StyleSheet.create({
   modalCard: {
     backgroundColor: '#1A1A2E',
     borderRadius: 24,
-    padding: 32,
+    padding: 28,
     alignItems: 'center',
     borderWidth: 2,
     shadowColor: '#000',
@@ -183,7 +329,7 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   iconCorrect: {
     backgroundColor: 'rgba(0, 255, 135, 0.15)',
@@ -194,13 +340,43 @@ const styles = StyleSheet.create({
   resultText: {
     fontSize: 28,
     fontWeight: '800',
-    marginBottom: 12,
+    marginBottom: 8,
+  },
+  messagesContainer: {
+    width: '100%',
+    marginBottom: 16,
+    gap: 8,
+  },
+  messageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    gap: 6,
+  },
+  messageRowHighlight: {
+    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+  },
+  messageEmoji: {
+    fontSize: 18,
+  },
+  messageText: {
+    fontSize: 14,
+    color: '#AAA',
+    textAlign: 'center',
+  },
+  messageTextHighlight: {
+    color: '#FFD700',
+    fontWeight: '600',
+    fontSize: 15,
   },
   answerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   answerLabel: {
     fontSize: 14,
@@ -219,7 +395,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   hintsUsedText: {
     fontSize: 13,
@@ -231,7 +407,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     width: '100%',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   explanationHeader: {
     flexDirection: 'row',
@@ -257,12 +433,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 20,
     gap: 6,
-    marginBottom: 20,
+    marginBottom: 16,
+  },
+  streakContainerHot: {
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.3)',
   },
   streakText: {
     fontSize: 15,
     fontWeight: '600',
     color: '#FF6B00',
+  },
+  streakTextHot: {
+    color: '#FFD700',
   },
   swipeHint: {
     flexDirection: 'row',
