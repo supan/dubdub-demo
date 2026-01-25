@@ -231,6 +231,10 @@ export default function FeedScreen() {
     try {
       setGameState('SUBMITTING');
       const playable = playables[currentIndex];
+      
+      // Store previous streak before answer
+      const prevStreak = user?.current_streak || 0;
+      setPreviousStreak(prevStreak);
 
       const response = await axios.post(
         `${BACKEND_URL}/api/playables/${playable.playable_id}/answer`,
@@ -238,7 +242,29 @@ export default function FeedScreen() {
         { headers: { Authorization: `Bearer ${sessionToken}` } }
       );
 
-      setFeedbackData(response.data);
+      const result = response.data;
+      
+      // Update session stats
+      setSessionStats(prev => {
+        const newStats = {
+          played: prev.played + 1,
+          correct: result.correct ? prev.correct + 1 : prev.correct,
+          bestStreak: Math.max(prev.bestStreak, result.current_streak || 0),
+          categoryStats: { ...prev.categoryStats },
+        };
+        if (result.correct) {
+          newStats.categoryStats[playable.category] = (prev.categoryStats[playable.category] || 0) + 1;
+        }
+        return newStats;
+      });
+      
+      // Add extra feedback data
+      setFeedbackData({
+        ...result,
+        category: playable.category,
+        categoryCorrectCount: (sessionStats.categoryStats[playable.category] || 0) + (result.correct ? 1 : 0),
+        previousStreak: prevStreak,
+      });
       setTotalPlayed(prev => prev + 1);
       setGameState('SHOWING_FEEDBACK');
       refreshUser().catch(console.error);
@@ -246,7 +272,7 @@ export default function FeedScreen() {
       console.error('Error submitting:', error);
       setGameState('PLAYING');
     }
-  }, [gameState, playables, currentIndex, sessionToken]);
+  }, [gameState, playables, currentIndex, sessionToken, user, sessionStats]);
 
   // Handle "Guess the X" answer submission
   const handleGuessAnswer = useCallback(async (answer: string, hintNumber: number) => {
