@@ -183,11 +183,13 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
             // Parent will handle transition
           } else if (result.reveal_next_hint) {
             // Wrong, but more hints available - reveal next hint
+            setWrongGuesses(prev => [...prev, userAnswer]);
             setCurrentHintIndex(currentHintIndex + 1);
             setUserAnswer('');
             setHasSubmitted(false);
           } else if (result.all_hints_exhausted) {
             // All hints used, show correct answer
+            setWrongGuesses(prev => [...prev, userAnswer]);
             setGuessResult(result);
             setShowCorrectAnswer(true);
           }
