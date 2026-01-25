@@ -68,12 +68,12 @@ export default function LoginScreen() {
         <View style={styles.header}>
           <Ionicons name="infinite" size={100} color="#00FF87" />
           <Text style={styles.title}>DubDub</Text>
-          <Text style={styles.tagline}>Quick Play. Infinite Wins</Text>
+          <Text style={styles.tagline}>Quick Plays. Real Wins.</Text>
         </View>
 
         <View style={styles.centerContent}>
           <Text style={styles.description}>
-            Challenge yourself with infinite plays
+            30 second plays across topics you love.
           </Text>
         </View>
 
@@ -92,7 +92,7 @@ export default function LoginScreen() {
             </Text>
           </TouchableOpacity>
 
-          <Text style={styles.footerText}>Join the winning community</Text>
+          <Text style={styles.footerText}>New challenges every day</Text>
           <Text style={styles.versionText}>v1.3.0</Text>
         </View>
       </View>
