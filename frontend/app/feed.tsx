@@ -47,6 +47,15 @@ export default function FeedScreen() {
   const [totalPlayed, setTotalPlayed] = useState(0);
   const [gameState, setGameState] = useState<GameState>('LOADING');
   const [initialLoadDone, setInitialLoadDone] = useState(false);
+  
+  // Session stats for end screen
+  const [sessionStats, setSessionStats] = useState({
+    played: 0,
+    correct: 0,
+    bestStreak: 0,
+    categoryStats: {} as Record<string, number>,
+  });
+  const [previousStreak, setPreviousStreak] = useState(0);
 
   // Animated values
   const translateY = useRef(new Animated.Value(0)).current;
