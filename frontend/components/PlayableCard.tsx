@@ -263,6 +263,7 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
             <>
               <View style={[styles.guessInputWrapper, hasImage && styles.guessInputWrapperImmersive]}>
                 <TextInput
+                  ref={inputRef}
                   style={[styles.guessInput, hasImage && styles.guessInputImmersive]}
                   placeholder="Type your guess..."
                   placeholderTextColor={hasImage ? "rgba(255,255,255,0.5)" : "#666"}
@@ -271,6 +272,12 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
                   autoCapitalize="words"
                   returnKeyType="done"
                   blurOnSubmit={true}
+                  onFocus={() => {
+                    // Scroll to end when input is focused to ensure visibility
+                    setTimeout(() => {
+                      scrollViewRef.current?.scrollToEnd({ animated: true });
+                    }, 300);
+                  }}
                 />
               </View>
               <TouchableOpacity
