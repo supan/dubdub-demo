@@ -1197,6 +1197,13 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
+  wrongGuessText: {
+    fontSize: 13,
+    color: '#FF6B6B',
+    fontWeight: '500',
+    marginTop: 6,
+    paddingLeft: 4,
+  },
   hintLockedText: {
     flex: 1,
     fontSize: 14,
