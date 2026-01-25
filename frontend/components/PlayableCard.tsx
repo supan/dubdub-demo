@@ -319,7 +319,7 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
         <KeyboardAvoidingView 
           style={styles.immersiveContainer}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
         >
           <View style={styles.fullScreenMedia}>
             <Image
@@ -329,10 +329,11 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
             />
             <View style={styles.guessOverlay}>
               <ScrollView 
+                ref={scrollViewRef}
                 style={styles.guessScrollView}
                 contentContainerStyle={styles.guessScrollContent}
                 showsVerticalScrollIndicator={false}
-                bounces={false}
+                bounces={true}
                 keyboardShouldPersistTaps="handled"
               >
                 {renderGuessContent()}
@@ -348,13 +349,14 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
       <KeyboardAvoidingView 
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
       >
         <ScrollView 
+          ref={scrollViewRef}
           style={styles.scrollView}
           contentContainerStyle={styles.guessScrollContentStandard}
           showsVerticalScrollIndicator={false}
-          bounces={false}
+          bounces={true}
           keyboardShouldPersistTaps="handled"
         >
           {renderGuessContent()}
