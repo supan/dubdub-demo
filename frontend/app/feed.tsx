@@ -666,7 +666,10 @@ export default function FeedScreen() {
           
           {/* Swipe Up for Next Set */}
           <View style={styles.swipeUpHint}>
-            <Ionicons name="chevron-up" size={24} color="rgba(255,255,255,0.5)" />
+            <View style={styles.chevronStack}>
+              <Ionicons name="chevron-up" size={22} color="rgba(255,255,255,0.4)" style={{ marginBottom: -12 }} />
+              <Ionicons name="chevron-up" size={22} color="rgba(255,255,255,0.7)" />
+            </View>
             <Text style={styles.swipeUpText}>Swipe up for next</Text>
           </View>
           
