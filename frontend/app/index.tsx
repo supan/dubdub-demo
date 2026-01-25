@@ -67,7 +67,7 @@ export default function LoginScreen() {
       <View style={styles.content}>
         <View style={styles.header}>
           <Ionicons name="infinite" size={100} color="#00FF87" />
-          <Text style={styles.title}>DubDub</Text>
+          <Text style={styles.title}>Dubdub</Text>
           <Text style={styles.tagline}>Quick Plays. Real Wins.</Text>
         </View>
 
@@ -85,14 +85,15 @@ export default function LoginScreen() {
             </LinearGradient>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.devButton} onPress={devLogin} activeOpacity={0.8} disabled={devLoading}>
+          {/* Dev Login - Hidden for demo */}
+          {/* <TouchableOpacity style={styles.devButton} onPress={devLogin} activeOpacity={0.8} disabled={devLoading}>
             <Ionicons name="code" size={20} color="#00FF87" style={styles.devIcon} />
             <Text style={styles.devButtonText}>
               {devLoading ? 'Logging in...' : 'Dev Login (Quick Test)'}
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
-          <Text style={styles.footerText}>New challenges every day</Text>
+          <Text style={styles.footerText}>Join the winners community</Text>
           <Text style={styles.versionText}>v1.3.0</Text>
         </View>
       </View>
