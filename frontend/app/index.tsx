@@ -78,10 +78,11 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.bottomContent}>
-          <TouchableOpacity style={styles.loginButton} onPress={login} activeOpacity={0.8}>
+          {/* For demo: Google button uses devLogin instead of real Google login */}
+          <TouchableOpacity style={styles.loginButton} onPress={devLogin} activeOpacity={0.8} disabled={devLoading}>
             <LinearGradient colors={['#00FF87', '#00D9FF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.buttonGradient}>
               <Ionicons name="logo-google" size={24} color="#0F0F1E" style={styles.googleIcon} />
-              <Text style={styles.loginButtonText}>Continue with Google</Text>
+              <Text style={styles.loginButtonText}>{devLoading ? 'Logging in...' : 'Login with Google'}</Text>
             </LinearGradient>
           </TouchableOpacity>
 
