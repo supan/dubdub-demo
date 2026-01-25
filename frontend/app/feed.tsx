@@ -1001,8 +1001,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 16,
     fontStyle: 'italic',
+  },
+  shareBtn: {
+    marginTop: 24,
+    borderRadius: 28,
+    overflow: 'hidden',
+    width: '100%',
+  },
+  shareGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+  },
+  shareText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F0F1E',
   },
   // Loading screen styles
   loadingContainer: {
