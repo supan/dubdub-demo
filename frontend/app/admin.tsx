@@ -427,7 +427,7 @@ export default function AdminDashboard() {
           <View style={styles.loginCard}>
             <Ionicons name="shield-checkmark" size={60} color="#00FF87" />
             <Text style={styles.loginTitle}>Admin Dashboard</Text>
-            <Text style={styles.loginSubtitle}>Dubdub Content Management</Text>
+            <Text style={styles.loginSubtitle}>dubdub Content Management</Text>
 
             {loginError ? (
               <View style={styles.errorBox}>
