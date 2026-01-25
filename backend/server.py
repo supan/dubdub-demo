@@ -391,13 +391,12 @@ async def get_playables_feed(
     """Get playables feed"""
     try:
         # DEMO MODE: Return specific playables in specific order for demo video
-        # Demo playables: Be Careful, Eyes Don't Lie, Supan1, Guess Who?, No Grammy?, Guess the Cricketer (Shikhar Dhawan)
+        # Demo playables: Be Careful, Eyes Don't Lie, Supan1, No Grammy?, Guess the Cricketer (Shikhar Dhawan)
         DEMO_MODE = True  # Set to False to disable demo mode
         DEMO_PLAYABLE_IDS = [
             "play_87f944dcfcb1",  # Be Careful
             "play_fbf745c05db8",  # Eyes Don't Lie
             "play_520619533384",  # Supan1
-            "play_75dd28b4a09f",  # Guess Who?
             "play_8b45d1dfbb71",  # No Grammy?
             "play_d2ed16b75ebb",  # Guess the Cricketer (Shikhar Dhawan)
         ]
