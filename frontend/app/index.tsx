@@ -110,6 +110,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { flex: 1, justifyContent: 'space-between', alignItems: 'center', padding: 32, paddingTop: 80, paddingBottom: 50 },
   header: { alignItems: 'center' },
+  logo: { width: 200, height: 200 },
   title: { fontSize: 72, fontWeight: '800', color: '#FFFFFF', marginTop: 20, letterSpacing: -2 },
   tagline: { fontSize: 20, fontWeight: '600', color: '#00FF87', marginTop: 8, textAlign: 'center', letterSpacing: 0.5 },
   centerContent: { alignItems: 'center', paddingHorizontal: 20 },
