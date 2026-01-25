@@ -539,6 +539,48 @@ export default function FeedScreen() {
       "Practice makes perfect, see you soon!",
     ];
     
+    // Generate competitive share message
+    const generateShareMessage = () => {
+      const streakEmoji = sessionStats.bestStreak >= 5 ? '🔥🔥🔥' : sessionStats.bestStreak >= 3 ? '🔥🔥' : '🔥';
+      const percentile = getPercentile();
+      
+      // Different messages based on performance
+      if (accuracy === 100 && sessionStats.played > 0) {
+        return `🏆 PERFECT ROUND on dubdub!\n\n` +
+          `📊 ${sessionStats.correct}/${sessionStats.played} correct\n` +
+          `${streakEmoji} ${sessionStats.bestStreak} streak\n` +
+          `🎯 ${accuracy}% accuracy\n\n` +
+          `${percentile} worldwide. Think you can beat that? 💪`;
+      } else if (sessionStats.bestStreak >= 5) {
+        return `${streakEmoji} ${sessionStats.bestStreak} STREAK on dubdub!\n\n` +
+          `📊 Score: ${sessionStats.correct}/${sessionStats.played}\n` +
+          `🎯 Accuracy: ${accuracy}%\n\n` +
+          `Only ${percentile} get this far. Your move 🎮`;
+      } else if (accuracy >= 80) {
+        return `🧠 Just dominated on dubdub!\n\n` +
+          `📊 ${sessionStats.correct}/${sessionStats.played} correct\n` +
+          `${streakEmoji} Best streak: ${sessionStats.bestStreak}\n` +
+          `🎯 ${accuracy}% accuracy\n\n` +
+          `${percentile} performance. Can you do better? 😏`;
+      } else {
+        return `⚡ Just finished a dubdub session!\n\n` +
+          `📊 Score: ${sessionStats.correct}/${sessionStats.played}\n` +
+          `${streakEmoji} Streak: ${sessionStats.bestStreak}\n\n` +
+          `Think you're smarter? Prove it 🎯`;
+      }
+    };
+    
+    const handleShare = async () => {
+      try {
+        const message = generateShareMessage();
+        await Share.share({
+          message: message,
+        });
+      } catch (error) {
+        console.error('Error sharing:', error);
+      }
+    };
+    
     return (
       <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
         <View style={styles.header}>
@@ -608,6 +650,19 @@ export default function FeedScreen() {
             <Text style={styles.bestCategoryLabel}>Your Strength</Text>
             <Text style={styles.bestCategoryValue}>Logical Thinking ⭐</Text>
           </View>
+          
+          {/* Share Button */}
+          <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
+            <LinearGradient
+              colors={['#00FF87', '#00D9FF']}
+              style={styles.shareGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Ionicons name="share-social" size={22} color="#0F0F1E" />
+              <Text style={styles.shareText}>Challenge Friends</Text>
+            </LinearGradient>
+          </TouchableOpacity>
           
           {/* Return Hook */}
           <Text style={styles.returnHook}>
