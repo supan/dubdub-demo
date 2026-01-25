@@ -603,7 +603,7 @@ export default function FeedScreen() {
           </View>
           
           {/* Main Title */}
-          <Text style={styles.emptyTitle}>Session Complete! 🎉</Text>
+          <Text style={styles.emptyTitle}>Set 1 Done! 🎉</Text>
           
           {/* Performance Percentile */}
           {sessionStats.played > 0 && (
