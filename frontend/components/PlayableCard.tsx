@@ -78,6 +78,27 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
     setIsReplaying(false);
   }, [playable.playable_id]);
 
+  // Check if this is a video type playable (needed early for autoplay effect)
+  const isVideoType = playable.type === 'video' || playable.type === 'video_text';
+
+  // Autoplay video when navigating to a new video question
+  useEffect(() => {
+    const autoplayVideo = async () => {
+      if (videoRef.current && isVideoType) {
+        try {
+          await videoRef.current.setPositionAsync(0);
+          await videoRef.current.playAsync();
+        } catch (error) {
+          console.log('Video autoplay error:', error);
+        }
+      }
+    };
+    
+    // Small delay to ensure video source has updated
+    const timer = setTimeout(autoplayVideo, 150);
+    return () => clearTimeout(timer);
+  }, [playable.playable_id, isVideoType]);
+
   // Handle video playback status
   const handleVideoPlaybackStatus = (status: any) => {
     if (status.didJustFinish && !status.isLooping) {
