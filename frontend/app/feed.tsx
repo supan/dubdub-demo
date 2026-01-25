@@ -1024,6 +1024,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0F0F1E',
   },
+  swipeUpHint: {
+    alignItems: 'center',
+    marginTop: 24,
+    paddingBottom: 16,
+  },
+  swipeUpText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: 4,
+  },
   // Loading screen styles
   loadingContainer: {
     flex: 1,
