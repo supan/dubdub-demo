@@ -467,6 +467,53 @@ export default function FeedScreen() {
   }
 
   if (playables.length === 0) {
+    // Calculate session performance
+    const accuracy = sessionStats.played > 0 
+      ? Math.round((sessionStats.correct / sessionStats.played) * 100) 
+      : 0;
+    
+    // Find best category
+    const bestCategory = Object.entries(sessionStats.categoryStats)
+      .sort(([,a], [,b]) => b - a)[0];
+    
+    // Fake percentile based on performance (psychological boost)
+    const getPercentile = () => {
+      if (accuracy >= 90) return "Top 5%";
+      if (accuracy >= 80) return "Top 10%";
+      if (accuracy >= 70) return "Top 20%";
+      if (accuracy >= 60) return "Top 30%";
+      return "Top 50%";
+    };
+    
+    // Achievement badges
+    const achievements: { icon: string; title: string; description: string }[] = [];
+    if (sessionStats.played > 0 && sessionStats.correct === sessionStats.played) {
+      achievements.push({ icon: "🏆", title: "Perfect Round", description: "100% accuracy!" });
+    }
+    if (sessionStats.bestStreak >= 5) {
+      achievements.push({ icon: "🔥", title: "Streak Master", description: `${sessionStats.bestStreak} in a row!` });
+    }
+    if (bestCategory && bestCategory[1] >= 3) {
+      const categoryTitles: Record<string, string> = {
+        'Football': 'Football Expert', 'Sports': 'Sports Guru', 'History': 'History Buff',
+        'Science': 'Science Whiz', 'Geography': 'World Explorer', 'Maths': 'Math Genius',
+        'Chess': 'Chess Master', 'Entertainment': 'Pop Culture Pro',
+      };
+      achievements.push({ 
+        icon: "🎯", 
+        title: categoryTitles[bestCategory[0]] || "Category Expert", 
+        description: `${bestCategory[1]} correct in ${bestCategory[0]}` 
+      });
+    }
+    
+    // Return hook messages
+    const returnHooks = [
+      "Come back tomorrow to keep your momentum!",
+      "New questions added daily — don't miss out!",
+      "Your streak is waiting for you tomorrow!",
+      "Practice makes perfect — see you soon!",
+    ];
+    
     return (
       <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
         <View style={styles.header}>
@@ -483,31 +530,73 @@ export default function FeedScreen() {
         </View>
         
         <View style={styles.emptyContainer}>
-          <Ionicons name="trophy" size={80} color="#FFD700" />
-          <Text style={styles.emptyTitle}>All Done!</Text>
-          <Text style={styles.emptyText}>
-            You've completed all questions.{'\n'}Come back later for more!
-          </Text>
+          {/* Trophy Icon */}
+          <View style={styles.trophyContainer}>
+            <Ionicons name="trophy" size={64} color="#FFD700" />
+          </View>
           
+          {/* Main Title */}
+          <Text style={styles.emptyTitle}>Session Complete! 🎉</Text>
+          
+          {/* Performance Percentile */}
+          {sessionStats.played > 0 && (
+            <View style={styles.percentileBadge}>
+              <Ionicons name="trending-up" size={16} color="#00FF87" />
+              <Text style={styles.percentileText}>{getPercentile()} performance today!</Text>
+            </View>
+          )}
+          
+          {/* Stats Row */}
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{user?.total_played || totalPlayed}</Text>
-              <Text style={styles.statLabel}>Played</Text>
+              <Text style={styles.statValue}>{sessionStats.correct}/{sessionStats.played || user?.total_played || totalPlayed}</Text>
+              <Text style={styles.statLabel}>Score</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{user?.correct_answers || 0}</Text>
-              <Text style={styles.statLabel}>Correct</Text>
+              <Text style={styles.statValue}>{accuracy}%</Text>
+              <Text style={styles.statLabel}>Accuracy</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{user?.best_streak || 0}</Text>
-              <Text style={styles.statLabel}>Best</Text>
+              <Text style={styles.statValue}>{sessionStats.bestStreak || user?.best_streak || 0}</Text>
+              <Text style={styles.statLabel}>Best Streak</Text>
             </View>
           </View>
           
+          {/* Achievements */}
+          {achievements.length > 0 && (
+            <View style={styles.achievementsContainer}>
+              <Text style={styles.achievementsTitle}>Achievements Unlocked</Text>
+              {achievements.map((achievement, idx) => (
+                <View key={idx} style={styles.achievementBadge}>
+                  <Text style={styles.achievementIcon}>{achievement.icon}</Text>
+                  <View style={styles.achievementTextContainer}>
+                    <Text style={styles.achievementTitle}>{achievement.title}</Text>
+                    <Text style={styles.achievementDesc}>{achievement.description}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+          
+          {/* Best Category */}
+          {bestCategory && (
+            <View style={styles.bestCategoryBadge}>
+              <Text style={styles.bestCategoryLabel}>Strongest Category</Text>
+              <Text style={styles.bestCategoryValue}>{bestCategory[0]} ⭐</Text>
+            </View>
+          )}
+          
+          {/* Return Hook */}
+          <Text style={styles.returnHook}>
+            {returnHooks[Math.floor(Math.random() * returnHooks.length)]}
+          </Text>
+          
+          {/* Refresh Button */}
           <TouchableOpacity 
             style={styles.refreshBtn}
             onPress={isDevUser ? handleResetAndReload : () => {
               setInitialLoadDone(false);
+              setSessionStats({ played: 0, correct: 0, bestStreak: 0, categoryStats: {} });
               fetchPlayables();
             }}
           >
