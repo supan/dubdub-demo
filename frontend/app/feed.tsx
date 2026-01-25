@@ -347,10 +347,23 @@ export default function FeedScreen() {
 
       const result = response.data;
       
+      // Update session stats for Chess puzzle
+      setSessionStats(prev => {
+        const newStats = {
+          played: prev.played + 1,
+          correct: prev.correct + 1,
+          bestStreak: Math.max(prev.bestStreak, result.current_streak || 0),
+          categoryStats: { ...prev.categoryStats },
+        };
+        newStats.categoryStats[playable.category] = (prev.categoryStats[playable.category] || 0) + 1;
+        return newStats;
+      });
+      
       setFeedbackData({
         correct: true,
         current_streak: result.current_streak,
         moves_used: movesUsed,
+        category: playable.category,
       });
       setTotalPlayed(prev => prev + 1);
       setGameState('SHOWING_FEEDBACK');
@@ -374,9 +387,17 @@ export default function FeedScreen() {
 
       const result = response.data;
       
+      // Update session stats for failed Chess puzzle
+      setSessionStats(prev => ({
+        ...prev,
+        played: prev.played + 1,
+        // correct stays same, bestStreak stays same
+      }));
+      
       setFeedbackData({
         correct: false,
         current_streak: result.current_streak,
+        category: playable.category,
       });
       setTotalPlayed(prev => prev + 1);
       setGameState('SHOWING_FEEDBACK');
