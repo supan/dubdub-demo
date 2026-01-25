@@ -44,6 +44,7 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
   const [currentHintIndex, setCurrentHintIndex] = useState(0);
   const [guessResult, setGuessResult] = useState<any>(null);
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
+  const [wrongGuesses, setWrongGuesses] = useState<string[]>([]);
 
   // Safety check
   if (!playable) {
