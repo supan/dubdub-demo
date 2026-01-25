@@ -121,7 +121,7 @@ export default function FeedbackOverlay({
       
       // Message 2: Social proof
       const socialProof = SOCIAL_PROOF_CORRECT[Math.floor(Math.random() * SOCIAL_PROOF_CORRECT.length)];
-      result.push({ text: `${socialProof.text} — ${socialProof.suffix}` });
+      result.push({ text: `${socialProof.text}, ${socialProof.suffix}` });
       
     } else {
       // Wrong answer messages
