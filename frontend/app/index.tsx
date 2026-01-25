@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,7 +7,6 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
-const LOGO_URL = 'https://customer-assets.emergentagent.com/job_swipelearn-11/artifacts/wyp0msoq_Extract_me_the_2k_202601251933.png';
 
 export default function LoginScreen() {
   const { user, login, loading, setUser, setSessionToken } = useAuth();
