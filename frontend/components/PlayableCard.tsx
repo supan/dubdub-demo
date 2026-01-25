@@ -386,9 +386,6 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
     );
   }
 
-  // Check if this is a video type playable
-  const isVideoType = playable.type === 'video' || playable.type === 'video_text';
-
   // ============ IMMERSIVE LAYOUT (Image/Video) ============
   if (isImmersive) {
     return (
