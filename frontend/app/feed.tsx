@@ -753,6 +753,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 20,
     gap: 4,
+    minWidth: 70,
   },
   streakText: {
     fontSize: 18,
@@ -763,9 +764,12 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: '700',
     color: '#FFFFFF',
+    textAlign: 'center',
   },
   logoutButton: {
     padding: 8,
+    minWidth: 70,
+    alignItems: 'flex-end',
   },
   cardWrapper: {
     flex: 1,
