@@ -66,11 +66,8 @@ export default function LoginScreen() {
     >
       <View style={styles.content}>
         <View style={styles.header}>
-          <Image 
-            source={{ uri: LOGO_URL }} 
-            style={styles.logo}
-            resizeMode="contain"
-          />
+          <Ionicons name="infinite" size={100} color="#00FF87" />
+          <Text style={styles.title}>dubdub</Text>
           <Text style={styles.tagline}>Quick Plays. Real Wins.</Text>
         </View>
 
