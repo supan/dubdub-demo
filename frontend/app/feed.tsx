@@ -1032,6 +1032,9 @@ const styles = StyleSheet.create({
     marginTop: 28,
     paddingBottom: 16,
   },
+  chevronStack: {
+    alignItems: 'center',
+  },
   swipeUpText: {
     fontSize: 15,
     fontWeight: '700',
