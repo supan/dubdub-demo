@@ -467,51 +467,28 @@ export default function FeedScreen() {
   }
 
   if (playables.length === 0) {
-    // Calculate session performance
-    const accuracy = sessionStats.played > 0 
-      ? Math.round((sessionStats.correct / sessionStats.played) * 100) 
-      : 0;
-    
-    // Find best category
-    const bestCategory = Object.entries(sessionStats.categoryStats)
-      .sort(([,a], [,b]) => b - a)[0];
+    // DEMO MODE: Hardcoded stats for consistent demo experience
+    const DEMO_PLAYED = 5;
+    const DEMO_CORRECT = 5;
+    const DEMO_BEST_STREAK = 5;
+    const demoAccuracy = 100;
     
     // Fake percentile based on performance (psychological boost)
     const getPercentile = () => {
-      if (accuracy >= 90) return "Top 5%";
-      if (accuracy >= 80) return "Top 10%";
-      if (accuracy >= 70) return "Top 20%";
-      if (accuracy >= 60) return "Top 30%";
-      return "Top 50%";
+      return "Top 5%";
     };
     
-    // Achievement badges
+    // Achievement badges for demo
     const achievements: { icon: string; title: string; description: string }[] = [];
-    if (sessionStats.played > 0 && sessionStats.correct === sessionStats.played) {
-      achievements.push({ icon: "🏆", title: "Perfect Round", description: "100% accuracy!" });
-    }
-    if (sessionStats.bestStreak >= 5) {
-      achievements.push({ icon: "🔥", title: "Streak Master", description: `${sessionStats.bestStreak} in a row!` });
-    }
-    if (bestCategory && bestCategory[1] >= 3) {
-      const categoryTitles: Record<string, string> = {
-        'Football': 'Football Expert', 'Sports': 'Sports Guru', 'History': 'History Buff',
-        'Science': 'Science Whiz', 'Geography': 'World Explorer', 'Maths': 'Math Genius',
-        'Chess': 'Chess Master', 'Entertainment': 'Pop Culture Pro',
-      };
-      achievements.push({ 
-        icon: "🎯", 
-        title: categoryTitles[bestCategory[0]] || "Category Expert", 
-        description: `${bestCategory[1]} correct in ${bestCategory[0]}` 
-      });
-    }
+    achievements.push({ icon: "🏆", title: "Perfect Round", description: "100% accuracy!" });
+    achievements.push({ icon: "🔥", title: "Streak Master", description: `${DEMO_BEST_STREAK} in a row!` });
     
-    // Return hook messages
+    // Return hook messages - remove em-dashes
     const returnHooks = [
       "Come back tomorrow to keep your momentum!",
-      "New questions added daily — don't miss out!",
+      "New questions added daily, don't miss out!",
       "Your streak is waiting for you tomorrow!",
-      "Practice makes perfect — see you soon!",
+      "Practice makes perfect, see you soon!",
     ];
     
     return (
@@ -520,7 +497,7 @@ export default function FeedScreen() {
           <View style={styles.headerContent}>
             <View style={styles.streakContainer}>
               <Ionicons name="flame" size={24} color="#FF6B00" />
-              <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
+              <Text style={styles.streakText}>{DEMO_BEST_STREAK}</Text>
             </View>
             <Text style={styles.headerTitle}>dubdub</Text>
             <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
@@ -539,60 +516,54 @@ export default function FeedScreen() {
           <Text style={styles.emptyTitle}>Session Complete! 🎉</Text>
           
           {/* Performance Percentile */}
-          {sessionStats.played > 0 && (
-            <View style={styles.percentileBadge}>
-              <Ionicons name="trending-up" size={16} color="#00FF87" />
-              <Text style={styles.percentileText}>{getPercentile()} performance today!</Text>
-            </View>
-          )}
+          <View style={styles.percentileBadge}>
+            <Ionicons name="trending-up" size={16} color="#00FF87" />
+            <Text style={styles.percentileText}>{getPercentile()} performance today!</Text>
+          </View>
           
           {/* Stats Row */}
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{sessionStats.correct}/{sessionStats.played || user?.total_played || totalPlayed}</Text>
+              <Text style={styles.statValue}>{DEMO_CORRECT}/{DEMO_PLAYED}</Text>
               <Text style={styles.statLabel}>Score</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{accuracy}%</Text>
+              <Text style={styles.statValue}>{demoAccuracy}%</Text>
               <Text style={styles.statLabel}>Accuracy</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{sessionStats.bestStreak || user?.best_streak || 0}</Text>
+              <Text style={styles.statValue}>{DEMO_BEST_STREAK}</Text>
               <Text style={styles.statLabel}>Best Streak</Text>
             </View>
           </View>
           
           {/* Achievements */}
-          {achievements.length > 0 && (
-            <View style={styles.achievementsContainer}>
-              <Text style={styles.achievementsTitle}>Achievements Unlocked</Text>
-              {achievements.map((achievement, idx) => (
-                <View key={idx} style={styles.achievementBadge}>
-                  <Text style={styles.achievementIcon}>{achievement.icon}</Text>
-                  <View style={styles.achievementTextContainer}>
-                    <Text style={styles.achievementTitle}>{achievement.title}</Text>
-                    <Text style={styles.achievementDesc}>{achievement.description}</Text>
-                  </View>
+          <View style={styles.achievementsContainer}>
+            <Text style={styles.achievementsTitle}>Achievements Unlocked</Text>
+            {achievements.map((achievement, idx) => (
+              <View key={idx} style={styles.achievementBadge}>
+                <Text style={styles.achievementIcon}>{achievement.icon}</Text>
+                <View style={styles.achievementTextContainer}>
+                  <Text style={styles.achievementTitle}>{achievement.title}</Text>
+                  <Text style={styles.achievementDesc}>{achievement.description}</Text>
                 </View>
-              ))}
-            </View>
-          )}
+              </View>
+            ))}
+          </View>
           
-          {/* Best Category */}
-          {bestCategory && (
-            <View style={styles.bestCategoryBadge}>
-              <Text style={styles.bestCategoryLabel}>Strongest Category</Text>
-              <Text style={styles.bestCategoryValue}>{bestCategory[0]} ⭐</Text>
-            </View>
-          )}
+          {/* Your Strength - Logical Thinking */}
+          <View style={styles.bestCategoryBadge}>
+            <Text style={styles.bestCategoryLabel}>Your Strength</Text>
+            <Text style={styles.bestCategoryValue}>Logical Thinking ⭐</Text>
+          </View>
           
           {/* Return Hook */}
           <Text style={styles.returnHook}>
             {returnHooks[Math.floor(Math.random() * returnHooks.length)]}
           </Text>
           
-          {/* Refresh Button */}
-          <TouchableOpacity 
+          {/* Refresh Button - Hidden for demo */}
+          {/* <TouchableOpacity 
             style={styles.refreshBtn}
             onPress={isDevUser ? handleResetAndReload : () => {
               setInitialLoadDone(false);
@@ -609,7 +580,7 @@ export default function FeedScreen() {
                 {isDevUser ? 'Reset & Reload' : 'Check for New'}
               </Text>
             </LinearGradient>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </LinearGradient>
     );
