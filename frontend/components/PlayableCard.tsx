@@ -254,9 +254,17 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
                     ]}>{index + 1}</Text>
                   </View>
                   {isRevealed ? (
-                    <Text style={[styles.hintText, hasImage && styles.hintTextImmersive]}>
-                      {hint}
-                    </Text>
+                    <>
+                      <Text style={[styles.hintText, hasImage && styles.hintTextImmersive]}>
+                        {hint}
+                      </Text>
+                      {/* Show wrong guess for this hint if exists */}
+                      {wrongGuesses[index] && (
+                        <Text style={styles.wrongGuessText}>
+                          ✗ {wrongGuesses[index]}
+                        </Text>
+                      )}
+                    </>
                   ) : (
                     <Text style={styles.hintLockedText}>Hint {index + 1}</Text>
                   )}
