@@ -33,6 +33,8 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const videoRef = useRef<Video>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const inputRef = useRef<TextInput>(null);
   
   // Video playback state - for "watch first, then answer" flow
   const [videoFinished, setVideoFinished] = useState(false);
