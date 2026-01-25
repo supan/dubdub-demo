@@ -9,6 +9,7 @@ import {
   Dimensions,
   Animated,
   PanResponder,
+  Share,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'expo-router';
