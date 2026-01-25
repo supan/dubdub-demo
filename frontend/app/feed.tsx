@@ -589,7 +589,10 @@ export default function FeedScreen() {
           correctAnswer={feedbackData?.correct_answer}
           answerExplanation={feedbackData?.answer_explanation}
           currentStreak={feedbackData?.current_streak || user?.current_streak || 0}
+          previousStreak={feedbackData?.previousStreak || previousStreak}
           hintsUsed={feedbackData?.hints_used}
+          category={feedbackData?.category || currentPlayable?.category}
+          categoryCorrectCount={feedbackData?.categoryCorrectCount || 0}
         />
       </Animated.View>
       
