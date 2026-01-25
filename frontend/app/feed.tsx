@@ -664,10 +664,11 @@ export default function FeedScreen() {
             </LinearGradient>
           </TouchableOpacity>
           
-          {/* Return Hook */}
-          <Text style={styles.returnHook}>
-            {returnHooks[Math.floor(Math.random() * returnHooks.length)]}
-          </Text>
+          {/* Swipe Up for Next Set */}
+          <View style={styles.swipeUpHint}>
+            <Ionicons name="chevron-up" size={24} color="rgba(255,255,255,0.5)" />
+            <Text style={styles.swipeUpText}>Swipe up for next</Text>
+          </View>
           
           {/* Refresh Button - Hidden for demo */}
           {/* <TouchableOpacity 
