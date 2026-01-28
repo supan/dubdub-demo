@@ -953,11 +953,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  immersiveCategoryBadge: {
-    alignSelf: 'flex-start',
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
   progressBadge: {
     backgroundColor: '#000000',
     paddingHorizontal: 12,
