@@ -378,9 +378,16 @@ export default function FeedScreen() {
       
       // If correct, show feedback then transition
       if (result.correct) {
+        const playable = playables[currentIndex];
+        
+        // Update set stats
+        setSetStats(prev => ({
+          played: prev.played + 1,
+          correct: prev.correct + 1,
+        }));
+        
         // Update session stats for Guess the X
         setSessionStats(prev => {
-          const playable = playables[currentIndex];
           const newStats = {
             played: prev.played + 1,
             correct: prev.correct + 1,
@@ -404,6 +411,10 @@ export default function FeedScreen() {
         refreshUser().catch(console.error);
       } else if (result.all_hints_exhausted) {
         // All hints used - count as played but not correct
+        setSetStats(prev => ({
+          played: prev.played + 1,
+          correct: prev.correct,
+        }));
         setSessionStats(prev => ({
           ...prev,
           played: prev.played + 1,
