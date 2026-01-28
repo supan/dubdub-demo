@@ -510,15 +510,8 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
         <View style={styles.topSection}>
           <View style={styles.topRow}>
             {/* Category Badge */}
-            <View style={styles.immersiveCategoryBadge}>
-              <LinearGradient
-                colors={['#00FF87', '#00D9FF']}
-                style={styles.categoryGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Text style={styles.categoryText}>{playable.category}</Text>
-              </LinearGradient>
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryText}>{playable.category}</Text>
             </View>
             {/* Progress Badge - Black with white text */}
             {totalCount > 0 && (
