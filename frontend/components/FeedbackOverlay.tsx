@@ -211,6 +211,14 @@ export default function FeedbackOverlay({
             {correct ? "Correct!" : "Wrong"}
           </Text>
 
+          {/* Correct Answer (for wrong answers) - PROMINENT at top */}
+          {!correct && correctAnswer && (
+            <View style={styles.correctAnswerBox}>
+              <Text style={styles.correctAnswerLabel}>The answer is:</Text>
+              <Text style={styles.correctAnswerValue}>{correctAnswer}</Text>
+            </View>
+          )}
+
           {/* Psychological Messages */}
           <View style={styles.messagesContainer}>
             {messages.map((msg, index) => (
