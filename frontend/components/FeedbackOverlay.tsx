@@ -395,21 +395,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 15,
   },
-  answerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  answerLabel: {
-    fontSize: 14,
-    color: '#888',
-  },
-  answerValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
   hintsUsedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
