@@ -615,6 +615,187 @@ export default function FeedScreen() {
     );
   }
 
+  // Set Feedback Screen - shows after every 5 questions
+  if (showSetFeedback) {
+    const setAccuracy = setStats.played > 0 
+      ? Math.round((setStats.correct / setStats.played) * 100) 
+      : 0;
+    
+    const isLastSet = noMorePlayables && currentIndex >= playables.length - 1;
+    
+    // Fake percentile based on performance
+    const getPercentile = () => {
+      if (setAccuracy >= 90) return "Top 5%";
+      if (setAccuracy >= 80) return "Top 10%";
+      if (setAccuracy >= 70) return "Top 20%";
+      if (setAccuracy >= 60) return "Top 30%";
+      return "Top 50%";
+    };
+    
+    // Achievement badges - per set + cumulative
+    const achievements: { icon: string; title: string; description: string }[] = [];
+    if (setStats.played > 0 && setStats.correct === setStats.played) {
+      achievements.push({ icon: "🏆", title: "Perfect Set", description: "100% accuracy this set!" });
+    }
+    if (sessionStats.bestStreak >= 5) {
+      achievements.push({ icon: "🔥", title: "Streak Master", description: `${sessionStats.bestStreak} in a row!` });
+    }
+    
+    // Generate competitive share message
+    const generateShareMessage = () => {
+      const streakEmoji = sessionStats.bestStreak >= 5 ? '🔥🔥🔥' : sessionStats.bestStreak >= 3 ? '🔥🔥' : '🔥';
+      const percentile = getPercentile();
+      
+      if (setAccuracy === 100 && setStats.played > 0) {
+        return `🏆 PERFECT SET on dubdub!\n\n` +
+          `📊 Set ${currentSetNumber}: ${setStats.correct}/${setStats.played} correct\n` +
+          `${streakEmoji} ${sessionStats.bestStreak} streak\n` +
+          `🎯 ${setAccuracy}% accuracy\n\n` +
+          `${percentile} worldwide. Think you can beat that? 💪`;
+      } else if (sessionStats.bestStreak >= 5) {
+        return `${streakEmoji} ${sessionStats.bestStreak} STREAK on dubdub!\n\n` +
+          `📊 Set ${currentSetNumber}: ${setStats.correct}/${setStats.played}\n` +
+          `🎯 Accuracy: ${setAccuracy}%\n\n` +
+          `Only ${percentile} get this far. Your move 🎮`;
+      } else {
+        return `⚡ Set ${currentSetNumber} done on dubdub!\n\n` +
+          `📊 Score: ${setStats.correct}/${setStats.played}\n` +
+          `${streakEmoji} Streak: ${sessionStats.bestStreak}\n\n` +
+          `Think you're smarter? Prove it 🎯`;
+      }
+    };
+    
+    const handleShare = async () => {
+      try {
+        const message = generateShareMessage();
+        await Share.share({ message });
+      } catch (error) {
+        console.error('Error sharing:', error);
+      }
+    };
+    
+    return (
+      <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <View style={styles.streakContainer}>
+              <Ionicons name="flame" size={24} color="#FF6B00" />
+              <Text style={styles.streakText}>{user?.current_streak || sessionStats.bestStreak}</Text>
+            </View>
+            <Text style={styles.headerTitle}>dubdub</Text>
+            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+              <Ionicons name="log-out-outline" size={24} color="#B0B0C8" />
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        <View style={[styles.emptyContainer, { paddingBottom: 60 }]} {...panResponder.panHandlers}>
+          {/* Trophy Icon */}
+          <View style={styles.trophyContainer}>
+            <Ionicons name="trophy" size={64} color="#FFD700" />
+          </View>
+          
+          {/* Main Title */}
+          <Text style={styles.emptyTitle}>Set {currentSetNumber} Done! 🎉</Text>
+          
+          {/* Performance Percentile */}
+          <View style={styles.percentileBadge}>
+            <Ionicons name="trending-up" size={16} color="#00FF87" />
+            <Text style={styles.percentileText}>{getPercentile()} performance!</Text>
+          </View>
+          
+          {/* Stats Row - Set Score + Cumulative Streak */}
+          <View style={styles.statsRow}>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{setStats.correct}/{setStats.played}</Text>
+              <Text style={styles.statLabel}>Set Score</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{setAccuracy}%</Text>
+              <Text style={styles.statLabel}>Accuracy</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{sessionStats.bestStreak}</Text>
+              <Text style={styles.statLabel}>Best Streak</Text>
+            </View>
+          </View>
+          
+          {/* Achievements */}
+          {achievements.length > 0 && (
+            <View style={styles.achievementsContainer}>
+              <Text style={styles.achievementsTitle}>Achievements Unlocked</Text>
+              {achievements.map((achievement, idx) => (
+                <View key={idx} style={styles.achievementBadge}>
+                  <Text style={styles.achievementIcon}>{achievement.icon}</Text>
+                  <View style={styles.achievementTextContainer}>
+                    <Text style={styles.achievementTitle}>{achievement.title}</Text>
+                    <Text style={styles.achievementDesc}>{achievement.description}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+          
+          {/* Your Strength */}
+          <View style={styles.bestCategoryBadge}>
+            <Text style={styles.bestCategoryLabel}>Your Strength</Text>
+            <Text style={styles.bestCategoryValue}>Logical Thinking ⭐</Text>
+          </View>
+          
+          {/* Share Button */}
+          <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
+            <LinearGradient
+              colors={['#00FF87', '#00D9FF']}
+              style={styles.shareGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Ionicons name="share-social" size={22} color="#0F0F1E" />
+              <Text style={styles.shareText}>Challenge Friends</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+          
+          {/* Reset & Reload - Only show on last set */}
+          {isLastSet && (
+            <TouchableOpacity 
+              style={styles.refreshBtn}
+              onPress={() => {
+                setInitialLoadDone(false);
+                setSessionStats({ played: 0, correct: 0, bestStreak: 0, categoryStats: {} });
+                setSetStats({ played: 0, correct: 0 });
+                setCurrentSetNumber(1);
+                setSetStartIndex(0);
+                setShowSetFeedback(false);
+                setNoMorePlayables(false);
+                setFetchSkip(0);
+                fetchPlayables(true);
+              }}
+            >
+              <LinearGradient
+                colors={['#444', '#555']}
+                style={styles.refreshGradient}
+              >
+                <Ionicons name="refresh" size={20} color="#FFF" />
+                <Text style={[styles.refreshText, { color: '#FFF' }]}>Reset & Reload</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+          
+          {/* Swipe Up for Next Set - Only if not last */}
+          {!isLastSet && (
+            <View style={styles.swipeUpHint}>
+              <View style={styles.chevronStack}>
+                <Ionicons name="chevron-up" size={22} color="rgba(255,255,255,0.4)" style={{ marginBottom: -12 }} />
+                <Ionicons name="chevron-up" size={22} color="rgba(255,255,255,0.7)" />
+              </View>
+              <Text style={styles.swipeUpText}>Swipe up for next</Text>
+            </View>
+          )}
+        </View>
+      </LinearGradient>
+    );
+  }
+
   if (playables.length === 0) {
     // Calculate session performance
     const accuracy = sessionStats.played > 0 
