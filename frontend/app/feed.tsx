@@ -694,16 +694,27 @@ export default function FeedScreen() {
     const iconConfig = getIconConfig();
     const performanceMessage = getPerformanceMessage();
     
-    // Achievement badges - only show for good/great performance
+    // Achievement badges - only show for good performance (50%+)
     const achievements: { icon: string; title: string; description: string }[] = [];
-    if (setStats.played > 0 && setStats.correct === setStats.played) {
-      achievements.push({ icon: "🏆", title: "Perfect Set", description: "100% accuracy this set!" });
-    }
-    if (sessionStats.bestStreak >= 5) {
-      achievements.push({ icon: "🔥", title: "Streak Master", description: `${sessionStats.bestStreak} in a row!` });
+    if (isGoodPerformance) {
+      if (setStats.played > 0 && setStats.correct === setStats.played) {
+        achievements.push({ icon: "🏆", title: "Perfect Set", description: "100% accuracy this set!" });
+      }
+      if (sessionStats.bestStreak >= 5) {
+        achievements.push({ icon: "🔥", title: "Streak Master", description: `${sessionStats.bestStreak} in a row!` });
+      }
     }
     
-    // Generate share message - only for decent performance
+    // Motivational messages for zero-correct sets
+    const zeroCorrectMotivations = [
+      "Learning happens through challenges!",
+      "The next set is your comeback!",
+      "Great things take practice!",
+      "You're building knowledge with each try!",
+    ];
+    const randomMotivation = zeroCorrectMotivations[Math.floor(Math.random() * zeroCorrectMotivations.length)];
+    
+    // Generate share message - only for decent performance (don't share poor performance)
     const generateShareMessage = () => {
       const streakEmoji = sessionStats.bestStreak >= 5 ? '🔥🔥🔥' : sessionStats.bestStreak >= 3 ? '🔥🔥' : '🔥';
       
