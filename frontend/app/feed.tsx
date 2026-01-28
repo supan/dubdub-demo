@@ -206,20 +206,31 @@ export default function FeedScreen() {
     const idx = currentIndexRef.current;
     const items = playablesRef.current;
     
+    // Calculate position within current set (0-4)
+    const positionInSet = (idx - setStartIndex) + 1;
+    
+    // Check if we just completed a set of 5
+    if (positionInSet >= SET_SIZE) {
+      // Show set feedback screen
+      setShowSetFeedback(true);
+      setFeedbackData(null);
+      setGameState('PLAYING');
+      return;
+    }
+    
     if (idx < items.length - 1) {
-      // Move to next question
+      // Move to next question in current set
       setCurrentIndex(idx + 1);
       setFeedbackData(null);
       setGameState('PLAYING');
     } else {
-      // No more questions - show empty state
-      // Set gameState first to trigger the empty state render
-      setGameState('PLAYING');
-      setPlayables([]);
+      // No more questions available - show final feedback
+      setShowSetFeedback(true);
+      setNoMorePlayables(true);
       setFeedbackData(null);
-      setCurrentIndex(0);
+      setGameState('PLAYING');
     }
-  }, []);
+  }, [setStartIndex]);
 
   const handleSkip = useCallback(async () => {
     const state = gameStateRef.current;
