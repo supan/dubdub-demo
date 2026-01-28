@@ -773,7 +773,7 @@ export default function FeedScreen() {
           {/* Performance Message */}
           <View style={[styles.percentileBadge, { backgroundColor: `${performanceMessage.color}20` }]}>
             <Ionicons 
-              name={isGreatPerformance ? "trending-up" : isGoodPerformance ? "remove" : "trending-down"} 
+              name={isGoodPerformance ? "trending-up" : isLowPerformance ? "remove" : "bulb-outline"} 
               size={16} 
               color={performanceMessage.color} 
             />
@@ -782,16 +782,21 @@ export default function FeedScreen() {
             </Text>
           </View>
           
+          {/* Extra motivation for zero-correct sets */}
+          {isZeroCorrect && (
+            <Text style={styles.motivationText}>{randomMotivation}</Text>
+          )}
+          
           {/* Stats Row - Set Score + Cumulative Streak */}
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
-              <Text style={[styles.statValue, isPoorPerformance && { color: '#FF6B6B' }]}>
+              <Text style={[styles.statValue, isZeroCorrect && { color: '#9B59B6' }, isLowPerformance && { color: '#00D9FF' }]}>
                 {setStats.correct}/{setStats.played}
               </Text>
               <Text style={styles.statLabel}>Set Score</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={[styles.statValue, isPoorPerformance && { color: '#FF6B6B' }]}>
+              <Text style={[styles.statValue, isZeroCorrect && { color: '#9B59B6' }, isLowPerformance && { color: '#00D9FF' }]}>
                 {setAccuracy}%
               </Text>
               <Text style={styles.statLabel}>Accuracy</Text>
@@ -802,7 +807,7 @@ export default function FeedScreen() {
             </View>
           </View>
           
-          {/* Achievements */}
+          {/* Achievements - only show for good performance */}
           {achievements.length > 0 && (
             <View style={styles.achievementsContainer}>
               <Text style={styles.achievementsTitle}>Achievements Unlocked</Text>
@@ -818,24 +823,55 @@ export default function FeedScreen() {
             </View>
           )}
           
-          {/* Your Strength */}
-          <View style={styles.bestCategoryBadge}>
-            <Text style={styles.bestCategoryLabel}>Your Strength</Text>
-            <Text style={styles.bestCategoryValue}>Logical Thinking ⭐</Text>
-          </View>
+          {/* Your Strength - only show for good performance */}
+          {isGoodPerformance && (
+            <View style={styles.bestCategoryBadge}>
+              <Text style={styles.bestCategoryLabel}>Your Strength</Text>
+              <Text style={styles.bestCategoryValue}>Logical Thinking ⭐</Text>
+            </View>
+          )}
           
-          {/* Share Button */}
-          <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-            <LinearGradient
-              colors={['#00FF87', '#00D9FF']}
-              style={styles.shareGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <Ionicons name="share-social" size={22} color="#0F0F1E" />
-              <Text style={styles.shareText}>Challenge Friends</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+          {/* Try Again Button - for zero-correct or low performance */}
+          {(isZeroCorrect || isLowPerformance) && !isLastSet && (
+            <TouchableOpacity style={styles.tryAgainBtn} onPress={() => {
+              animateToNext(async () => {
+                setCurrentSetNumber(prev => prev + 1);
+                setSetStats({ played: 0, correct: 0 });
+                setSetStartIndex(currentIndex + 1);
+                setCurrentIndex(currentIndex + 1);
+                setShowSetFeedback(false);
+                setGameState('PLAYING');
+                await fetchMoreIfNeeded();
+              });
+            }}>
+              <LinearGradient
+                colors={isZeroCorrect ? ['#9B59B6', '#8E44AD'] : ['#00D9FF', '#0099CC']}
+                style={styles.shareGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Ionicons name="arrow-forward" size={22} color="#FFF" />
+                <Text style={[styles.shareText, { color: '#FFF' }]}>
+                  {isZeroCorrect ? "Let's Try Again!" : "Next Set"}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+          
+          {/* Share Button - only for good performance */}
+          {isGoodPerformance && (
+            <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
+              <LinearGradient
+                colors={['#00FF87', '#00D9FF']}
+                style={styles.shareGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Ionicons name="share-social" size={22} color="#0F0F1E" />
+                <Text style={styles.shareText}>Challenge Friends</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
           
           {/* Reset & Reload - Only show on last set */}
           {isLastSet && (
@@ -863,8 +899,8 @@ export default function FeedScreen() {
             </TouchableOpacity>
           )}
           
-          {/* Swipe Up for Next Set - Only if not last */}
-          {!isLastSet && (
+          {/* Swipe Up for Next Set - Only if not last and for good performance (others have button) */}
+          {!isLastSet && isGoodPerformance && (
             <View style={styles.swipeUpHint}>
               <View style={styles.chevronStack}>
                 <Ionicons name="chevron-up" size={22} color="rgba(255,255,255,0.4)" style={{ marginBottom: -12 }} />
