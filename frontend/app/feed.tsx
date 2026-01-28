@@ -49,7 +49,21 @@ export default function FeedScreen() {
   const [gameState, setGameState] = useState<GameState>('LOADING');
   const [initialLoadDone, setInitialLoadDone] = useState(false);
   
-  // Session stats for end screen
+  // Set-based tracking
+  const SET_SIZE = 5;
+  const [currentSetNumber, setCurrentSetNumber] = useState(1);
+  const [setStartIndex, setSetStartIndex] = useState(0);
+  const [showSetFeedback, setShowSetFeedback] = useState(false);
+  const [noMorePlayables, setNoMorePlayables] = useState(false);
+  const [fetchSkip, setFetchSkip] = useState(0);
+  
+  // Set stats (reset each set)
+  const [setStats, setSetStats] = useState({
+    played: 0,
+    correct: 0,
+  });
+  
+  // Cumulative session stats
   const [sessionStats, setSessionStats] = useState({
     played: 0,
     correct: 0,
@@ -66,11 +80,13 @@ export default function FeedScreen() {
   const gameStateRef = useRef(gameState);
   const currentIndexRef = useRef(currentIndex);
   const playablesRef = useRef(playables);
+  const showSetFeedbackRef = useRef(showSetFeedback);
   
   // Keep refs in sync with state
   useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
   useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
   useEffect(() => { playablesRef.current = playables; }, [playables]);
+  useEffect(() => { showSetFeedbackRef.current = showSetFeedback; }, [showSetFeedback]);
 
   useEffect(() => {
     // Don't navigate while auth is still loading
