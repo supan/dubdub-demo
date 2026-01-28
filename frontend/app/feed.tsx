@@ -623,16 +623,39 @@ export default function FeedScreen() {
     
     const isLastSet = noMorePlayables && currentIndex >= playables.length - 1;
     
-    // Fake percentile based on performance
-    const getPercentile = () => {
-      if (setAccuracy >= 90) return "Top 5%";
-      if (setAccuracy >= 80) return "Top 10%";
-      if (setAccuracy >= 70) return "Top 20%";
-      if (setAccuracy >= 60) return "Top 30%";
-      return "Top 50%";
+    // Determine performance level
+    const isGreatPerformance = setAccuracy >= 80;
+    const isGoodPerformance = setAccuracy >= 40 && setAccuracy < 80;
+    const isPoorPerformance = setAccuracy < 40;
+    
+    // Get appropriate icon and color based on performance
+    const getIconConfig = () => {
+      if (isGreatPerformance) return { name: "trophy" as const, color: "#FFD700", bgColor: "rgba(255, 215, 0, 0.15)" };
+      if (isGoodPerformance) return { name: "thumbs-up" as const, color: "#00D9FF", bgColor: "rgba(0, 217, 255, 0.15)" };
+      return { name: "fitness" as const, color: "#FF6B6B", bgColor: "rgba(255, 107, 107, 0.15)" };
     };
     
-    // Achievement badges - per set + cumulative
+    // Get appropriate title based on performance
+    const getTitle = () => {
+      if (isGreatPerformance) return `Set ${currentSetNumber} Done! 🎉`;
+      if (isGoodPerformance) return `Set ${currentSetNumber} Complete`;
+      return `Set ${currentSetNumber} Complete`;
+    };
+    
+    // Get performance message
+    const getPerformanceMessage = () => {
+      if (isGreatPerformance) {
+        if (setAccuracy === 100) return { text: "Perfect! You nailed it!", color: "#00FF87" };
+        return { text: "Great job! Keep it up!", color: "#00FF87" };
+      }
+      if (isGoodPerformance) return { text: "Not bad! Room to improve", color: "#00D9FF" };
+      return { text: "Keep practicing, you'll get better!", color: "#FF6B6B" };
+    };
+    
+    const iconConfig = getIconConfig();
+    const performanceMessage = getPerformanceMessage();
+    
+    // Achievement badges - only show for good/great performance
     const achievements: { icon: string; title: string; description: string }[] = [];
     if (setStats.played > 0 && setStats.correct === setStats.played) {
       achievements.push({ icon: "🏆", title: "Perfect Set", description: "100% accuracy this set!" });
@@ -641,24 +664,23 @@ export default function FeedScreen() {
       achievements.push({ icon: "🔥", title: "Streak Master", description: `${sessionStats.bestStreak} in a row!` });
     }
     
-    // Generate competitive share message
+    // Generate share message - only for decent performance
     const generateShareMessage = () => {
       const streakEmoji = sessionStats.bestStreak >= 5 ? '🔥🔥🔥' : sessionStats.bestStreak >= 3 ? '🔥🔥' : '🔥';
-      const percentile = getPercentile();
       
       if (setAccuracy === 100 && setStats.played > 0) {
         return `🏆 PERFECT SET on dubdub!\n\n` +
           `📊 Set ${currentSetNumber}: ${setStats.correct}/${setStats.played} correct\n` +
           `${streakEmoji} ${sessionStats.bestStreak} streak\n` +
           `🎯 ${setAccuracy}% accuracy\n\n` +
-          `${percentile} worldwide. Think you can beat that? 💪`;
+          `Think you can beat that? 💪`;
       } else if (sessionStats.bestStreak >= 5) {
         return `${streakEmoji} ${sessionStats.bestStreak} STREAK on dubdub!\n\n` +
           `📊 Set ${currentSetNumber}: ${setStats.correct}/${setStats.played}\n` +
           `🎯 Accuracy: ${setAccuracy}%\n\n` +
-          `Only ${percentile} get this far. Your move 🎮`;
+          `Can you beat my streak? 🎮`;
       } else {
-        return `⚡ Set ${currentSetNumber} done on dubdub!\n\n` +
+        return `⚡ Playing dubdub!\n\n` +
           `📊 Score: ${setStats.correct}/${setStats.played}\n` +
           `${streakEmoji} Streak: ${sessionStats.bestStreak}\n\n` +
           `Think you're smarter? Prove it 🎯`;
@@ -690,28 +712,38 @@ export default function FeedScreen() {
         </View>
         
         <View style={[styles.emptyContainer, { paddingBottom: 60 }]} {...panResponder.panHandlers}>
-          {/* Trophy Icon */}
-          <View style={styles.trophyContainer}>
-            <Ionicons name="trophy" size={64} color="#FFD700" />
+          {/* Icon - changes based on performance */}
+          <View style={[styles.trophyContainer, { backgroundColor: iconConfig.bgColor }]}>
+            <Ionicons name={iconConfig.name} size={56} color={iconConfig.color} />
           </View>
           
           {/* Main Title */}
-          <Text style={styles.emptyTitle}>Set {currentSetNumber} Done! 🎉</Text>
+          <Text style={styles.emptyTitle}>{getTitle()}</Text>
           
-          {/* Performance Percentile */}
-          <View style={styles.percentileBadge}>
-            <Ionicons name="trending-up" size={16} color="#00FF87" />
-            <Text style={styles.percentileText}>{getPercentile()} performance!</Text>
+          {/* Performance Message */}
+          <View style={[styles.percentileBadge, { backgroundColor: `${performanceMessage.color}20` }]}>
+            <Ionicons 
+              name={isGreatPerformance ? "trending-up" : isGoodPerformance ? "remove" : "trending-down"} 
+              size={16} 
+              color={performanceMessage.color} 
+            />
+            <Text style={[styles.percentileText, { color: performanceMessage.color }]}>
+              {performanceMessage.text}
+            </Text>
           </View>
           
           {/* Stats Row - Set Score + Cumulative Streak */}
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{setStats.correct}/{setStats.played}</Text>
+              <Text style={[styles.statValue, isPoorPerformance && { color: '#FF6B6B' }]}>
+                {setStats.correct}/{setStats.played}
+              </Text>
               <Text style={styles.statLabel}>Set Score</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{setAccuracy}%</Text>
+              <Text style={[styles.statValue, isPoorPerformance && { color: '#FF6B6B' }]}>
+                {setAccuracy}%
+              </Text>
               <Text style={styles.statLabel}>Accuracy</Text>
             </View>
             <View style={styles.statBox}>
