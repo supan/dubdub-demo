@@ -256,28 +256,55 @@ export default function FeedScreen() {
     const state = gameStateRef.current;
     const idx = currentIndexRef.current;
     const items = playablesRef.current;
+    const isShowingSetFeedback = showSetFeedbackRef.current;
+    
+    // If showing set feedback, swipe moves to next set
+    if (isShowingSetFeedback) {
+      animateToNext(async () => {
+        // Increment set number
+        setCurrentSetNumber(prev => prev + 1);
+        // Reset set stats
+        setSetStats({ played: 0, correct: 0 });
+        // Update set start index
+        setSetStartIndex(idx + 1);
+        // Move to next question
+        setCurrentIndex(idx + 1);
+        setShowSetFeedback(false);
+        setGameState('PLAYING');
+        // Fetch more playables
+        await fetchMoreIfNeeded();
+      });
+      return;
+    }
     
     // Only skip if in PLAYING state (not in feedback)
     if (state === 'PLAYING') {
       handleSkip();
     }
     
+    // Calculate position within current set
+    const positionInSet = (idx - setStartIndex) + 1;
+    
     // Animate and transition to next
     animateToNext(() => {
-      // Use captured values from refs
-      if (idx < items.length - 1) {
+      // Check if completing a set
+      if (positionInSet >= SET_SIZE) {
+        setShowSetFeedback(true);
+        setFeedbackData(null);
+        setGameState('PLAYING');
+      } else if (idx < items.length - 1) {
         setCurrentIndex(idx + 1);
         setFeedbackData(null);
         setGameState('PLAYING');
       } else {
-        // No more questions - show empty state
-        setGameState('PLAYING');
-        setPlayables([]);
+        // No more questions - show final set feedback
+        setShowSetFeedback(true);
+        setNoMorePlayables(true);
         setFeedbackData(null);
-        setCurrentIndex(0);
+        setGameState('PLAYING');
       }
     });
-  }, [handleSkip, animateToNext]);
+  }, [handleSkip, animateToNext, setStartIndex, fetchMoreIfNeeded]);
 
   const handleAnswer = useCallback(async (answer: string) => {
     if (gameState !== 'PLAYING' || !playables[currentIndex]) return;
