@@ -325,7 +325,13 @@ export default function FeedScreen() {
 
       const result = response.data;
       
-      // Update session stats
+      // Update set stats
+      setSetStats(prev => ({
+        played: prev.played + 1,
+        correct: result.correct ? prev.correct + 1 : prev.correct,
+      }));
+      
+      // Update cumulative session stats
       setSessionStats(prev => {
         const newStats = {
           played: prev.played + 1,
