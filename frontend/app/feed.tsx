@@ -616,6 +616,34 @@ export default function FeedScreen() {
   }
 
   // Set Feedback Screen - shows after every 5 questions
+  // STATE 1: If nothing was attempted (all skipped), skip feedback screen entirely
+  if (showSetFeedback && setStats.played === 0) {
+    // Auto-transition to next set without showing feedback
+    const handleSkipToNextSet = async () => {
+      setCurrentSetNumber(prev => prev + 1);
+      setSetStats({ played: 0, correct: 0 });
+      setSetStartIndex(currentIndex + 1);
+      setCurrentIndex(currentIndex + 1);
+      setShowSetFeedback(false);
+      setGameState('PLAYING');
+      await fetchMoreIfNeeded();
+    };
+    
+    // Trigger auto-skip
+    React.useEffect(() => {
+      handleSkipToNextSet();
+    }, []);
+    
+    // Show minimal loading while transitioning
+    return (
+      <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#00FF87" />
+        </View>
+      </LinearGradient>
+    );
+  }
+  
   if (showSetFeedback) {
     const setAccuracy = setStats.played > 0 
       ? Math.round((setStats.correct / setStats.played) * 100) 
@@ -623,33 +651,44 @@ export default function FeedScreen() {
     
     const isLastSet = noMorePlayables && currentIndex >= playables.length - 1;
     
-    // Determine performance level
-    const isGreatPerformance = setAccuracy >= 80;
-    const isGoodPerformance = setAccuracy >= 40 && setAccuracy < 80;
-    const isPoorPerformance = setAccuracy < 40;
+    // Determine performance level based on 4 states:
+    // STATE 2: 0% correct (all wrong) - Encouraging, non-celebratory
+    // STATE 3: 1-49% correct - Appreciative but encouraging  
+    // STATE 4: 50%+ correct - Celebratory
+    const isZeroCorrect = setStats.correct === 0;
+    const isLowPerformance = !isZeroCorrect && setAccuracy < 50;
+    const isGoodPerformance = setAccuracy >= 50;
     
     // Get appropriate icon and color based on performance
     const getIconConfig = () => {
-      if (isGreatPerformance) return { name: "trophy" as const, color: "#FFD700", bgColor: "rgba(255, 215, 0, 0.15)" };
-      if (isGoodPerformance) return { name: "thumbs-up" as const, color: "#00D9FF", bgColor: "rgba(0, 217, 255, 0.15)" };
-      return { name: "fitness" as const, color: "#FF6B6B", bgColor: "rgba(255, 107, 107, 0.15)" };
+      if (isGoodPerformance) return { name: "trophy" as const, color: "#FFD700", bgColor: "rgba(255, 215, 0, 0.15)" };
+      if (isLowPerformance) return { name: "thumbs-up" as const, color: "#00D9FF", bgColor: "rgba(0, 217, 255, 0.15)" };
+      // Zero correct - encouraging but subdued
+      return { name: "rocket" as const, color: "#9B59B6", bgColor: "rgba(155, 89, 182, 0.15)" };
     };
     
     // Get appropriate title based on performance
     const getTitle = () => {
-      if (isGreatPerformance) return `Set ${currentSetNumber} Done! 🎉`;
-      if (isGoodPerformance) return `Set ${currentSetNumber} Complete`;
-      return `Set ${currentSetNumber} Complete`;
+      if (isGoodPerformance) {
+        if (setAccuracy === 100) return `Perfect Set! 🎉`;
+        if (setAccuracy >= 80) return `Set ${currentSetNumber} Done! 🎉`;
+        return `Set ${currentSetNumber} Complete! 👏`;
+      }
+      if (isLowPerformance) return `Set ${currentSetNumber} Complete`;
+      // Zero correct - no celebration emoji
+      return `Set ${currentSetNumber} Done`;
     };
     
     // Get performance message
     const getPerformanceMessage = () => {
-      if (isGreatPerformance) {
+      if (isGoodPerformance) {
         if (setAccuracy === 100) return { text: "Perfect! You nailed it!", color: "#00FF87" };
-        return { text: "Great job! Keep it up!", color: "#00FF87" };
+        if (setAccuracy >= 80) return { text: "Great job! Keep it up!", color: "#00FF87" };
+        return { text: "Well done! You're on track!", color: "#00FF87" };
       }
-      if (isGoodPerformance) return { text: "Not bad! Room to improve", color: "#00D9FF" };
-      return { text: "Keep practicing, you'll get better!", color: "#FF6B6B" };
+      if (isLowPerformance) return { text: "Good effort! Keep practicing!", color: "#00D9FF" };
+      // Zero correct - supportive message
+      return { text: "Every expert was once a beginner!", color: "#9B59B6" };
     };
     
     const iconConfig = getIconConfig();
