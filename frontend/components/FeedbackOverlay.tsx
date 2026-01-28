@@ -237,14 +237,6 @@ export default function FeedbackOverlay({
             ))}
           </View>
 
-          {/* Correct Answer (for wrong answers) */}
-          {!correct && correctAnswer && (
-            <View style={styles.answerRow}>
-              <Text style={styles.answerLabel}>Answer:</Text>
-              <Text style={styles.answerValue}>{correctAnswer}</Text>
-            </View>
-          )}
-
           {/* Hints Used (for Guess the X) */}
           {hintsUsed !== undefined && correct && (
             <View style={styles.hintsUsedBadge}>
