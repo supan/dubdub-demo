@@ -1452,6 +1452,19 @@ const styles = StyleSheet.create({
     marginTop: 4,
     letterSpacing: 0.5,
   },
+  motivationText: {
+    fontSize: 14,
+    color: '#AAA',
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  tryAgainBtn: {
+    marginTop: 14,
+    borderRadius: 24,
+    overflow: 'hidden',
+    width: '100%',
+  },
   // Loading screen styles
   loadingContainer: {
     flex: 1,
