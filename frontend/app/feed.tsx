@@ -1213,6 +1213,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 215, 0, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 20,
     marginBottom: 8,
   },
   percentileBadge: {
