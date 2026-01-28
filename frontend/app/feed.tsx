@@ -445,6 +445,12 @@ export default function FeedScreen() {
 
       const result = response.data;
       
+      // Update set stats
+      setSetStats(prev => ({
+        played: prev.played + 1,
+        correct: prev.correct + 1,
+      }));
+      
       // Update session stats for Chess puzzle
       setSessionStats(prev => {
         const newStats = {
@@ -485,11 +491,16 @@ export default function FeedScreen() {
 
       const result = response.data;
       
+      // Update set stats
+      setSetStats(prev => ({
+        played: prev.played + 1,
+        correct: prev.correct,
+      }));
+      
       // Update session stats for failed Chess puzzle
       setSessionStats(prev => ({
         ...prev,
         played: prev.played + 1,
-        // correct stays same, bestStreak stays same
       }));
       
       setFeedbackData({
