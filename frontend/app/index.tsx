@@ -78,21 +78,21 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.bottomContent}>
-          {/* For demo: Google button uses devLogin instead of real Google login */}
-          <TouchableOpacity style={styles.loginButton} onPress={devLogin} activeOpacity={0.8} disabled={devLoading}>
+          {/* Google OAuth Login */}
+          <TouchableOpacity style={styles.loginButton} onPress={login} activeOpacity={0.8}>
             <LinearGradient colors={['#00FF87', '#00D9FF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.buttonGradient}>
               <Ionicons name="logo-google" size={24} color="#0F0F1E" style={styles.googleIcon} />
-              <Text style={styles.loginButtonText}>{devLoading ? 'Logging in...' : 'Login with Google'}</Text>
+              <Text style={styles.loginButtonText}>Login with Google</Text>
             </LinearGradient>
           </TouchableOpacity>
 
-          {/* Dev Login - Hidden for demo */}
-          {/* <TouchableOpacity style={styles.devButton} onPress={devLogin} activeOpacity={0.8} disabled={devLoading}>
+          {/* Dev Login - Quick Test */}
+          <TouchableOpacity style={styles.devButton} onPress={devLogin} activeOpacity={0.8} disabled={devLoading}>
             <Ionicons name="code" size={20} color="#00FF87" style={styles.devIcon} />
             <Text style={styles.devButtonText}>
               {devLoading ? 'Logging in...' : 'Dev Login (Quick Test)'}
             </Text>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
 
           <Text style={styles.footerText}>Join the winners community</Text>
           <Text style={styles.versionText}>v1.3.0</Text>
