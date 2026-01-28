@@ -106,25 +106,51 @@ export default function FeedScreen() {
     if (!initialLoadDone) {
       setInitialLoadDone(true);
       setTotalPlayed(user?.total_played || 0);
-      fetchPlayables();
+      fetchPlayables(true); // Initial fetch with 10 items
     }
   }, [sessionToken, loading]);
 
-  const fetchPlayables = async () => {
+  const fetchPlayables = async (isInitial: boolean = false) => {
     try {
       setGameState('LOADING');
+      const limit = isInitial ? 10 : 5;
+      const skip = isInitial ? 0 : fetchSkip;
+      
       const response = await axios.get(`${BACKEND_URL}/api/playables/feed`, {
         headers: { Authorization: `Bearer ${sessionToken}` },
-        params: { skip: 0, limit: 20 },
+        params: { skip, limit },
       });
-      setPlayables(response.data);
-      setCurrentIndex(0);
+      
+      const newPlayables = response.data;
+      
+      if (isInitial) {
+        setPlayables(newPlayables);
+        setCurrentIndex(0);
+        setSetStartIndex(0);
+        setFetchSkip(10);
+        setNoMorePlayables(newPlayables.length < 10);
+      } else {
+        // Append new playables
+        setPlayables(prev => [...prev, ...newPlayables]);
+        setFetchSkip(prev => prev + 5);
+        if (newPlayables.length < 5) {
+          setNoMorePlayables(true);
+        }
+      }
+      
       translateY.setValue(0);
       opacity.setValue(1);
       setGameState('PLAYING');
     } catch (error) {
       console.error('Error fetching playables:', error);
       setGameState('PLAYING');
+    }
+  };
+
+  // Fetch more playables when entering a new set
+  const fetchMoreIfNeeded = async () => {
+    if (!noMorePlayables) {
+      await fetchPlayables(false);
     }
   };
 
