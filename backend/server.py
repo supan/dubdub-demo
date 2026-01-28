@@ -390,38 +390,6 @@ async def get_playables_feed(
 ):
     """Get playables feed"""
     try:
-        # DEMO MODE: Return specific playables in specific order for demo video
-        # Demo playables: Be Careful, Eyes Don't Lie, Supan1, No Grammy?, Guess the Cricketer (Shikhar Dhawan)
-        DEMO_MODE = True  # Set to False to disable demo mode
-        DEMO_PLAYABLE_IDS = [
-            "play_87f944dcfcb1",  # Be Careful
-            "play_fbf745c05db8",  # Eyes Don't Lie
-            "play_520619533384",  # Supan1
-            "play_8b45d1dfbb71",  # No Grammy?
-            "play_d2ed16b75ebb",  # Guess the Cricketer (Shikhar Dhawan)
-        ]
-        
-        if DEMO_MODE:
-            # Get user's answered playables
-            answered_playables = await db.user_progress.find(
-                {"user_id": current_user.user_id},
-                {"_id": 0, "playable_id": 1}
-            ).to_list(1000)
-            answered_ids = [p["playable_id"] for p in answered_playables]
-            
-            # Filter out answered ones and maintain order
-            remaining_ids = [pid for pid in DEMO_PLAYABLE_IDS if pid not in answered_ids]
-            
-            # Fetch playables in the specific order
-            playables = []
-            for pid in remaining_ids:
-                p = await db.playables.find_one({"playable_id": pid}, {"_id": 0})
-                if p:
-                    playables.append(p)
-            
-            return playables
-        
-        # NORMAL MODE (below)
         # Get user's answered playables
         answered_playables = await db.user_progress.find(
             {"user_id": current_user.user_id},
