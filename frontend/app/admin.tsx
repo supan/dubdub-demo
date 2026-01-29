@@ -174,6 +174,79 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchCategories = async (token: string) => {
+    try {
+      setLoadingCategories(true);
+      const response = await axios.get(`${BACKEND_URL}/api/admin/categories`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCategories(response.data.categories || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  const handleInitCategories = async () => {
+    try {
+      setCategoryMessage('Initializing...');
+      const response = await axios.post(
+        `${BACKEND_URL}/api/admin/categories/init`,
+        {},
+        { headers: { Authorization: `Bearer ${adminToken}` } }
+      );
+      setCategoryMessage(`✅ ${response.data.message}. Added: ${response.data.added.join(', ') || 'None'}`);
+      if (adminToken) fetchCategories(adminToken);
+    } catch (error: any) {
+      setCategoryMessage(`❌ ${error.response?.data?.detail || 'Failed to initialize'}`);
+    }
+  };
+
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) {
+      setCategoryMessage('Please enter a category name');
+      return;
+    }
+    try {
+      setAddingCategory(true);
+      setCategoryMessage('');
+      const response = await axios.post(
+        `${BACKEND_URL}/api/admin/categories`,
+        {
+          name: newCategoryName.trim(),
+          icon: newCategoryIcon,
+          color: newCategoryColor,
+        },
+        { headers: { Authorization: `Bearer ${adminToken}` } }
+      );
+      setCategoryMessage(`✅ ${response.data.message}`);
+      setNewCategoryName('');
+      if (adminToken) fetchCategories(adminToken);
+    } catch (error: any) {
+      setCategoryMessage(`❌ ${error.response?.data?.detail || 'Failed to add category'}`);
+    } finally {
+      setAddingCategory(false);
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId: string, categoryName: string) => {
+    if (Platform.OS === 'web') {
+      if (!window.confirm(`Delete category "${categoryName}"?`)) return;
+    } else {
+      // For mobile, you'd use Alert.alert with buttons
+    }
+    try {
+      await axios.delete(`${BACKEND_URL}/api/admin/categories/${categoryId}`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
+      setCategoryMessage(`✅ Category "${categoryName}" deleted`);
+      if (adminToken) fetchCategories(adminToken);
+    } catch (error: any) {
+      setCategoryMessage(`❌ ${error.response?.data?.detail || 'Failed to delete'}`);
+    }
+  };
+
   const fetchStats = async (date?: string) => {
     try {
       setStatsLoading(true);
