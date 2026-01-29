@@ -152,6 +152,8 @@ export default function AdminDashboard() {
           setAdminToken(storedToken);
           setIsLoggedIn(true);
           setPlayables(response.data.playables);
+          // Also fetch categories
+          fetchCategories(storedToken);
         }
       } catch (e) {
         // Token invalid, remove it
