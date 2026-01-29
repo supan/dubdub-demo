@@ -588,11 +588,11 @@ export default function AdminDashboard() {
           <Text style={[styles.tabText, activeTab === 'stats' && styles.tabTextActive]}>Stats</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'reset' && styles.tabActive]}
-          onPress={() => setActiveTab('reset')}
+          style={[styles.tab, activeTab === 'categories' && styles.tabActive]}
+          onPress={() => { setActiveTab('categories'); if (adminToken) fetchCategories(adminToken); }}
         >
-          <Ionicons name="refresh" size={18} color={activeTab === 'reset' ? '#00FF87' : '#888'} />
-          <Text style={[styles.tabText, activeTab === 'reset' && styles.tabTextActive]}>Reset</Text>
+          <Ionicons name="pricetags" size={18} color={activeTab === 'categories' ? '#00FF87' : '#888'} />
+          <Text style={[styles.tabText, activeTab === 'categories' && styles.tabTextActive]}>Categories</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'add' && styles.tabActive]}
@@ -614,6 +614,13 @@ export default function AdminDashboard() {
         >
           <Ionicons name="list" size={18} color={activeTab === 'view' ? '#00FF87' : '#888'} />
           <Text style={[styles.tabText, activeTab === 'view' && styles.tabTextActive]}>View</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'reset' && styles.tabActive]}
+          onPress={() => setActiveTab('reset')}
+        >
+          <Ionicons name="refresh" size={18} color={activeTab === 'reset' ? '#00FF87' : '#888'} />
+          <Text style={[styles.tabText, activeTab === 'reset' && styles.tabTextActive]}>Reset</Text>
         </TouchableOpacity>
       </View>
 
