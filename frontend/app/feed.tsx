@@ -761,147 +761,150 @@ export default function FeedScreen() {
           </View>
         </View>
         
-        <View style={[styles.emptyContainer, { paddingBottom: 60 }]} {...panResponder.panHandlers}>
-          {/* Icon - changes based on performance */}
-          <View style={[styles.trophyContainer, { backgroundColor: iconConfig.bgColor }]}>
-            <Ionicons name={iconConfig.name} size={56} color={iconConfig.color} />
-          </View>
-          
-          {/* Main Title */}
-          <Text style={styles.emptyTitle}>{getTitle()}</Text>
-          
-          {/* Performance Message */}
-          <View style={[styles.percentileBadge, { backgroundColor: `${performanceMessage.color}20` }]}>
-            <Ionicons 
-              name={isGoodPerformance ? "trending-up" : isLowPerformance ? "remove" : "bulb-outline"} 
-              size={16} 
-              color={performanceMessage.color} 
-            />
-            <Text style={[styles.percentileText, { color: performanceMessage.color }]}>
-              {performanceMessage.text}
-            </Text>
-          </View>
-          
-          {/* Extra motivation for zero-correct sets */}
-          {isZeroCorrect && (
-            <Text style={styles.motivationText}>{randomMotivation}</Text>
-          )}
-          
-          {/* Stats Row - Set Score + Cumulative Streak */}
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={[styles.statValue, isZeroCorrect && { color: '#9B59B6' }, isLowPerformance && { color: '#00D9FF' }]}>
-                {setStats.correct}/{setStats.played}
+        <View style={styles.feedbackScreenContainer} {...panResponder.panHandlers}>
+          {/* Main Content Area */}
+          <View style={styles.feedbackContent}>
+            {/* Icon - changes based on performance */}
+            <View style={[styles.trophyContainer, { backgroundColor: iconConfig.bgColor }]}>
+              <Ionicons name={iconConfig.name} size={56} color={iconConfig.color} />
+            </View>
+            
+            {/* Main Title */}
+            <Text style={styles.feedbackTitle}>{getTitle()}</Text>
+            
+            {/* Performance Message */}
+            <View style={[styles.percentileBadge, { backgroundColor: `${performanceMessage.color}20` }]}>
+              <Ionicons 
+                name={isGoodPerformance ? "trending-up" : isLowPerformance ? "remove" : "bulb-outline"} 
+                size={16} 
+                color={performanceMessage.color} 
+              />
+              <Text style={[styles.percentileText, { color: performanceMessage.color }]}>
+                {performanceMessage.text}
               </Text>
-              <Text style={styles.statLabel}>Set Score</Text>
             </View>
-            <View style={styles.statBox}>
-              <Text style={[styles.statValue, isZeroCorrect && { color: '#9B59B6' }, isLowPerformance && { color: '#00D9FF' }]}>
-                {setAccuracy}%
-              </Text>
-              <Text style={styles.statLabel}>Accuracy</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{sessionStats.bestStreak}</Text>
-              <Text style={styles.statLabel}>Best Streak</Text>
-            </View>
-          </View>
-          
-          {/* Achievements - only show for good performance */}
-          {achievements.length > 0 && (
-            <View style={styles.achievementsContainer}>
-              <Text style={styles.achievementsTitle}>Achievements Unlocked</Text>
-              {achievements.map((achievement, idx) => (
-                <View key={idx} style={styles.achievementBadge}>
-                  <Text style={styles.achievementIcon}>{achievement.icon}</Text>
-                  <View style={styles.achievementTextContainer}>
-                    <Text style={styles.achievementTitle}>{achievement.title}</Text>
-                    <Text style={styles.achievementDesc}>{achievement.description}</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
-          
-          {/* Your Strength - only show for good performance */}
-          {isGoodPerformance && (
-            <View style={styles.bestCategoryBadge}>
-              <Text style={styles.bestCategoryLabel}>Your Strength</Text>
-              <Text style={styles.bestCategoryValue}>Logical Thinking ⭐</Text>
-            </View>
-          )}
-          
-          {/* Try Again Button - for zero-correct or low performance */}
-          {(isZeroCorrect || isLowPerformance) && !isLastSet && (
-            <TouchableOpacity style={styles.tryAgainBtn} onPress={() => {
-              animateToNext(async () => {
-                setCurrentSetNumber(prev => prev + 1);
-                setSetStats({ played: 0, correct: 0 });
-                setSetStartIndex(currentIndex + 1);
-                setCurrentIndex(currentIndex + 1);
-                setShowSetFeedback(false);
-                setGameState('PLAYING');
-                await fetchMoreIfNeeded();
-              });
-            }}>
-              <LinearGradient
-                colors={isZeroCorrect ? ['#9B59B6', '#8E44AD'] : ['#00D9FF', '#0099CC']}
-                style={styles.shareGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Ionicons name="arrow-forward" size={22} color="#FFF" />
-                <Text style={[styles.shareText, { color: '#FFF' }]}>
-                  {isZeroCorrect ? "Let's Try Again!" : "Next Set"}
+            
+            {/* Extra motivation for zero-correct sets */}
+            {isZeroCorrect && (
+              <Text style={styles.motivationText}>{randomMotivation}</Text>
+            )}
+            
+            {/* Stats Row - Set Score + Cumulative Streak */}
+            <View style={styles.feedbackStatsRow}>
+              <View style={styles.feedbackStatBox}>
+                <Text style={[styles.feedbackStatValue, isZeroCorrect && { color: '#9B59B6' }, isLowPerformance && { color: '#00D9FF' }]}>
+                  {setStats.correct}/{setStats.played}
                 </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
-          
-          {/* Share Button - only for good performance */}
-          {isGoodPerformance && (
-            <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-              <LinearGradient
-                colors={['#00FF87', '#00D9FF']}
-                style={styles.shareGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
+                <Text style={styles.feedbackStatLabel}>Set Score</Text>
+              </View>
+              <View style={styles.feedbackStatBox}>
+                <Text style={[styles.feedbackStatValue, isZeroCorrect && { color: '#9B59B6' }, isLowPerformance && { color: '#00D9FF' }]}>
+                  {setAccuracy}%
+                </Text>
+                <Text style={styles.feedbackStatLabel}>Accuracy</Text>
+              </View>
+              <View style={styles.feedbackStatBox}>
+                <Text style={styles.feedbackStatValue}>{sessionStats.bestStreak}</Text>
+                <Text style={styles.feedbackStatLabel}>Best Streak</Text>
+              </View>
+            </View>
+            
+            {/* Achievements - only show for good performance */}
+            {achievements.length > 0 && (
+              <View style={styles.achievementsContainer}>
+                <Text style={styles.achievementsTitle}>Achievements Unlocked</Text>
+                {achievements.map((achievement, idx) => (
+                  <View key={idx} style={styles.achievementBadge}>
+                    <Text style={styles.achievementIcon}>{achievement.icon}</Text>
+                    <View style={styles.achievementTextContainer}>
+                      <Text style={styles.achievementTitle}>{achievement.title}</Text>
+                      <Text style={styles.achievementDesc}>{achievement.description}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+            
+            {/* Your Strength - only show for good performance */}
+            {isGoodPerformance && (
+              <View style={styles.bestCategoryBadge}>
+                <Text style={styles.bestCategoryLabel}>Your Strength</Text>
+                <Text style={styles.bestCategoryValue}>Logical Thinking ⭐</Text>
+              </View>
+            )}
+            
+            {/* Try Again Button - for zero-correct or low performance */}
+            {(isZeroCorrect || isLowPerformance) && !isLastSet && (
+              <TouchableOpacity style={styles.tryAgainBtn} onPress={() => {
+                animateToNext(async () => {
+                  setCurrentSetNumber(prev => prev + 1);
+                  setSetStats({ played: 0, correct: 0 });
+                  setSetStartIndex(currentIndex + 1);
+                  setCurrentIndex(currentIndex + 1);
+                  setShowSetFeedback(false);
+                  setGameState('PLAYING');
+                  await fetchMoreIfNeeded();
+                });
+              }}>
+                <LinearGradient
+                  colors={isZeroCorrect ? ['#9B59B6', '#8E44AD'] : ['#00D9FF', '#0099CC']}
+                  style={styles.shareGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Ionicons name="arrow-forward" size={22} color="#FFF" />
+                  <Text style={[styles.shareText, { color: '#FFF' }]}>
+                    {isZeroCorrect ? "Let's Try Again!" : "Next Set"}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+            
+            {/* Share Button - only for good performance */}
+            {isGoodPerformance && (
+              <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
+                <LinearGradient
+                  colors={['#00FF87', '#00D9FF']}
+                  style={styles.shareGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Ionicons name="share-social" size={22} color="#0F0F1E" />
+                  <Text style={styles.shareText}>Challenge Friends</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+            
+            {/* Reset & Reload - Only show on last set */}
+            {isLastSet && (
+              <TouchableOpacity 
+                style={styles.refreshBtn}
+                onPress={() => {
+                  setInitialLoadDone(false);
+                  setSessionStats({ played: 0, correct: 0, bestStreak: 0, categoryStats: {} });
+                  setSetStats({ played: 0, correct: 0 });
+                  setCurrentSetNumber(1);
+                  setSetStartIndex(0);
+                  setShowSetFeedback(false);
+                  setNoMorePlayables(false);
+                  setFetchSkip(0);
+                  fetchPlayables(true);
+                }}
               >
-                <Ionicons name="share-social" size={22} color="#0F0F1E" />
-                <Text style={styles.shareText}>Challenge Friends</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
+                <LinearGradient
+                  colors={['#444', '#555']}
+                  style={styles.refreshGradient}
+                >
+                  <Ionicons name="refresh" size={20} color="#FFF" />
+                  <Text style={[styles.refreshText, { color: '#FFF' }]}>Reset & Reload</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+          </View>
           
-          {/* Reset & Reload - Only show on last set */}
-          {isLastSet && (
-            <TouchableOpacity 
-              style={styles.refreshBtn}
-              onPress={() => {
-                setInitialLoadDone(false);
-                setSessionStats({ played: 0, correct: 0, bestStreak: 0, categoryStats: {} });
-                setSetStats({ played: 0, correct: 0 });
-                setCurrentSetNumber(1);
-                setSetStartIndex(0);
-                setShowSetFeedback(false);
-                setNoMorePlayables(false);
-                setFetchSkip(0);
-                fetchPlayables(true);
-              }}
-            >
-              <LinearGradient
-                colors={['#444', '#555']}
-                style={styles.refreshGradient}
-              >
-                <Ionicons name="refresh" size={20} color="#FFF" />
-                <Text style={[styles.refreshText, { color: '#FFF' }]}>Reset & Reload</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
-          
-          {/* Swipe Up for Next Set - Only if not last and for good performance (others have button) */}
-          {!isLastSet && isGoodPerformance && (
-            <View style={styles.swipeUpHint}>
+          {/* Swipe Up Hint - Always at bottom */}
+          {!isLastSet && (
+            <View style={styles.swipeUpHintFixed}>
               <View style={styles.chevronStack}>
                 <Ionicons name="chevron-up" size={22} color="rgba(255,255,255,0.4)" style={{ marginBottom: -12 }} />
                 <Ionicons name="chevron-up" size={22} color="rgba(255,255,255,0.7)" />
