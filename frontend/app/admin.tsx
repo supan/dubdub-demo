@@ -749,21 +749,40 @@ export default function AdminDashboard() {
               Add or remove categories. Categories are used when creating playables.
             </Text>
 
-            {/* Initialize from existing playables */}
-            <TouchableOpacity
-              style={[styles.actionButton, { marginBottom: 16 }]}
-              onPress={handleInitCategories}
-            >
-              <LinearGradient
-                colors={['#9B59B6', '#8E44AD']}
-                style={styles.actionButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
+            {/* Action Buttons Row */}
+            <View style={styles.actionButtonsRow}>
+              {/* Initialize from existing playables */}
+              <TouchableOpacity
+                style={[styles.actionButton, { flex: 1 }]}
+                onPress={handleInitCategories}
               >
-                <Ionicons name="sync" size={20} color="#FFF" />
-                <Text style={styles.actionButtonText}>Initialize from Existing Playables</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+                <LinearGradient
+                  colors={['#9B59B6', '#8E44AD']}
+                  style={styles.actionButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Ionicons name="sync" size={18} color="#FFF" />
+                  <Text style={styles.actionButtonText}>Initialize</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              {/* Fix Icons Button */}
+              <TouchableOpacity
+                style={[styles.actionButton, { flex: 1 }]}
+                onPress={handleFixIcons}
+              >
+                <LinearGradient
+                  colors={['#00BCD4', '#0097A7']}
+                  style={styles.actionButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Ionicons name="color-wand" size={18} color="#FFF" />
+                  <Text style={styles.actionButtonText}>Fix Icons</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
 
             {/* Add new category */}
             <View style={styles.addCategoryRow}>
