@@ -1455,6 +1455,50 @@ const styles = StyleSheet.create({
     marginTop: 4,
     letterSpacing: 0.5,
   },
+  swipeUpHintFixed: {
+    alignItems: 'center',
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+  },
+  feedbackScreenContainer: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  feedbackContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 28,
+  },
+  feedbackTitle: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  feedbackStatsRow: {
+    flexDirection: 'row',
+    marginTop: 24,
+    gap: 16,
+  },
+  feedbackStatBox: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    minWidth: 90,
+  },
+  feedbackStatValue: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#00FF87',
+  },
+  feedbackStatLabel: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 4,
+  },
   motivationText: {
     fontSize: 14,
     color: '#AAA',
