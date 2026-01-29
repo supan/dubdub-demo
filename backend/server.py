@@ -1682,6 +1682,15 @@ async def bulk_upload_playables(
                     errors.append(f"Row {idx}: Missing required fields (category, title, or correct_answer)")
                     continue
                 
+                # Validate category exists
+                category_doc = await db.categories.find_one({"name": {"$regex": f"^{category}$", "$options": "i"}})
+                if not category_doc:
+                    errors.append(f"Row {idx}: Category '{category}' does not exist. Add it in the Categories tab first.")
+                    continue
+                
+                # Use the exact category name from database
+                validated_category = category_doc["name"]
+                
                 # Build question object
                 question = {}
                 if question_text:
