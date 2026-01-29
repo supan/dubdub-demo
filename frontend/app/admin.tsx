@@ -2276,6 +2276,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   // Categories Tab Styles
+  actionButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
   addCategoryRow: {
     flexDirection: 'row',
     alignItems: 'center',
