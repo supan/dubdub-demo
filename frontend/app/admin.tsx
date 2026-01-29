@@ -78,7 +78,7 @@ export default function AdminDashboard() {
   // Existing Content State
   const [playables, setPlayables] = useState<Playable[]>([]);
   const [loadingPlayables, setLoadingPlayables] = useState(false);
-  const [activeTab, setActiveTab] = useState<'reset' | 'add' | 'bulk' | 'view' | 'stats'>('stats');
+  const [activeTab, setActiveTab] = useState<'reset' | 'add' | 'bulk' | 'view' | 'stats' | 'categories'>('stats');
 
   // Bulk Upload State
   const [bulkFormatType, setBulkFormatType] = useState('text_mcq');
@@ -90,6 +90,15 @@ export default function AdminDashboard() {
   const [statsDate, setStatsDate] = useState(new Date().toISOString().split('T')[0]);
   const [statsData, setStatsData] = useState<any>(null);
   const [statsLoading, setStatsLoading] = useState(false);
+
+  // Categories State
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryIcon, setNewCategoryIcon] = useState('help-circle');
+  const [newCategoryColor, setNewCategoryColor] = useState('#00FF87');
+  const [addingCategory, setAddingCategory] = useState(false);
+  const [categoryMessage, setCategoryMessage] = useState('');
 
   const handleLogin = async () => {
     if (!username || !password) {
