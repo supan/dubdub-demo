@@ -1769,7 +1769,7 @@ async def bulk_upload_playables(
                     "playable_id": playable_id,
                     "type": playable_type,
                     "answer_type": answer_type,
-                    "category": category,
+                    "category": validated_category,  # Use validated category name
                     "title": title,
                     "question": question,
                     "options": options,
