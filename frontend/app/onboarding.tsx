@@ -25,13 +25,14 @@ interface Category {
   playable_count: number;
 }
 
-// Icon mapping
+// Icon mapping - maps backend icon names to Ionicons
 const ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
   'flask': 'flask',
   'globe': 'globe',
   'time': 'time',
   'book': 'book',
   'football': 'football',
+  'american-football': 'american-football',
   'musical-notes': 'musical-notes',
   'color-palette': 'color-palette',
   'film': 'film',
@@ -42,6 +43,21 @@ const ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
   'calculator': 'calculator',
   'language': 'language',
   'help-circle': 'help-circle',
+  'baseball': 'baseball',
+  'star': 'star',
+  'game-controller': 'game-controller',
+  'extension-puzzle': 'extension-puzzle',
+  'videocam': 'videocam',
+  'podium': 'podium',
+  'tv': 'tv',
+  'bulb': 'bulb',
+  'trophy': 'trophy',
+  'medal': 'medal',
+  'ribbon': 'ribbon',
+  'fitness': 'fitness',
+  'bicycle': 'bicycle',
+  'tennisball': 'tennisball',
+  'basketball': 'basketball',
 };
 
 export default function OnboardingScreen() {
