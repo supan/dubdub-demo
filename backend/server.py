@@ -291,8 +291,8 @@ async def logout(authorization: Optional[str] = Header(None)):
 
 # ==================== CATEGORY ENDPOINTS ====================
 
-# Default category icons and colors mapping
-CATEGORY_STYLES = {
+# Default category icons and colors mapping (used for initialization)
+DEFAULT_CATEGORY_STYLES = {
     "SCIENCE": {"icon": "flask", "color": "#4CAF50"},
     "GEOGRAPHY": {"icon": "globe", "color": "#2196F3"},
     "HISTORY": {"icon": "time", "color": "#FF9800"},
@@ -306,45 +306,60 @@ CATEGORY_STYLES = {
     "NATURE": {"icon": "leaf", "color": "#8BC34A"},
     "ANIMALS": {"icon": "paw", "color": "#FFEB3B"},
     "MATHEMATICS": {"icon": "calculator", "color": "#3F51B5"},
+    "MATHS": {"icon": "calculator", "color": "#3F51B5"},
     "LANGUAGES": {"icon": "language", "color": "#009688"},
     "GENERAL": {"icon": "help-circle", "color": "#9E9E9E"},
+    "CRICKET": {"icon": "baseball", "color": "#4CAF50"},
+    "POP CULTURE": {"icon": "star", "color": "#E91E63"},
+    "CHESS": {"icon": "game-controller", "color": "#607D8B"},
 }
 
-def get_category_style(category_name: str) -> dict:
-    """Get icon and color for a category"""
+def get_default_category_style(category_name: str) -> dict:
+    """Get default icon and color for a category"""
     upper_name = category_name.upper()
-    if upper_name in CATEGORY_STYLES:
-        return CATEGORY_STYLES[upper_name]
+    if upper_name in DEFAULT_CATEGORY_STYLES:
+        return DEFAULT_CATEGORY_STYLES[upper_name]
     # Default style for unknown categories
     return {"icon": "help-circle", "color": "#00FF87"}
 
+# Model for adding a new category
+class AddCategoryRequest(BaseModel):
+    name: str
+    icon: Optional[str] = "help-circle"
+    color: Optional[str] = "#00FF87"
+
 @api_router.get("/categories")
 async def get_categories(current_user: User = Depends(require_auth)):
-    """Get all available categories with their counts, icons, and colors"""
+    """Get all available categories from the managed categories collection"""
     try:
-        # Get distinct categories from playables
+        # Get categories from the managed collection
+        categories_cursor = db.categories.find({}, {"_id": 0}).sort("name", 1)
+        categories = await categories_cursor.to_list(100)
+        
+        # Get playable counts for each category
         pipeline = [
-            {"$group": {"_id": "$category", "count": {"$sum": 1}}},
-            {"$sort": {"count": -1}}
+            {"$group": {"_id": "$category", "count": {"$sum": 1}}}
         ]
-        
         category_counts = await db.playables.aggregate(pipeline).to_list(100)
+        count_map = {c["_id"]: c["count"] for c in category_counts}
         
-        categories = []
-        for cat in category_counts:
-            cat_name = cat["_id"]
-            style = get_category_style(cat_name)
-            categories.append({
-                "category_id": cat_name.lower().replace(" ", "_"),
-                "name": cat_name,
-                "icon": style["icon"],
-                "color": style["color"],
-                "playable_count": cat["count"]
-            })
+        # Add playable_count to each category
+        for cat in categories:
+            cat["playable_count"] = count_map.get(cat["name"], 0)
         
         return {"categories": categories}
     except Exception as e:
         logging.error(f"Error fetching categories: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/categories/list")
+async def get_categories_list():
+    """Get all category names (public endpoint for validation)"""
+    try:
+        categories = await db.categories.find({}, {"_id": 0, "name": 1}).to_list(100)
+        return {"categories": [c["name"] for c in categories]}
+    except Exception as e:
+        logging.error(f"Error fetching categories list: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/categories/select")
