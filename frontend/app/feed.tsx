@@ -88,6 +88,22 @@ export default function FeedScreen() {
   useEffect(() => { playablesRef.current = playables; }, [playables]);
   useEffect(() => { showSetFeedbackRef.current = showSetFeedback; }, [showSetFeedback]);
 
+  // STATE 1: Auto-skip feedback screen if nothing was attempted (all skipped)
+  useEffect(() => {
+    if (showSetFeedback && setStats.played === 0) {
+      const skipToNextSet = async () => {
+        setCurrentSetNumber(prev => prev + 1);
+        setSetStats({ played: 0, correct: 0 });
+        setSetStartIndex(currentIndex + 1);
+        setCurrentIndex(currentIndex + 1);
+        setShowSetFeedback(false);
+        setGameState('PLAYING');
+        await fetchMoreIfNeeded();
+      };
+      skipToNextSet();
+    }
+  }, [showSetFeedback, setStats.played]);
+
   useEffect(() => {
     // Don't navigate while auth is still loading
     if (loading) return;
