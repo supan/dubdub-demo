@@ -206,6 +206,21 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleFixIcons = async () => {
+    try {
+      setCategoryMessage('Fixing icons...');
+      const response = await axios.post(
+        `${BACKEND_URL}/api/admin/categories/fix-icons`,
+        {},
+        { headers: { Authorization: `Bearer ${adminToken}` } }
+      );
+      setCategoryMessage(`✅ ${response.data.message}`);
+      if (adminToken) fetchCategories(adminToken);
+    } catch (error: any) {
+      setCategoryMessage(`❌ ${error.response?.data?.detail || 'Failed to fix icons'}`);
+    }
+  };
+
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) {
       setCategoryMessage('Please enter a category name');
