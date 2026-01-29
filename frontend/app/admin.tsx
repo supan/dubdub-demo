@@ -923,15 +923,56 @@ export default function AdminDashboard() {
               </>
             )}
 
-            {/* Category */}
+            {/* Category - Dropdown */}
             <Text style={styles.label}>Category</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g., Science, History, Geography"
-              placeholderTextColor="#666"
-              value={category}
-              onChangeText={setCategory}
-            />
+            {Platform.OS === 'web' ? (
+              <select
+                value={category}
+                onChange={(e: any) => setCategory(e.target.value)}
+                style={{
+                  backgroundColor: '#1A1A2E',
+                  color: '#FFF',
+                  border: '1px solid #333',
+                  borderRadius: 8,
+                  padding: 12,
+                  fontSize: 14,
+                  marginBottom: 16,
+                  width: '100%',
+                }}
+              >
+                <option value="">Select a category</option>
+                {categories.map((cat: any) => (
+                  <option key={cat.category_id} value={cat.name}>{cat.name}</option>
+                ))}
+              </select>
+            ) : (
+              <View style={styles.dropdownContainer}>
+                <TouchableOpacity
+                  style={styles.dropdownButton}
+                  onPress={() => {
+                    // Simple alert-based picker for mobile
+                    Alert.alert(
+                      'Select Category',
+                      '',
+                      categories.map((cat: any) => ({
+                        text: cat.name,
+                        onPress: () => setCategory(cat.name),
+                      })).concat([{ text: 'Cancel', style: 'cancel' }])
+                    );
+                  }}
+                >
+                  <Text style={[styles.dropdownText, !category && { color: '#666' }]}>
+                    {category || 'Select a category'}
+                  </Text>
+                  <Ionicons name="chevron-down" size={20} color="#888" />
+                </TouchableOpacity>
+              </View>
+            )}
+            {categories.length === 0 && (
+              <Text style={styles.warningText}>
+                ⚠️ No categories found. Go to Categories tab to add some first.
+              </Text>
+            )}
 
             {/* Title */}
             <Text style={styles.label}>Title</Text>
