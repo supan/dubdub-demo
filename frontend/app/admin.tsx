@@ -726,6 +726,93 @@ export default function AdminDashboard() {
           </View>
         )}
 
+        {/* Categories Tab */}
+        {activeTab === 'categories' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Manage Categories</Text>
+            <Text style={styles.sectionDescription}>
+              Add or remove categories. Categories are used when creating playables.
+            </Text>
+
+            {/* Initialize from existing playables */}
+            <TouchableOpacity
+              style={[styles.actionButton, { marginBottom: 16 }]}
+              onPress={handleInitCategories}
+            >
+              <LinearGradient
+                colors={['#9B59B6', '#8E44AD']}
+                style={styles.actionButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Ionicons name="sync" size={20} color="#FFF" />
+                <Text style={styles.actionButtonText}>Initialize from Existing Playables</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* Add new category */}
+            <View style={styles.addCategoryRow}>
+              <TextInput
+                style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                placeholder="New category name"
+                placeholderTextColor="#666"
+                value={newCategoryName}
+                onChangeText={setNewCategoryName}
+              />
+              <TouchableOpacity
+                style={styles.addCategoryBtn}
+                onPress={handleAddCategory}
+                disabled={addingCategory}
+              >
+                {addingCategory ? (
+                  <ActivityIndicator color="#00FF87" size="small" />
+                ) : (
+                  <Ionicons name="add" size={24} color="#00FF87" />
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {categoryMessage ? (
+              <Text style={[styles.message, categoryMessage.includes('❌') && styles.errorMessage]}>
+                {categoryMessage}
+              </Text>
+            ) : null}
+
+            {/* Categories List */}
+            {loadingCategories ? (
+              <ActivityIndicator size="large" color="#00FF87" style={{ marginTop: 20 }} />
+            ) : (
+              <View style={styles.categoriesList}>
+                <Text style={styles.listHeader}>Categories ({categories.length})</Text>
+                {categories.map((cat: any) => (
+                  <View key={cat.category_id} style={styles.categoryItem}>
+                    <View style={styles.categoryInfo}>
+                      <View style={[styles.categoryIcon, { backgroundColor: cat.color + '30' }]}>
+                        <Ionicons name={cat.icon as any} size={20} color={cat.color} />
+                      </View>
+                      <View>
+                        <Text style={styles.categoryName}>{cat.name}</Text>
+                        <Text style={styles.categoryCount}>{cat.playable_count || 0} playables</Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.deleteCategoryBtn}
+                      onPress={() => handleDeleteCategory(cat.category_id, cat.name)}
+                    >
+                      <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+                {categories.length === 0 && (
+                  <Text style={styles.noDataText}>
+                    No categories yet. Click "Initialize from Existing Playables" to populate.
+                  </Text>
+                )}
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Reset Progress Tab */}
         {activeTab === 'reset' && (
           <View style={styles.section}>
