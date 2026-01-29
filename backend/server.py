@@ -1092,6 +1092,14 @@ async def admin_add_playable(
 ):
     """Add a new playable content (admin only)"""
     try:
+        # Validate category exists
+        category_exists = await db.categories.find_one({"name": {"$regex": f"^{request.category}$", "$options": "i"}})
+        if not category_exists:
+            raise HTTPException(status_code=400, detail=f"Category '{request.category}' does not exist. Please add it first in the Categories tab.")
+        
+        # Use the exact category name from database (preserves case)
+        category_name = category_exists["name"]
+        
         # Validate based on type
         question = {}
         
