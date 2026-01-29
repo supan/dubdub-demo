@@ -297,7 +297,7 @@ DEFAULT_CATEGORY_STYLES = {
     "GEOGRAPHY": {"icon": "globe", "color": "#2196F3"},
     "HISTORY": {"icon": "time", "color": "#FF9800"},
     "LITERATURE": {"icon": "book", "color": "#9C27B0"},
-    "SPORTS": {"icon": "football", "color": "#F44336"},
+    "SPORTS": {"icon": "american-football", "color": "#F44336"},
     "MUSIC": {"icon": "musical-notes", "color": "#E91E63"},
     "ART": {"icon": "color-palette", "color": "#00BCD4"},
     "MOVIES": {"icon": "film", "color": "#795548"},
@@ -311,7 +311,13 @@ DEFAULT_CATEGORY_STYLES = {
     "GENERAL": {"icon": "help-circle", "color": "#9E9E9E"},
     "CRICKET": {"icon": "baseball", "color": "#4CAF50"},
     "POP CULTURE": {"icon": "star", "color": "#E91E63"},
-    "CHESS": {"icon": "game-controller", "color": "#607D8B"},
+    "CHESS": {"icon": "extension-puzzle", "color": "#607D8B"},
+    "BOLLYWOOD": {"icon": "videocam", "color": "#FF5722"},
+    "FOOTBALL": {"icon": "football", "color": "#4CAF50"},
+    "POLITICS": {"icon": "podium", "color": "#9C27B0"},
+    "ENTERTAINMENT": {"icon": "tv", "color": "#E91E63"},
+    "GAMING": {"icon": "game-controller", "color": "#00BCD4"},
+    "TRIVIA": {"icon": "bulb", "color": "#FFEB3B"},
 }
 
 def get_default_category_style(category_name: str) -> dict:
