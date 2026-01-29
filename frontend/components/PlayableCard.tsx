@@ -826,16 +826,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   categoryBadge: {
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 6,
+    backgroundColor: '#000000',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
   standardProgressBadge: {
     backgroundColor: '#000000',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 14,
   },
   standardProgressText: {
     fontSize: 14,
@@ -843,11 +841,10 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   categoryText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.7)',
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   title: {
     fontSize: 24,
