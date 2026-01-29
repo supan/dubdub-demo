@@ -1254,6 +1254,130 @@ async def admin_get_users(_: bool = Depends(verify_admin_token)):
         logging.error(f"Error getting users: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ==================== ADMIN CATEGORY MANAGEMENT ====================
+
+@api_router.get("/admin/categories")
+async def admin_get_categories(_: bool = Depends(verify_admin_token)):
+    """Get all managed categories (admin only)"""
+    try:
+        categories = await db.categories.find({}, {"_id": 0}).sort("name", 1).to_list(100)
+        
+        # Get playable counts for each category
+        pipeline = [
+            {"$group": {"_id": "$category", "count": {"$sum": 1}}}
+        ]
+        category_counts = await db.playables.aggregate(pipeline).to_list(100)
+        count_map = {c["_id"]: c["count"] for c in category_counts}
+        
+        for cat in categories:
+            cat["playable_count"] = count_map.get(cat["name"], 0)
+        
+        return {"categories": categories, "count": len(categories)}
+    except Exception as e:
+        logging.error(f"Error getting categories: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/admin/categories")
+async def admin_add_category(request: AddCategoryRequest, _: bool = Depends(verify_admin_token)):
+    """Add a new category (admin only)"""
+    try:
+        # Check if category already exists (case-insensitive)
+        existing = await db.categories.find_one({"name": {"$regex": f"^{request.name}$", "$options": "i"}})
+        if existing:
+            raise HTTPException(status_code=400, detail=f"Category '{request.name}' already exists")
+        
+        category_id = f"cat_{uuid.uuid4().hex[:8]}"
+        category_doc = {
+            "category_id": category_id,
+            "name": request.name,
+            "icon": request.icon or "help-circle",
+            "color": request.color or "#00FF87",
+            "created_at": datetime.now(timezone.utc)
+        }
+        
+        await db.categories.insert_one(category_doc)
+        
+        return {
+            "success": True,
+            "message": f"Category '{request.name}' added successfully",
+            "category_id": category_id
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error adding category: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/admin/categories/{category_id}")
+async def admin_delete_category(category_id: str, _: bool = Depends(verify_admin_token)):
+    """Delete a category (admin only) - only if no playables use it"""
+    try:
+        # Find category
+        category = await db.categories.find_one({"category_id": category_id})
+        if not category:
+            raise HTTPException(status_code=404, detail="Category not found")
+        
+        # Check if any playables use this category
+        playable_count = await db.playables.count_documents({"category": category["name"]})
+        if playable_count > 0:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Cannot delete category '{category['name']}' - it has {playable_count} playable(s) using it"
+            )
+        
+        await db.categories.delete_one({"category_id": category_id})
+        
+        return {"success": True, "message": f"Category '{category['name']}' deleted"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error deleting category: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/admin/categories/init")
+async def admin_init_categories(_: bool = Depends(verify_admin_token)):
+    """Initialize categories from existing playables (admin only)"""
+    try:
+        # Get distinct categories from playables
+        distinct_categories = await db.playables.distinct("category")
+        
+        added = []
+        skipped = []
+        
+        for cat_name in distinct_categories:
+            if not cat_name:
+                continue
+            
+            # Check if already exists
+            existing = await db.categories.find_one({"name": {"$regex": f"^{cat_name}$", "$options": "i"}})
+            if existing:
+                skipped.append(cat_name)
+                continue
+            
+            # Get default style
+            style = get_default_category_style(cat_name)
+            
+            category_doc = {
+                "category_id": f"cat_{uuid.uuid4().hex[:8]}",
+                "name": cat_name,
+                "icon": style["icon"],
+                "color": style["color"],
+                "created_at": datetime.now(timezone.utc)
+            }
+            
+            await db.categories.insert_one(category_doc)
+            added.append(cat_name)
+        
+        return {
+            "success": True,
+            "message": f"Initialized {len(added)} categories",
+            "added": added,
+            "skipped": skipped
+        }
+    except Exception as e:
+        logging.error(f"Error initializing categories: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/admin/stats")
 async def admin_get_stats(date: str = None, _: bool = Depends(verify_admin_token)):
     """Get user performance stats for a specific date (admin only)
