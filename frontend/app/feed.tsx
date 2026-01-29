@@ -923,6 +923,9 @@ export default function FeedScreen() {
       ? Math.round((sessionStats.correct / sessionStats.played) * 100) 
       : 0;
     
+    // Determine performance level
+    const isGoodPerformance = accuracy >= 50;
+    
     // Fake percentile based on performance (psychological boost)
     const getPercentile = () => {
       if (accuracy >= 90) return "Top 5%";
@@ -1006,102 +1009,101 @@ export default function FeedScreen() {
           </View>
         </View>
         
-        <View style={styles.emptyContainer}>
-          {/* Trophy Icon */}
-          <View style={styles.trophyContainer}>
-            <Ionicons name="trophy" size={64} color="#FFD700" />
-          </View>
-          
-          {/* Main Title */}
-          <Text style={styles.emptyTitle}>Set 1 Done! 🎉</Text>
-          
-          {/* Performance Percentile */}
-          {sessionStats.played > 0 && (
-            <View style={styles.percentileBadge}>
-              <Ionicons name="trending-up" size={16} color="#00FF87" />
-              <Text style={styles.percentileText}>{getPercentile()} performance today!</Text>
+        <View style={styles.feedbackScreenContainer}>
+          <View style={styles.feedbackContent}>
+            {/* Trophy Icon */}
+            <View style={styles.trophyContainer}>
+              <Ionicons name="trophy" size={56} color="#FFD700" />
             </View>
-          )}
-          
-          {/* Stats Row */}
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{sessionStats.correct}/{sessionStats.played}</Text>
-              <Text style={styles.statLabel}>Score</Text>
+            
+            {/* Main Title */}
+            <Text style={styles.feedbackTitle}>All Done! 🎉</Text>
+            
+            {/* Performance Percentile */}
+            {sessionStats.played > 0 && (
+              <View style={styles.percentileBadge}>
+                <Ionicons name="trending-up" size={16} color="#00FF87" />
+                <Text style={styles.percentileText}>{getPercentile()} performance today!</Text>
+              </View>
+            )}
+            
+            {/* Stats Row */}
+            <View style={styles.feedbackStatsRow}>
+              <View style={styles.feedbackStatBox}>
+                <Text style={styles.feedbackStatValue}>{sessionStats.correct}/{sessionStats.played}</Text>
+                <Text style={styles.feedbackStatLabel}>Score</Text>
+              </View>
+              <View style={styles.feedbackStatBox}>
+                <Text style={styles.feedbackStatValue}>{accuracy}%</Text>
+                <Text style={styles.feedbackStatLabel}>Accuracy</Text>
+              </View>
+              <View style={styles.feedbackStatBox}>
+                <Text style={styles.feedbackStatValue}>{sessionStats.bestStreak}</Text>
+                <Text style={styles.feedbackStatLabel}>Best Streak</Text>
+              </View>
             </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{accuracy}%</Text>
-              <Text style={styles.statLabel}>Accuracy</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{sessionStats.bestStreak}</Text>
-              <Text style={styles.statLabel}>Best Streak</Text>
-            </View>
-          </View>
-          
-          {/* Achievements */}
-          {achievements.length > 0 && (
-            <View style={styles.achievementsContainer}>
-              <Text style={styles.achievementsTitle}>Achievements Unlocked</Text>
-              {achievements.map((achievement, idx) => (
-                <View key={idx} style={styles.achievementBadge}>
-                  <Text style={styles.achievementIcon}>{achievement.icon}</Text>
-                  <View style={styles.achievementTextContainer}>
-                    <Text style={styles.achievementTitle}>{achievement.title}</Text>
-                    <Text style={styles.achievementDesc}>{achievement.description}</Text>
+            
+            {/* Achievements - only show if earned */}
+            {achievements.length > 0 && (
+              <View style={styles.achievementsContainer}>
+                <Text style={styles.achievementsTitle}>Achievements Unlocked</Text>
+                {achievements.map((achievement, idx) => (
+                  <View key={idx} style={styles.achievementBadge}>
+                    <Text style={styles.achievementIcon}>{achievement.icon}</Text>
+                    <View style={styles.achievementTextContainer}>
+                      <Text style={styles.achievementTitle}>{achievement.title}</Text>
+                      <Text style={styles.achievementDesc}>{achievement.description}</Text>
+                    </View>
                   </View>
-                </View>
-              ))}
-            </View>
-          )}
-          
-          {/* Your Strength */}
-          <View style={styles.bestCategoryBadge}>
-            <Text style={styles.bestCategoryLabel}>Your Strength</Text>
-            <Text style={styles.bestCategoryValue}>Logical Thinking ⭐</Text>
-          </View>
-          
-          {/* Share Button */}
-          <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-            <LinearGradient
-              colors={['#00FF87', '#00D9FF']}
-              style={styles.shareGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
+                ))}
+              </View>
+            )}
+            
+            {/* Your Strength - only show for good performance */}
+            {isGoodPerformance && sessionStats.played > 0 && (
+              <View style={styles.bestCategoryBadge}>
+                <Text style={styles.bestCategoryLabel}>Your Strength</Text>
+                <Text style={styles.bestCategoryValue}>Logical Thinking ⭐</Text>
+              </View>
+            )}
+            
+            {/* Share Button */}
+            <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
+              <LinearGradient
+                colors={['#00FF87', '#00D9FF']}
+                style={styles.shareGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Ionicons name="share-social" size={22} color="#0F0F1E" />
+                <Text style={styles.shareText}>Challenge Friends</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            
+            {/* Refresh Button */}
+            <TouchableOpacity 
+              style={styles.refreshBtn}
+              onPress={() => {
+                setInitialLoadDone(false);
+                setSessionStats({ played: 0, correct: 0, bestStreak: 0, categoryStats: {} });
+                setSetStats({ played: 0, correct: 0 });
+                setCurrentSetNumber(1);
+                setSetStartIndex(0);
+                setShowSetFeedback(false);
+                setNoMorePlayables(false);
+                setFetchSkip(0);
+                fetchPlayables(true);
+              }}
             >
-              <Ionicons name="share-social" size={22} color="#0F0F1E" />
-              <Text style={styles.shareText}>Challenge Friends</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-          
-          {/* Swipe Up for Next Set */}
-          <View style={styles.swipeUpHint}>
-            <View style={styles.chevronStack}>
-              <Ionicons name="chevron-up" size={22} color="rgba(255,255,255,0.4)" style={{ marginBottom: -12 }} />
-              <Ionicons name="chevron-up" size={22} color="rgba(255,255,255,0.7)" />
-            </View>
-            <Text style={styles.swipeUpText}>Swipe up for next</Text>
+              <LinearGradient
+                colors={['#444', '#555']}
+                style={styles.refreshGradient}
+              >
+                <Ionicons name="refresh" size={20} color="#FFF" />
+                <Text style={[styles.refreshText, { color: '#FFF' }]}>Play Again</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
-          
-          {/* Refresh Button - Hidden for demo */}
-          {/* <TouchableOpacity 
-            style={styles.refreshBtn}
-            onPress={isDevUser ? handleResetAndReload : () => {
-              setInitialLoadDone(false);
-              setSessionStats({ played: 0, correct: 0, bestStreak: 0, categoryStats: {} });
-              fetchPlayables();
-            }}
-          >
-            <LinearGradient
-              colors={['#00FF87', '#00D9FF']}
-              style={styles.refreshGradient}
-            >
-              <Ionicons name="refresh" size={20} color="#0F0F1E" />
-              <Text style={styles.refreshText}>
-                {isDevUser ? 'Reset & Reload' : 'Check for New'}
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity> */}
         </View>
       </LinearGradient>
     );
