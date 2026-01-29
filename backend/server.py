@@ -1395,6 +1395,38 @@ async def admin_init_categories(_: bool = Depends(verify_admin_token)):
         logging.error(f"Error initializing categories: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/admin/categories/fix-icons")
+async def admin_fix_category_icons(_: bool = Depends(verify_admin_token)):
+    """Update all category icons to use the correct defaults (admin only)"""
+    try:
+        categories = await db.categories.find({}).to_list(100)
+        updated = []
+        
+        for cat in categories:
+            cat_name = cat.get("name", "")
+            style = get_default_category_style(cat_name)
+            
+            # Update if icon is different or is help-circle (default)
+            current_icon = cat.get("icon", "help-circle")
+            new_icon = style["icon"]
+            new_color = style["color"]
+            
+            if current_icon != new_icon or current_icon == "help-circle":
+                await db.categories.update_one(
+                    {"category_id": cat["category_id"]},
+                    {"$set": {"icon": new_icon, "color": new_color}}
+                )
+                updated.append(f"{cat_name}: {current_icon} → {new_icon}")
+        
+        return {
+            "success": True,
+            "message": f"Updated {len(updated)} categories",
+            "updated": updated
+        }
+    except Exception as e:
+        logging.error(f"Error fixing category icons: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/admin/stats")
 async def admin_get_stats(date: str = None, _: bool = Depends(verify_admin_token)):
     """Get user performance stats for a specific date (admin only)
