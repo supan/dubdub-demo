@@ -127,8 +127,9 @@ export default function AdminDashboard() {
           console.log('Could not store admin token');
         }
         
-        // Fetch playables with the token directly (not from state)
+        // Fetch playables and categories with the token directly
         fetchPlayables(token);
+        fetchCategories(token);
       }
     } catch (error: any) {
       setLoginError(error.response?.data?.detail || 'Login failed');
