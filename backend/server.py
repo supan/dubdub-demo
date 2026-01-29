@@ -1165,6 +1165,9 @@ async def admin_add_playable(
             "created_at": datetime.now(timezone.utc)
         }
         
+        # Use the validated category name
+        playable_doc["category"] = category_name
+        
         await db.playables.insert_one(playable_doc)
         
         return {
