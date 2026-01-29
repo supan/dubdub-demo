@@ -617,24 +617,25 @@ export default function FeedScreen() {
 
   // Set Feedback Screen - shows after every 5 questions
   // STATE 1: If nothing was attempted (all skipped), skip feedback screen entirely
+  // Handle this via useEffect before the conditional renders
+  useEffect(() => {
+    if (showSetFeedback && setStats.played === 0) {
+      // Auto-transition to next set without showing feedback
+      const skipToNextSet = async () => {
+        setCurrentSetNumber(prev => prev + 1);
+        setSetStats({ played: 0, correct: 0 });
+        setSetStartIndex(currentIndex + 1);
+        setCurrentIndex(currentIndex + 1);
+        setShowSetFeedback(false);
+        setGameState('PLAYING');
+        await fetchMoreIfNeeded();
+      };
+      skipToNextSet();
+    }
+  }, [showSetFeedback, setStats.played]);
+  
+  // Show loading while auto-skipping (all skipped case)
   if (showSetFeedback && setStats.played === 0) {
-    // Auto-transition to next set without showing feedback
-    const handleSkipToNextSet = async () => {
-      setCurrentSetNumber(prev => prev + 1);
-      setSetStats({ played: 0, correct: 0 });
-      setSetStartIndex(currentIndex + 1);
-      setCurrentIndex(currentIndex + 1);
-      setShowSetFeedback(false);
-      setGameState('PLAYING');
-      await fetchMoreIfNeeded();
-    };
-    
-    // Trigger auto-skip
-    React.useEffect(() => {
-      handleSkipToNextSet();
-    }, []);
-    
-    // Show minimal loading while transitioning
     return (
       <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
         <View style={styles.loadingContainer}>
