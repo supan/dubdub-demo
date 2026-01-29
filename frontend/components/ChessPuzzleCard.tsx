@@ -375,24 +375,20 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   categoryBadge: {
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  categoryGradient: {
+    backgroundColor: '#000000',
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    paddingHorizontal: 14,
   },
   categoryText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
-    color: '#0F0F1E',
+    color: '#FFFFFF',
     textTransform: 'uppercase',
   },
   progressBadge: {
     backgroundColor: '#000000',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 14,
   },
   progressText: {
     fontSize: 14,
