@@ -1140,8 +1140,8 @@ export default function FeedScreen() {
               playable={currentPlayable}
               onPuzzleSolved={handleChessPuzzleSolved}
               onPuzzleFailed={handleChessPuzzleFailed}
-              currentIndex={currentIndex}
-              totalCount={playables.length}
+              currentIndex={(currentIndex - setStartIndex)}
+              totalCount={SET_SIZE}
             />
           ) : (
             <PlayableCard
@@ -1149,8 +1149,8 @@ export default function FeedScreen() {
               onAnswer={handleAnswer}
               onGuessAnswer={handleGuessAnswer}
               submitting={isSubmitting}
-              currentIndex={currentIndex}
-              totalCount={playables.length}
+              currentIndex={(currentIndex - setStartIndex)}
+              totalCount={SET_SIZE}
             />
           )
         ) : (
