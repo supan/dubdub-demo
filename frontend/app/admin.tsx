@@ -2241,4 +2241,86 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  // Categories Tab Styles
+  addCategoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  addCategoryBtn: {
+    backgroundColor: 'rgba(0, 255, 135, 0.2)',
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  categoriesList: {
+    marginTop: 16,
+  },
+  listHeader: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#888',
+    marginBottom: 12,
+    textTransform: 'uppercase',
+  },
+  categoryItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+  },
+  categoryInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  categoryIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  categoryName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFF',
+  },
+  categoryCount: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 2,
+  },
+  deleteCategoryBtn: {
+    padding: 8,
+  },
+  dropdownContainer: {
+    marginBottom: 16,
+  },
+  dropdownButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: '#FFF',
+  },
+  warningText: {
+    color: '#FFB800',
+    fontSize: 12,
+    marginTop: -8,
+    marginBottom: 16,
+  },
 });
