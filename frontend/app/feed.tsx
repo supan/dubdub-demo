@@ -438,6 +438,11 @@ export default function FeedScreen() {
         });
         setTotalPlayed(prev => prev + 1);
         setGameState('SHOWING_FEEDBACK');
+        
+        // Track last played for variety optimization
+        setLastPlayedCategory(playables[currentIndex]?.category);
+        setLastPlayedFormat(playables[currentIndex]?.type);
+        
         refreshUser().catch(console.error);
       } else if (result.all_hints_exhausted) {
         // All hints used - count as played but not correct
@@ -450,6 +455,11 @@ export default function FeedScreen() {
           played: prev.played + 1,
         }));
         setTotalPlayed(prev => prev + 1);
+        
+        // Track last played for variety optimization
+        setLastPlayedCategory(playables[currentIndex]?.category);
+        setLastPlayedFormat(playables[currentIndex]?.type);
+        
         refreshUser().catch(console.error);
       }
       
