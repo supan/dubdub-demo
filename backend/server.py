@@ -474,8 +474,8 @@ async def get_playables_feed(
             # 7. Limit to requested amount
             {"$limit": limit},
             
-            # 8. Remove helper fields
-            {"$project": {"played": 0, "variety_score": 0}}
+            # 8. Remove helper fields and _id
+            {"$project": {"played": 0, "variety_score": 0, "_id": 0}}
         ]
         
         # Remove empty $match if no category filter
