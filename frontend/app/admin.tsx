@@ -433,6 +433,8 @@ export default function AdminDashboard() {
       if (questionText) payload.question_text = questionText;
       if (imageUrl) payload.image_url = imageUrl;
       if (videoUrl) payload.video_url = videoUrl;
+      if (videoStart) payload.video_start = parseInt(videoStart, 10);
+      if (videoEnd) payload.video_end = parseInt(videoEnd, 10);
       
       if (answerType === 'mcq' && contentType !== 'guess_the_x') {
         payload.options = options.filter(o => o.trim());
