@@ -16,7 +16,12 @@ import { Video, ResizeMode, Audio } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
-import YoutubePlayer from 'react-native-youtube-iframe';
+
+// Conditionally import YouTube player only for native platforms
+let YoutubePlayer: any = null;
+if (Platform.OS !== 'web') {
+  YoutubePlayer = require('react-native-youtube-iframe').default;
+}
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
