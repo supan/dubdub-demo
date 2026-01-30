@@ -379,6 +379,11 @@ export default function FeedScreen() {
       });
       setTotalPlayed(prev => prev + 1);
       setGameState('SHOWING_FEEDBACK');
+      
+      // Track last played for variety optimization
+      setLastPlayedCategory(playable.category);
+      setLastPlayedFormat(playable.type);
+      
       refreshUser().catch(console.error);
     } catch (error) {
       console.error('Error submitting:', error);
