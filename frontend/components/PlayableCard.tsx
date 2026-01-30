@@ -442,8 +442,32 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
               style={StyleSheet.absoluteFillObject}
               resizeMode="cover"
             />
+          ) : isYouTubeUrl(mediaSource.uri) && Platform.OS === 'web' ? (
+            // Web: Use YouTube iframe for better compatibility
+            <View style={[StyleSheet.absoluteFillObject, styles.videoContainer]}>
+              <iframe
+                src={`https://www.youtube.com/embed/${getYouTubeVideoId(mediaSource.uri)}?autoplay=1&controls=0&modestbranding=1&rel=0&showinfo=0&start=${playable.video_start || 0}${playable.video_end ? `&end=${playable.video_end}` : ''}&enablejsapi=1`}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                }}
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+              />
+              {/* Transparent overlay to detect when video might be done (approximate) */}
+              {playable.video_end && !videoFinished && (
+                <TimerOverlay 
+                  duration={(playable.video_end - (playable.video_start || 0)) * 1000}
+                  onComplete={() => setVideoFinished(true)}
+                />
+              )}
+            </View>
           ) : isYouTubeUrl(mediaSource.uri) ? (
-            // YouTube Video - Use YouTube Player
+            // Native: Use YouTube Player library
             <View style={[StyleSheet.absoluteFillObject, styles.videoContainer]}>
               <YoutubePlayer
                 height={SCREEN_HEIGHT}
@@ -469,7 +493,7 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
               />
             </View>
           ) : Platform.OS === 'web' ? (
-            // Web: Use native HTML5 video for better compatibility
+            // Web: Use native HTML5 video for regular videos
             <View style={[StyleSheet.absoluteFillObject, styles.videoContainer]}>
               <video
                 src={mediaSource.uri}
