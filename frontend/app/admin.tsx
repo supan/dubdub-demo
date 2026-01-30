@@ -2393,4 +2393,20 @@ const styles = StyleSheet.create({
     marginTop: -8,
     marginBottom: 16,
   },
+  timeInputRow: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 16,
+  },
+  timeInputContainer: {
+    flex: 1,
+  },
+  timeInput: {
+    marginBottom: 0,
+  },
+  labelSmall: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 8,
+  },
 });
