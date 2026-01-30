@@ -45,8 +45,6 @@ const isYouTubeUrl = (url: string): boolean => {
   return url.includes('youtube.com') || url.includes('youtu.be');
 };
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-
 interface PlayableCardProps {
   playable: any;
   onAnswer: (answer: string) => void;
