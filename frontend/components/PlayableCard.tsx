@@ -435,6 +435,32 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
               style={StyleSheet.absoluteFillObject}
               resizeMode="cover"
             />
+          ) : isYouTubeUrl(mediaSource.uri) ? (
+            // YouTube Video - Use YouTube Player
+            <View style={[StyleSheet.absoluteFillObject, styles.videoContainer]}>
+              <YoutubePlayer
+                height={SCREEN_HEIGHT}
+                width={SCREEN_WIDTH}
+                videoId={getYouTubeVideoId(mediaSource.uri) || ''}
+                play={!videoFinished}
+                initialPlayerParams={{
+                  controls: false,
+                  modestbranding: true,
+                  showClosedCaptions: false,
+                  rel: false,
+                  start: playable.video_start || 0,
+                  end: playable.video_end || undefined,
+                }}
+                onChangeState={(state: string) => {
+                  if (state === 'ended') {
+                    setVideoFinished(true);
+                  }
+                }}
+                webViewStyle={{
+                  opacity: 0.99, // Fix for Android rendering
+                }}
+              />
+            </View>
           ) : Platform.OS === 'web' ? (
             // Web: Use native HTML5 video for better compatibility
             <View style={[StyleSheet.absoluteFillObject, styles.videoContainer]}>
