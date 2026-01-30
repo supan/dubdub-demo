@@ -1257,6 +1257,8 @@ async def admin_add_playable(
             "hints": request.hints if request.type == "guess_the_x" else None,
             "fen": request.fen if request.type == "chess_mate_in_2" else None,
             "solution": request.solution if request.type == "chess_mate_in_2" else None,
+            "video_start": request.video_start if request.type in ["video", "video_text"] else None,
+            "video_end": request.video_end if request.type in ["video", "video_text"] else None,
             "difficulty": request.difficulty,
             "created_at": datetime.now(timezone.utc)
         }
