@@ -455,10 +455,10 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
               resizeMode="cover"
             />
           ) : isYouTubeUrl(mediaSource.uri) && Platform.OS === 'web' ? (
-            // Web: Use YouTube iframe for better compatibility
+            // Web: Use YouTube iframe with nocookie domain for better compatibility
             <View style={[StyleSheet.absoluteFillObject, styles.videoContainer]}>
               <iframe
-                src={`https://www.youtube.com/embed/${getYouTubeVideoId(mediaSource.uri)}?autoplay=1&controls=0&modestbranding=1&rel=0&showinfo=0&start=${playable.video_start || 0}${playable.video_end ? `&end=${playable.video_end}` : ''}&enablejsapi=1`}
+                src={`https://www.youtube-nocookie.com/embed/${getYouTubeVideoId(mediaSource.uri)}?autoplay=1&controls=0&modestbranding=1&rel=0&showinfo=0&start=${playable.video_start || 0}${playable.video_end ? `&end=${playable.video_end}` : ''}&enablejsapi=1&fs=0&iv_load_policy=3`}
                 style={{
                   width: '100%',
                   height: '100%',
