@@ -1074,6 +1074,8 @@ class AddPlayableRequest(BaseModel):
     question_text: Optional[str] = None
     image_url: Optional[str] = None
     video_url: Optional[str] = None
+    video_start: Optional[int] = None  # Start time in seconds (for YouTube clips)
+    video_end: Optional[int] = None    # End time in seconds (for YouTube clips)
     options: Optional[List[str]] = None  # For MCQ (4 options)
     correct_answer: str
     alternate_answers: Optional[List[str]] = None  # For text_input: spelling variants, short forms
