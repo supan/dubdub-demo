@@ -45,6 +45,18 @@ const isYouTubeUrl = (url: string): boolean => {
   return url.includes('youtube.com') || url.includes('youtu.be');
 };
 
+// Timer overlay for YouTube videos (approximate end detection on web)
+const TimerOverlay = ({ duration, onComplete }: { duration: number; onComplete: () => void }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onComplete();
+    }, duration);
+    return () => clearTimeout(timer);
+  }, [duration, onComplete]);
+  
+  return null; // Invisible component
+};
+
 interface PlayableCardProps {
   playable: any;
   onAnswer: (answer: string) => void;
