@@ -405,32 +405,120 @@ async def select_categories(
 
 @api_router.get("/playables/feed")
 async def get_playables_feed(
-    skip: int = 0,
     limit: int = 10,
+    last_category: Optional[str] = None,
+    last_format: Optional[str] = None,
     current_user: User = Depends(require_auth)
 ):
-    """Get playables feed"""
+    """Get playables feed with variety optimization
+    
+    Uses a smart selection algorithm:
+    1. Sample random candidates from user's selected categories
+    2. Filter out already played
+    3. Score by variety (different category/format from last played)
+    4. Return top scoring playables
+    """
     try:
-        # Get user's answered playables
-        answered_playables = await db.user_progress.find(
-            {"user_id": current_user.user_id},
-            {"_id": 0, "playable_id": 1}
-        ).to_list(1000)
-        
-        answered_ids = [p["playable_id"] for p in answered_playables]
-        
-        # Build query - filter by selected categories if user has them
-        query = {}
-        if answered_ids:
-            query["playable_id"] = {"$nin": answered_ids}
-        
-        # Filter by user's selected categories if they have completed onboarding
-        # SKIP category filter for dev users (email contains "supanshah51191")
+        # Build category filter
+        category_filter = {}
         is_dev_user = "supanshah51191" in current_user.email
         if not is_dev_user and current_user.selected_categories and len(current_user.selected_categories) > 0:
-            query["category"] = {"$in": current_user.selected_categories}
+            category_filter["category"] = {"$in": current_user.selected_categories}
         
-        playables = await db.playables.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+        # Build variety scoring expressions
+        category_score = {"$cond": [{"$ne": ["$category", last_category or ""]}, 2, 0]}
+        format_score = {"$cond": [{"$ne": ["$type", last_format or ""]}, 1, 0]}
+        
+        # Optimized aggregation pipeline
+        pipeline = [
+            # 1. Filter by user's selected categories (reduces dataset)
+            {"$match": category_filter} if category_filter else {"$match": {}},
+            
+            # 2. Random sample FIRST - get 100 candidates (fast)
+            {"$sample": {"size": 100}},
+            
+            # 3. Lookup to check if played (only 100 lookups, not thousands)
+            {
+                "$lookup": {
+                    "from": "user_progress",
+                    "let": {"pid": "$playable_id"},
+                    "pipeline": [
+                        {
+                            "$match": {
+                                "$expr": {
+                                    "$and": [
+                                        {"$eq": ["$playable_id", "$$pid"]},
+                                        {"$eq": ["$user_id", current_user.user_id]}
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    "as": "played"
+                }
+            },
+            
+            # 4. Keep only unplayed (empty played array)
+            {"$match": {"played": {"$size": 0}}},
+            
+            # 5. Add variety score
+            {
+                "$addFields": {
+                    "variety_score": {"$add": [category_score, format_score]}
+                }
+            },
+            
+            # 6. Sort by variety score (highest first)
+            {"$sort": {"variety_score": -1}},
+            
+            # 7. Limit to requested amount
+            {"$limit": limit},
+            
+            # 8. Remove helper fields
+            {"$project": {"played": 0, "variety_score": 0}}
+        ]
+        
+        # Remove empty $match if no category filter
+        if not category_filter:
+            pipeline = pipeline[1:]
+        
+        playables = await db.playables.aggregate(pipeline).to_list(limit)
+        
+        # If we got fewer than requested, try again without variety scoring
+        # (fallback for when most content is exhausted)
+        if len(playables) < limit:
+            # Get any remaining unplayed content
+            fallback_pipeline = [
+                {"$match": category_filter} if category_filter else {"$match": {}},
+                {"$sample": {"size": 200}},
+                {
+                    "$lookup": {
+                        "from": "user_progress",
+                        "let": {"pid": "$playable_id"},
+                        "pipeline": [
+                            {
+                                "$match": {
+                                    "$expr": {
+                                        "$and": [
+                                            {"$eq": ["$playable_id", "$$pid"]},
+                                            {"$eq": ["$user_id", current_user.user_id]}
+                                        ]
+                                    }
+                                }
+                            }
+                        ],
+                        "as": "played"
+                    }
+                },
+                {"$match": {"played": {"$size": 0}}},
+                {"$limit": limit},
+                {"$project": {"played": 0}}
+            ]
+            
+            if not category_filter:
+                fallback_pipeline = fallback_pipeline[1:]
+            
+            playables = await db.playables.aggregate(fallback_pipeline).to_list(limit)
         
         return playables
     except Exception as e:
