@@ -512,7 +512,7 @@ async def get_playables_feed(
                 },
                 {"$match": {"played": {"$size": 0}}},
                 {"$limit": limit},
-                {"$project": {"played": 0}}
+                {"$project": {"played": 0, "_id": 0}}
             ]
             
             if not category_filter:
