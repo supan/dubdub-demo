@@ -479,17 +479,22 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
               )}
             </View>
           ) : isYouTubeUrl(mediaSource.uri) ? (
-            // Native: Use WebView with YouTube embed (using nocookie domain for better compatibility)
+            // Native: Use WebView with YouTube embed (with Referer header to fix Error 153)
             <View style={[StyleSheet.absoluteFillObject, styles.videoContainer]}>
               <WebView
                 source={{
-                  uri: `https://www.youtube-nocookie.com/embed/${getYouTubeVideoId(mediaSource.uri)}?autoplay=1&controls=0&modestbranding=1&rel=0&showinfo=0&start=${playable.video_start || 0}${playable.video_end ? `&end=${playable.video_end}` : ''}&playsinline=1&fs=0&iv_load_policy=3`
+                  uri: `https://www.youtube.com/embed/${getYouTubeVideoId(mediaSource.uri)}?autoplay=1&controls=0&modestbranding=1&rel=0&showinfo=0&start=${playable.video_start || 0}${playable.video_end ? `&end=${playable.video_end}` : ''}&playsinline=1&fs=0&iv_load_policy=3&origin=https://dubdub.app`,
+                  headers: {
+                    'Referer': 'https://dubdub.app/',
+                  },
                 }}
                 style={StyleSheet.absoluteFillObject}
                 allowsInlineMediaPlayback={true}
                 mediaPlaybackRequiresUserAction={false}
                 javaScriptEnabled={true}
                 domStorageEnabled={true}
+                originWhitelist={['*']}
+                mixedContentMode="always"
                 onMessage={(event) => {
                   // Listen for video end event from injected JS
                   if (event.nativeEvent.data === 'videoEnded') {
