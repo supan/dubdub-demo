@@ -133,11 +133,19 @@ export default function FeedScreen() {
     try {
       setGameState('LOADING');
       const limit = isInitial ? 10 : 5;
-      const skip = isInitial ? 0 : fetchSkip;
+      
+      // Build params with variety optimization
+      const params: any = { limit };
+      if (lastPlayedCategory) {
+        params.last_category = lastPlayedCategory;
+      }
+      if (lastPlayedFormat) {
+        params.last_format = lastPlayedFormat;
+      }
       
       const response = await axios.get(`${BACKEND_URL}/api/playables/feed`, {
         headers: { Authorization: `Bearer ${sessionToken}` },
-        params: { skip, limit },
+        params,
       });
       
       const newPlayables = response.data;
@@ -146,12 +154,10 @@ export default function FeedScreen() {
         setPlayables(newPlayables);
         setCurrentIndex(0);
         setSetStartIndex(0);
-        setFetchSkip(10);
         setNoMorePlayables(newPlayables.length < 10);
       } else {
         // Append new playables
         setPlayables(prev => [...prev, ...newPlayables]);
-        setFetchSkip(prev => prev + 5);
         if (newPlayables.length < 5) {
           setNoMorePlayables(true);
         }
