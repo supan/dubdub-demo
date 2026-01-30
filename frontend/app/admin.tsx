@@ -1061,12 +1061,37 @@ export default function AdminDashboard() {
                 <Text style={styles.label}>Video URL</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="https://example.com/video.mp4"
+                  placeholder="https://youtube.com/watch?v=... or https://example.com/video.mp4"
                   placeholderTextColor="#666"
                   value={videoUrl}
                   onChangeText={setVideoUrl}
                   autoCapitalize="none"
                 />
+                <Text style={styles.labelSmall}>For YouTube clips, specify start/end times (seconds):</Text>
+                <View style={styles.timeInputRow}>
+                  <View style={styles.timeInputContainer}>
+                    <Text style={styles.labelSmall}>Start (sec)</Text>
+                    <TextInput
+                      style={[styles.input, styles.timeInput]}
+                      placeholder="0"
+                      placeholderTextColor="#666"
+                      value={videoStart}
+                      onChangeText={setVideoStart}
+                      keyboardType="numeric"
+                    />
+                  </View>
+                  <View style={styles.timeInputContainer}>
+                    <Text style={styles.labelSmall}>End (sec)</Text>
+                    <TextInput
+                      style={[styles.input, styles.timeInput]}
+                      placeholder="Optional"
+                      placeholderTextColor="#666"
+                      value={videoEnd}
+                      onChangeText={setVideoEnd}
+                      keyboardType="numeric"
+                    />
+                  </View>
+                </View>
               </>
             )}
 
