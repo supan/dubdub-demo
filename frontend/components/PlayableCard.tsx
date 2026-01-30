@@ -467,29 +467,39 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
               )}
             </View>
           ) : isYouTubeUrl(mediaSource.uri) ? (
-            // Native: Use YouTube Player library
+            // Native: Use WebView with YouTube embed
             <View style={[StyleSheet.absoluteFillObject, styles.videoContainer]}>
-              <YoutubePlayer
-                height={SCREEN_HEIGHT}
-                width={SCREEN_WIDTH}
-                videoId={getYouTubeVideoId(mediaSource.uri) || ''}
-                play={!videoFinished}
-                initialPlayerParams={{
-                  controls: false,
-                  modestbranding: true,
-                  showClosedCaptions: false,
-                  rel: false,
-                  start: playable.video_start || 0,
-                  end: playable.video_end || undefined,
+              <WebView
+                source={{
+                  uri: `https://www.youtube.com/embed/${getYouTubeVideoId(mediaSource.uri)}?autoplay=1&controls=0&modestbranding=1&rel=0&showinfo=0&start=${playable.video_start || 0}${playable.video_end ? `&end=${playable.video_end}` : ''}&playsinline=1`
                 }}
-                onChangeState={(state: string) => {
-                  if (state === 'ended') {
+                style={StyleSheet.absoluteFillObject}
+                allowsInlineMediaPlayback={true}
+                mediaPlaybackRequiresUserAction={false}
+                javaScriptEnabled={true}
+                onMessage={(event) => {
+                  // Listen for video end event from injected JS
+                  if (event.nativeEvent.data === 'videoEnded') {
                     setVideoFinished(true);
                   }
                 }}
-                webViewStyle={{
-                  opacity: 0.99, // Fix for Android rendering
-                }}
+                injectedJavaScript={`
+                  // Listen for YouTube player state changes
+                  var checkEnded = setInterval(function() {
+                    var player = document.querySelector('video');
+                    if (player && player.ended) {
+                      window.ReactNativeWebView.postMessage('videoEnded');
+                      clearInterval(checkEnded);
+                    }
+                  }, 500);
+                  ${playable.video_end ? `
+                    // Timer fallback for end time
+                    setTimeout(function() {
+                      window.ReactNativeWebView.postMessage('videoEnded');
+                    }, ${((playable.video_end || 0) - (playable.video_start || 0)) * 1000});
+                  ` : ''}
+                  true;
+                `}
               />
             </View>
           ) : Platform.OS === 'web' ? (
