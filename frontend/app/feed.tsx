@@ -55,7 +55,10 @@ export default function FeedScreen() {
   const [setStartIndex, setSetStartIndex] = useState(0);
   const [showSetFeedback, setShowSetFeedback] = useState(false);
   const [noMorePlayables, setNoMorePlayables] = useState(false);
-  const [fetchSkip, setFetchSkip] = useState(0);
+  
+  // Track last played for variety optimization
+  const [lastPlayedCategory, setLastPlayedCategory] = useState<string | null>(null);
+  const [lastPlayedFormat, setLastPlayedFormat] = useState<string | null>(null);
   
   // Set stats (reset each set)
   const [setStats, setSetStats] = useState({
