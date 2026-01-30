@@ -357,6 +357,8 @@ export default function AdminDashboard() {
     setHints(['', '', '']);
     setFenPosition('');
     setSolutionMoves(['', '']);
+    setVideoStart('');
+    setVideoEnd('');
     setAddMessage('');
   };
 
