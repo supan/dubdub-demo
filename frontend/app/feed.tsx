@@ -182,26 +182,42 @@ export default function FeedScreen() {
   // Check if dev user (for special testing features)
   const isDevUser = user?.email?.includes('supanshah51191');
 
-  // Reset progress and reload (for dev testing)
-  const handleResetAndReload = async () => {
+  // Reset progress and reload - calls backend to clear progress then fetches fresh content
+  const handlePlayAgain = async () => {
     try {
       setGameState('LOADING');
-      // Reset progress via API
-      await axios.post(
-        `${BACKEND_URL}/api/dev/reset-progress?email=${user?.email}`,
-        {},
+      
+      // Reset progress via API (clears user_progress in database)
+      await axios.delete(
+        `${BACKEND_URL}/api/user/reset-progress`,
         { headers: { Authorization: `Bearer ${sessionToken}` } }
       );
-      // Refresh user data
+      
+      // Refresh user data to get updated stats
       await refreshUser();
+      
+      // Reset all local state
+      setSessionStats({ played: 0, correct: 0, bestStreak: 0, categoryStats: {} });
+      setSetStats({ played: 0, correct: 0 });
+      setCurrentSetNumber(1);
+      setSetStartIndex(0);
+      setShowSetFeedback(false);
+      setNoMorePlayables(false);
+      setPlayables([]);
+      setCurrentIndex(0);
+      setLastPlayedCategory(null);
+      setLastPlayedFormat(null);
+      
       // Fetch fresh playables
-      setInitialLoadDone(false);
-      await fetchPlayables();
+      await fetchPlayables(true);
     } catch (error) {
       console.error('Error resetting progress:', error);
       setGameState('PLAYING');
     }
   };
+
+  // Legacy dev reset (kept for compatibility)
+  const handleResetAndReload = handlePlayAgain;
 
   const animateToNext = useCallback((onComplete: () => void) => {
     Animated.parallel([
