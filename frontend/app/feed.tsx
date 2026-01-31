@@ -1132,17 +1132,7 @@ export default function FeedScreen() {
             {/* Refresh Button */}
             <TouchableOpacity 
               style={styles.refreshBtn}
-              onPress={() => {
-                setInitialLoadDone(false);
-                setSessionStats({ played: 0, correct: 0, bestStreak: 0, categoryStats: {} });
-                setSetStats({ played: 0, correct: 0 });
-                setCurrentSetNumber(1);
-                setSetStartIndex(0);
-                setShowSetFeedback(false);
-                setNoMorePlayables(false);
-                setPlayables([]);
-                fetchPlayables(true);
-              }}
+              onPress={handlePlayAgain}
             >
               <LinearGradient
                 colors={['#444', '#555']}
