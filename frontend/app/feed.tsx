@@ -920,7 +920,7 @@ export default function FeedScreen() {
                   setSetStartIndex(0);
                   setShowSetFeedback(false);
                   setNoMorePlayables(false);
-                  setFetchSkip(0);
+                  setPlayables([]);
                   fetchPlayables(true);
                 }}
               >
@@ -1124,7 +1124,7 @@ export default function FeedScreen() {
                 setSetStartIndex(0);
                 setShowSetFeedback(false);
                 setNoMorePlayables(false);
-                setFetchSkip(0);
+                setPlayables([]);
                 fetchPlayables(true);
               }}
             >
