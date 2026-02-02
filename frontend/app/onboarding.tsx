@@ -110,7 +110,7 @@ export default function OnboardingScreen() {
   };
 
   const getIcon = (iconName: string): keyof typeof Ionicons.glyphMap => {
-    return ICON_MAP[iconName] || 'help-circle';
+    return getValidIcon(iconName);
   };
 
   if (loading) {
