@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -24,16 +24,49 @@ interface FeedbackOverlayProps {
   categoryCorrectCount?: number;
 }
 
+// Single psychological message based on context
+const getCorrectMessage = (streak: number): string | null => {
+  if (streak >= 10) return "Legendary! 👑";
+  if (streak >= 7) return "Unstoppable! 🌟";
+  if (streak >= 5) return "On fire! 🔥";
+  if (streak >= 3) return "Hat-trick! 🎩";
+  if (streak === 2) return "Double up! ✨";
+  if (streak === 1) return "Nice one! 💪";
+  return null;
+};
+
+const getWrongMessage = (previousStreak: number): string => {
+  if (previousStreak >= 5) return "Fresh start! Let's go 💪";
+  if (previousStreak >= 3) return "Streak reset, comeback time!";
+  return "Now you know! 📈";
+};
+
 export default function FeedbackOverlay({
   visible,
   correct,
   correctAnswer,
   answerExplanation,
   currentStreak = 0,
+  previousStreak = 0,
   hintsUsed,
 }: FeedbackOverlayProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
+
+  // Determine the single psychological message to show
+  const psychMessage = useMemo(() => {
+    if (correct) {
+      // If hints used < 2, use that as the message (impressive solve)
+      if (hintsUsed !== undefined && hintsUsed < 2) {
+        if (hintsUsed === 0) return "No hints needed! 🧠";
+        return "Just 1 hint! Sharp! 🎯";
+      }
+      // Otherwise, show streak-based message
+      return getCorrectMessage(currentStreak);
+    } else {
+      return getWrongMessage(previousStreak);
+    }
+  }, [correct, currentStreak, previousStreak, hintsUsed]);
 
   useEffect(() => {
     if (visible) {
@@ -57,16 +90,6 @@ export default function FeedbackOverlay({
   }, [visible]);
 
   if (!visible) return null;
-
-  // Simple streak message only for significant streaks
-  const getStreakLabel = () => {
-    if (currentStreak >= 10) return "🔥 On Fire!";
-    if (currentStreak >= 5) return "🔥 Hot Streak!";
-    if (currentStreak >= 3) return "🔥 Nice!";
-    return null;
-  };
-
-  const streakLabel = correct ? getStreakLabel() : null;
 
   return (
     <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
@@ -98,7 +121,7 @@ export default function FeedbackOverlay({
             />
           </View>
 
-          {/* Result Text + Streak (combined) */}
+          {/* Result Text */}
           <Text style={[
             styles.resultText,
             { color: correct ? "#00FF87" : "#FF6B6B" }
@@ -106,39 +129,52 @@ export default function FeedbackOverlay({
             {correct ? "Correct!" : "Wrong"}
           </Text>
 
-          {/* Streak label (only for significant streaks) */}
-          {streakLabel && (
-            <Text style={styles.streakLabel}>{streakLabel}</Text>
+          {/* Single Psychological Message */}
+          {psychMessage && (
+            <Text style={styles.psychMessage}>{psychMessage}</Text>
           )}
 
-          {/* For WRONG answers: Show correct answer prominently */}
+          {/* Correct Answer (for wrong answers only) */}
           {!correct && correctAnswer && (
-            <View style={styles.answerSection}>
+            <View style={styles.answerBox}>
               <Text style={styles.answerLabel}>Answer</Text>
               <Text style={styles.answerValue}>{correctAnswer}</Text>
-              {answerExplanation && (
-                <Text style={styles.explanation}>{answerExplanation}</Text>
-              )}
             </View>
           )}
 
-          {/* For CORRECT answers with hints: Show hints used */}
-          {correct && hintsUsed !== undefined && hintsUsed > 0 && (
-            <Text style={styles.hintsText}>
-              Solved with {hintsUsed} hint{hintsUsed !== 1 ? 's' : ''}
-            </Text>
+          {/* Explanation (for wrong answers only) */}
+          {!correct && answerExplanation && (
+            <View style={styles.explanationBox}>
+              <View style={styles.explanationHeader}>
+                <Ionicons name="bulb" size={14} color="#FFB800" />
+                <Text style={styles.explanationLabel}>Did you know?</Text>
+              </View>
+              <Text style={styles.explanationText}>{answerExplanation}</Text>
+            </View>
           )}
 
-          {/* Streak Counter */}
-          <View style={styles.streakBadge}>
-            <Ionicons name="flame" size={16} color="#FF6B00" />
-            <Text style={styles.streakCount}>{currentStreak}</Text>
+          {/* Streak Container */}
+          <View style={[
+            styles.streakContainer,
+            currentStreak >= 5 && styles.streakContainerHot
+          ]}>
+            <Ionicons 
+              name="flame" 
+              size={18} 
+              color={currentStreak >= 5 ? "#FFD700" : "#FF6B00"} 
+            />
+            <Text style={[
+              styles.streakText,
+              currentStreak >= 5 && styles.streakTextHot
+            ]}>
+              {currentStreak} streak
+            </Text>
           </View>
 
           {/* Swipe Hint */}
           <View style={styles.swipeHint}>
-            <Ionicons name="chevron-up" size={18} color="rgba(255,255,255,0.3)" />
-            <Text style={styles.swipeText}>Swipe up</Text>
+            <Ionicons name="chevron-up" size={20} color="rgba(255,255,255,0.4)" />
+            <Text style={styles.swipeHintText}>Swipe up for next</Text>
           </View>
         </View>
       </Animated.View>
@@ -162,12 +198,12 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: SCREEN_WIDTH - 48,
-    maxWidth: 320,
+    maxWidth: 340,
   },
   modalCard: {
     backgroundColor: '#1A1A2E',
     borderRadius: 24,
-    padding: 24,
+    padding: 28,
     alignItems: 'center',
     borderWidth: 2,
     shadowColor: '#000',
@@ -177,18 +213,18 @@ const styles = StyleSheet.create({
     elevation: 20,
   },
   modalCorrect: {
-    borderColor: 'rgba(0, 255, 135, 0.4)',
+    borderColor: 'rgba(0, 255, 135, 0.5)',
   },
   modalIncorrect: {
-    borderColor: 'rgba(255, 107, 107, 0.4)',
+    borderColor: 'rgba(255, 107, 107, 0.5)',
   },
   iconContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   iconCorrect: {
     backgroundColor: 'rgba(0, 255, 135, 0.15)',
@@ -197,74 +233,94 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 107, 107, 0.15)',
   },
   resultText: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '800',
     marginBottom: 4,
   },
-  streakLabel: {
+  psychMessage: {
     fontSize: 15,
     color: '#FFD700',
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 16,
+    textAlign: 'center',
   },
-  // Wrong answer section
-  answerSection: {
-    backgroundColor: 'rgba(0, 255, 135, 0.08)',
+  answerBox: {
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
     borderRadius: 12,
-    padding: 16,
+    padding: 14,
     width: '100%',
-    marginTop: 12,
-    marginBottom: 8,
+    marginBottom: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
   },
   answerLabel: {
-    fontSize: 11,
-    color: '#888',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    fontSize: 12,
+    color: '#AAA',
     marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   answerValue: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#00FF87',
     textAlign: 'center',
   },
-  explanation: {
-    fontSize: 13,
-    color: '#999',
-    textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 18,
-  },
-  // Hints text
-  hintsText: {
-    fontSize: 13,
-    color: '#FFB800',
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  // Streak badge (compact)
-  streakBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 12,
+  explanationBox: {
+    backgroundColor: 'rgba(255, 184, 0, 0.08)',
+    borderRadius: 12,
+    padding: 14,
+    width: '100%',
     marginBottom: 12,
   },
-  streakCount: {
-    fontSize: 16,
-    fontWeight: '700',
+  explanationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  explanationLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFB800',
+  },
+  explanationText: {
+    fontSize: 13,
+    color: '#BBB',
+    lineHeight: 18,
+  },
+  streakContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 107, 0, 0.15)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    gap: 6,
+    marginBottom: 16,
+  },
+  streakContainerHot: {
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.3)',
+  },
+  streakText: {
+    fontSize: 15,
+    fontWeight: '600',
     color: '#FF6B00',
   },
-  // Swipe hint
+  streakTextHot: {
+    color: '#FFD700',
+  },
   swipeHint: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  swipeText: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.3)',
+  swipeHintText: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.4)',
+    fontWeight: '500',
   },
 });
