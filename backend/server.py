@@ -2114,6 +2114,163 @@ async def get_template_formats(_: bool = Depends(verify_admin_token)):
         ]
     }
 
+# ==================== API DOCUMENTATION ENDPOINT ====================
+
+@api_router.get("/docs/schema")
+async def get_api_schema():
+    """Get API schema documentation for agents/programmatic consumption"""
+    return {
+        "version": "1.0",
+        "base_endpoints": {
+            "admin_login": "POST /api/admin/login",
+            "playables": {
+                "list": "GET /api/admin/playables",
+                "create": "POST /api/admin/add-playable",
+                "update": "PUT /api/admin/playables/{playable_id}",
+                "delete": "DELETE /api/admin/playables/{playable_id}"
+            },
+            "categories": {
+                "list": "GET /api/admin/categories",
+                "create": "POST /api/admin/categories",
+                "update": "PATCH /api/admin/categories/{category_id}",
+                "delete": "DELETE /api/admin/categories/{category_id}",
+                "valid_icons": "GET /api/admin/valid-icons"
+            }
+        },
+        "playable_schema": {
+            "required_fields": {
+                "type": {
+                    "type": "string",
+                    "enum": ["text", "image", "video", "image_text", "video_text", "guess_the_x", "chess_mate_in_2"],
+                    "description": "Type of playable content"
+                },
+                "answer_type": {
+                    "type": "string",
+                    "enum": ["mcq", "text_input"],
+                    "description": "How user answers the question"
+                },
+                "category": {
+                    "type": "string",
+                    "description": "Must match an existing category name (case-sensitive)"
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Display title for the playable"
+                },
+                "correct_answer": {
+                    "type": "string",
+                    "description": "The correct answer"
+                }
+            },
+            "optional_fields": {
+                "question_text": {
+                    "type": "string",
+                    "description": "The question text (NOT nested under 'question')"
+                },
+                "video_url": {
+                    "type": "string",
+                    "description": "URL to video - MP4 or YouTube (NOT nested under 'question')"
+                },
+                "video_start": {
+                    "type": "integer",
+                    "description": "Start time in seconds for YouTube clips"
+                },
+                "video_end": {
+                    "type": "integer",
+                    "description": "End time in seconds for YouTube clips"
+                },
+                "image_url": {
+                    "type": "string",
+                    "description": "URL to image or base64 data URL (NOT nested under 'question')"
+                },
+                "options": {
+                    "type": "array",
+                    "items": "string",
+                    "description": "4 options for MCQ (required when answer_type is 'mcq')"
+                },
+                "alternate_answers": {
+                    "type": "array",
+                    "items": "string",
+                    "description": "Alternative accepted answers for text_input"
+                },
+                "answer_explanation": {
+                    "type": "string",
+                    "description": "Explanation shown after answering"
+                },
+                "hints": {
+                    "type": "array",
+                    "items": "string",
+                    "description": "3-5 progressive hints (for guess_the_x only)"
+                },
+                "fen": {
+                    "type": "string",
+                    "description": "Chess position in FEN notation (for chess_mate_in_2 only)"
+                },
+                "solution": {
+                    "type": "array",
+                    "items": "string",
+                    "description": "Chess moves in UCI format (for chess_mate_in_2 only)"
+                },
+                "difficulty": {
+                    "type": "string",
+                    "enum": ["easy", "medium", "hard"],
+                    "default": "medium"
+                }
+            }
+        },
+        "category_schema": {
+            "create": {
+                "name": {"type": "string", "required": True},
+                "icon": {"type": "string", "required": False, "default": "help-circle", "description": "Valid Ionicons name"},
+                "color": {"type": "string", "required": False, "default": "#00FF87", "description": "Hex color (#RGB or #RRGGBB)"}
+            },
+            "update": {
+                "icon": {"type": "string", "required": False},
+                "color": {"type": "string", "required": False}
+            }
+        },
+        "important_notes": [
+            "Use FLAT fields (question_text, video_url) NOT nested objects (question: {text, video_url})",
+            "Category names are case-sensitive and must exist before creating playables",
+            "Icons must be valid Ionicons names - check /api/admin/valid-icons",
+            "All admin endpoints require Authorization: Bearer <admin_token> header"
+        ],
+        "example_payloads": {
+            "text_mcq": {
+                "type": "text",
+                "answer_type": "mcq",
+                "category": "SCIENCE",
+                "title": "Chemistry Basics",
+                "question_text": "What is the chemical symbol for Gold?",
+                "options": ["Au", "Ag", "Fe", "Cu"],
+                "correct_answer": "Au",
+                "difficulty": "easy"
+            },
+            "video_mcq": {
+                "type": "video",
+                "answer_type": "mcq",
+                "category": "MATHS",
+                "title": "Math Puzzle",
+                "question_text": "Solve this!",
+                "video_url": "https://example.com/video.mp4",
+                "options": ["7", "14", "10", "24"],
+                "correct_answer": "7",
+                "difficulty": "medium"
+            },
+            "guess_the_x": {
+                "type": "guess_the_x",
+                "answer_type": "text_input",
+                "category": "MOVIES",
+                "title": "Guess the Movie",
+                "question_text": "Guess from these hints",
+                "hints": ["Hint 1", "Hint 2", "Hint 3", "Hint 4", "Hint 5"],
+                "correct_answer": "The Answer",
+                "alternate_answers": ["answer", "the answer"],
+                "difficulty": "medium"
+            }
+        }
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
