@@ -1493,4 +1493,21 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.25)',
     backgroundColor: 'rgba(0,0,0,0.55)',
   },
+  // This or That styles
+  thisOrThatContainer: {
+    flex: 1,
+    backgroundColor: '#0D0D1A',
+  },
+  thisOrThatHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    alignItems: 'center',
+  },
+  categoryBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#00FF87',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
 });
