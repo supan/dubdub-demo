@@ -2164,7 +2164,16 @@ async def get_api_schema():
                 "type": {
                     "type": "string",
                     "enum": ["text", "image", "video", "image_text", "video_text", "guess_the_x", "chess_mate_in_2"],
-                    "description": "Type of playable content"
+                    "description": "Type of playable content",
+                    "type_descriptions": {
+                        "text": "Text-only question",
+                        "image": "Image-based question",
+                        "video": "Video-based question",
+                        "image_text": "Image with text question",
+                        "video_text": "Video with text question",
+                        "guess_the_x": "5 hints • Next hint revealed on wrong answer",
+                        "chess_mate_in_2": "Chess puzzle - find mate in 2 moves"
+                    }
                 },
                 "answer_type": {
                     "type": "string",
