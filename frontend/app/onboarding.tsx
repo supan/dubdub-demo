@@ -25,39 +25,16 @@ interface Category {
   playable_count: number;
 }
 
-// Icon mapping - maps backend icon names to Ionicons
-const ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
-  'flask': 'flask',
-  'globe': 'globe',
-  'time': 'time',
-  'book': 'book',
-  'football': 'football',
-  'american-football': 'american-football',
-  'musical-notes': 'musical-notes',
-  'color-palette': 'color-palette',
-  'film': 'film',
-  'hardware-chip': 'hardware-chip',
-  'restaurant': 'restaurant',
-  'leaf': 'leaf',
-  'paw': 'paw',
-  'calculator': 'calculator',
-  'language': 'language',
-  'help-circle': 'help-circle',
-  'baseball': 'baseball',
-  'star': 'star',
-  'game-controller': 'game-controller',
-  'extension-puzzle': 'extension-puzzle',
-  'videocam': 'videocam',
-  'podium': 'podium',
-  'tv': 'tv',
-  'bulb': 'bulb',
-  'trophy': 'trophy',
-  'medal': 'medal',
-  'ribbon': 'ribbon',
-  'fitness': 'fitness',
-  'bicycle': 'bicycle',
-  'tennisball': 'tennisball',
-  'basketball': 'basketball',
+// Helper to safely use icon from database
+// Icons are stored as valid Ionicons names in the database (e.g., "flask", "globe")
+// This function provides type safety and fallback for invalid icons
+const getValidIcon = (iconName: string): keyof typeof Ionicons.glyphMap => {
+  // Check if the icon exists in Ionicons
+  if (iconName && iconName in Ionicons.glyphMap) {
+    return iconName as keyof typeof Ionicons.glyphMap;
+  }
+  // Fallback for invalid or missing icons
+  return 'help-circle';
 };
 
 export default function OnboardingScreen() {
