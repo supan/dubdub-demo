@@ -937,6 +937,11 @@ export default function AdminDashboard() {
                 </TouchableOpacity>
               ))}
             </View>
+            
+            {/* Subtext for Guess the X format */}
+            {contentType === 'guess_the_x' && (
+              <Text style={styles.formatHint}>5 hints • Next hint revealed on wrong answer</Text>
+            )}
 
             {/* Answer Type Selector - Hide for guess_the_x and chess_mate_in_2 */}
             {contentType !== 'guess_the_x' && contentType !== 'chess_mate_in_2' && (
