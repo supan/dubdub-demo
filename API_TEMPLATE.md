@@ -300,6 +300,33 @@ The API accepts flat fields which are internally converted to nested `question` 
 }
 ```
 
+#### Type: This or That (NEW)
+```json
+{
+  "type": "this_or_that",
+  "answer_type": "tap_select",
+  "category": "SPORTS",
+  "title": "Logo Challenge",
+  "question_text": "Which is the Real Madrid logo?",
+  "image_left_url": "https://example.com/real-madrid-logo.png",
+  "image_right_url": "https://example.com/barcelona-logo.png",
+  "label_left": "Real Madrid",
+  "label_right": "Barcelona",
+  "correct_answer": "Real Madrid",
+  "answer_explanation": "Real Madrid is known for its white jersey",
+  "difficulty": "easy"
+}
+```
+
+**Required fields for this_or_that:**
+| Field | Description |
+|-------|-------------|
+| `image_left_url` | URL of the left image |
+| `image_right_url` | URL of the right image |
+| `label_left` | Label for left image (used for answer matching, not shown to users) |
+| `label_right` | Label for right image (used for answer matching, not shown to users) |
+| `correct_answer` | Must match either `label_left` or `label_right` |
+
 ---
 
 ### Update Playable
