@@ -1153,8 +1153,8 @@ class AdminResetProgressRequest(BaseModel):
     email: str
 
 class AddPlayableRequest(BaseModel):
-    type: str  # "text", "image", "video", "image_text", "video_text", "guess_the_x", "chess_mate_in_2"
-    answer_type: str  # "mcq", "text_input"
+    type: str  # "text", "image", "video", "image_text", "video_text", "guess_the_x", "chess_mate_in_2", "this_or_that"
+    answer_type: str  # "mcq", "text_input", "tap_select"
     category: str
     title: str
     question_text: Optional[str] = None
@@ -1168,7 +1168,12 @@ class AddPlayableRequest(BaseModel):
     answer_explanation: Optional[str] = None  # Brief explanation of the answer
     hints: Optional[List[str]] = None  # For guess_the_x: 3-5 hints
     fen: Optional[str] = None  # For chess_mate_in_2: FEN position string
-    solution: Optional[List[str]] = None  # For chess_mate_in_2: ALL moves in UCI format (e.g., ["e2e4", "e7e5", "d1h5"])
+    solution: Optional[List[str]] = None  # For chess_mate_in_2: ALL moves in UCI format
+    # This or That fields
+    image_left_url: Optional[str] = None  # Left image URL
+    image_right_url: Optional[str] = None  # Right image URL
+    label_left: Optional[str] = None  # Label for left image (used for answer matching)
+    label_right: Optional[str] = None  # Label for right image (used for answer matching)
     difficulty: str = "medium"
 
 @api_router.post("/admin/login")
