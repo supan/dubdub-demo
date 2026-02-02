@@ -438,6 +438,36 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
     );
   }
 
+  // ============ THIS OR THAT LAYOUT ============
+  if (playable.type === 'this_or_that') {
+    const ThisOrThatCard = require('./ThisOrThatCard').default;
+    
+    const handleThisOrThatAnswer = (selectedLabel: string, isCorrect: boolean) => {
+      if (onAnswer) {
+        onAnswer(selectedLabel, isCorrect);
+      }
+    };
+    
+    return (
+      <View style={styles.thisOrThatContainer}>
+        {/* Header with Category Badge */}
+        <View style={styles.thisOrThatHeader}>
+          <View style={[styles.categoryBadge, { backgroundColor: 'rgba(0, 255, 135, 0.15)' }]}>
+            <Text style={styles.categoryBadgeText}>{playable.category}</Text>
+          </View>
+        </View>
+        
+        {/* This or That Card */}
+        <ThisOrThatCard
+          question={playable.question}
+          correctAnswer={playable.correct_answer}
+          onAnswer={handleThisOrThatAnswer}
+          disabled={hasSubmitted}
+        />
+      </View>
+    );
+  }
+
   // ============ IMMERSIVE LAYOUT (Image/Video) ============
   if (isImmersive) {
     return (
