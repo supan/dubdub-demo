@@ -396,6 +396,22 @@ export default function AdminDashboard() {
       }
     }
 
+    // Validation for this_or_that
+    if (contentType === 'this_or_that') {
+      if (!imageLeftUrl || !imageRightUrl) {
+        setAddMessage('❌ Please provide both left and right image URLs');
+        return;
+      }
+      if (!labelLeft || !labelRight) {
+        setAddMessage('❌ Please provide labels for both images');
+        return;
+      }
+      if (correctAnswer !== labelLeft && correctAnswer !== labelRight) {
+        setAddMessage('❌ Correct answer must match one of the labels');
+        return;
+      }
+    }
+
     if ((contentType === 'text' || contentType === 'image_text' || contentType === 'video_text') && !questionText) {
       setAddMessage('❌ Please enter question text');
       return;
@@ -411,7 +427,7 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (answerType === 'mcq' && contentType !== 'guess_the_x') {
+    if (answerType === 'mcq' && contentType !== 'guess_the_x' && contentType !== 'this_or_that') {
       const filledOptions = options.filter(o => o.trim());
       if (filledOptions.length < 2) {
         setAddMessage('❌ Please fill at least 2 options for MCQ');
@@ -429,7 +445,7 @@ export default function AdminDashboard() {
 
       const payload: any = {
         type: contentType,
-        answer_type: contentType === 'guess_the_x' ? 'text_input' : answerType,
+        answer_type: contentType === 'guess_the_x' ? 'text_input' : contentType === 'this_or_that' ? 'tap_select' : answerType,
         category,
         title,
         correct_answer: correctAnswer,
@@ -443,7 +459,15 @@ export default function AdminDashboard() {
       if (videoStart) payload.video_start = parseInt(videoStart, 10);
       if (videoEnd) payload.video_end = parseInt(videoEnd, 10);
       
-      if (answerType === 'mcq' && contentType !== 'guess_the_x') {
+      // This or That fields
+      if (contentType === 'this_or_that') {
+        payload.image_left_url = imageLeftUrl;
+        payload.image_right_url = imageRightUrl;
+        payload.label_left = labelLeft;
+        payload.label_right = labelRight;
+      }
+      
+      if (answerType === 'mcq' && contentType !== 'guess_the_x' && contentType !== 'this_or_that') {
         payload.options = options.filter(o => o.trim());
       }
       
