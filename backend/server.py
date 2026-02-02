@@ -2339,6 +2339,19 @@ async def get_api_schema():
                 "correct_answer": "The Answer",
                 "alternate_answers": ["answer", "the answer"],
                 "difficulty": "medium"
+            },
+            "this_or_that": {
+                "type": "this_or_that",
+                "answer_type": "tap_select",
+                "category": "GENERAL",
+                "title": "Logo Recognition",
+                "question_text": "Which is the Apple logo?",
+                "image_left_url": "https://example.com/apple-logo.png",
+                "image_right_url": "https://example.com/samsung-logo.png",
+                "label_left": "Apple",
+                "label_right": "Samsung",
+                "correct_answer": "Apple",
+                "difficulty": "easy"
             }
         }
     }
