@@ -441,8 +441,6 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
 
   // ============ THIS OR THAT LAYOUT ============
   if (playable.type === 'this_or_that') {
-    const ThisOrThatCard = require('./ThisOrThatCard').default;
-    
     const handleThisOrThatAnswer = (selectedLabel: string, isCorrect: boolean) => {
       if (onAnswer) {
         onAnswer(selectedLabel, isCorrect);
