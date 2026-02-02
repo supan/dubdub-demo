@@ -1,5 +1,29 @@
 # DubDub API Documentation
 
+---
+
+## ⚠️ MAINTENANCE INSTRUCTIONS (For Developers & AI Agents)
+
+**When adding NEW playable types/formats or modifying the API:**
+
+1. **Update Backend Schema API** (`/app/backend/server.py`):
+   - Add new type to `"enum"` in `playable_schema.required_fields.type`
+   - Add new fields to `optional_fields` if applicable
+   - Add example payload in `example_payloads` section
+   - Increment `version` number
+
+2. **Update this Documentation** (`/app/API_TEMPLATE.md`):
+   - Add new type to "Valid Playable Types" table
+   - Add example payload under "Add Playable" section
+   - Update field reference tables if needed
+
+3. **Files to Update Checklist**:
+   - [ ] `/app/backend/server.py` - Schema API endpoint
+   - [ ] `/app/API_TEMPLATE.md` - This file
+   - [ ] Frontend components if new rendering logic needed
+
+---
+
 ## Base URL
 - **Preview:** `https://your-app.preview.emergent.sh`
 - **Production:** `https://your-app.emergent.host`
