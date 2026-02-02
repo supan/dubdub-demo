@@ -1326,22 +1326,41 @@ async def admin_add_playable(
             if not request.solution or len(request.solution) < 1:
                 raise HTTPException(status_code=400, detail="Chess puzzle requires at least 1 solution move")
         
-        if request.answer_type == "mcq" and request.type not in ["guess_the_x", "chess_mate_in_2"]:
+        # Validate this_or_that has both images and labels
+        if request.type == "this_or_that":
+            if not request.image_left_url or not request.image_right_url:
+                raise HTTPException(status_code=400, detail="This or That requires both left and right images")
+            if not request.label_left or not request.label_right:
+                raise HTTPException(status_code=400, detail="This or That requires labels for both images")
+            if request.correct_answer not in [request.label_left, request.label_right]:
+                raise HTTPException(status_code=400, detail="Correct answer must match one of the labels")
+        
+        if request.answer_type == "mcq" and request.type not in ["guess_the_x", "chess_mate_in_2", "this_or_that"]:
             if not request.options or len(request.options) < 2:
                 raise HTTPException(status_code=400, detail="MCQ requires at least 2 options")
             if request.correct_answer not in request.options:
                 raise HTTPException(status_code=400, detail="Correct answer must be one of the options")
+        
+        # Build question object for this_or_that
+        if request.type == "this_or_that":
+            question = {
+                "text": request.question_text,
+                "image_left": request.image_left_url,
+                "image_right": request.image_right_url,
+                "label_left": request.label_left,
+                "label_right": request.label_right
+            }
         
         # Create playable
         playable_id = f"play_{uuid.uuid4().hex[:12]}"
         playable_doc = {
             "playable_id": playable_id,
             "type": request.type,
-            "answer_type": "text_input" if request.type in ["guess_the_x", "chess_mate_in_2"] else request.answer_type,
+            "answer_type": "tap_select" if request.type == "this_or_that" else ("text_input" if request.type in ["guess_the_x", "chess_mate_in_2"] else request.answer_type),
             "category": request.category,
             "title": request.title,
             "question": question,
-            "options": request.options if request.answer_type == "mcq" and request.type not in ["guess_the_x", "chess_mate_in_2"] else None,
+            "options": request.options if request.answer_type == "mcq" and request.type not in ["guess_the_x", "chess_mate_in_2", "this_or_that"] else None,
             "correct_answer": request.correct_answer,
             "alternate_answers": request.alternate_answers if (request.answer_type == "text_input" or request.type in ["guess_the_x", "chess_mate_in_2"]) else None,
             "answer_explanation": request.answer_explanation,
