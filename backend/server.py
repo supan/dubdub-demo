@@ -2289,9 +2289,6 @@ async def get_api_schema():
         }
     }
 
-# Include the router in the app
-app.include_router(api_router)
-
 @app.on_event("startup")
 async def startup_db_client():
     """Create indexes for optimized queries"""
