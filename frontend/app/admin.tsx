@@ -917,7 +917,7 @@ export default function AdminDashboard() {
             {/* Content Type Selector */}
             <Text style={styles.label}>Content Type {isEditMode && <Text style={styles.readOnlyLabel}>(read-only)</Text>}</Text>
             <View style={[styles.typeSelector, isEditMode && styles.typeSelectorDisabled]}>
-              {(['text', 'image', 'video', 'image_text', 'video_text', 'guess_the_x', 'chess_mate_in_2'] as ContentType[]).map((type) => (
+              {(['text', 'image', 'video', 'image_text', 'video_text', 'guess_the_x', 'chess_mate_in_2', 'this_or_that'] as ContentType[]).map((type) => (
                 <TouchableOpacity
                   key={type}
                   style={[styles.typeOption, contentType === type && styles.typeOptionSelected]}
@@ -928,11 +928,14 @@ export default function AdminDashboard() {
                     if (type === 'guess_the_x' || type === 'chess_mate_in_2') {
                       setAnswerType('text_input');
                     }
+                    if (type === 'this_or_that') {
+                      setAnswerType('tap_select');
+                    }
                   }}
                   disabled={isEditMode}
                 >
                   <Text style={[styles.typeOptionText, contentType === type && styles.typeOptionTextSelected]}>
-                    {type === 'guess_the_x' ? 'GUESS THE X' : type === 'chess_mate_in_2' ? 'CHESS MATE IN 2' : type.replace('_', ' + ').toUpperCase()}
+                    {type === 'guess_the_x' ? 'GUESS THE X' : type === 'chess_mate_in_2' ? 'CHESS MATE IN 2' : type === 'this_or_that' ? 'THIS OR THAT' : type.replace('_', ' + ').toUpperCase()}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -942,9 +945,14 @@ export default function AdminDashboard() {
             {contentType === 'guess_the_x' && (
               <Text style={styles.formatHint}>5 hints • Next hint revealed on wrong answer</Text>
             )}
+            
+            {/* Subtext for This or That format */}
+            {contentType === 'this_or_that' && (
+              <Text style={styles.formatHint}>Two images • Tap to select the correct one</Text>
+            )}
 
-            {/* Answer Type Selector - Hide for guess_the_x and chess_mate_in_2 */}
-            {contentType !== 'guess_the_x' && contentType !== 'chess_mate_in_2' && (
+            {/* Answer Type Selector - Hide for guess_the_x, chess_mate_in_2, and this_or_that */}
+            {contentType !== 'guess_the_x' && contentType !== 'chess_mate_in_2' && contentType !== 'this_or_that' && (
               <>
                 <Text style={styles.label}>Answer Type</Text>
                 <View style={styles.typeSelector}>
