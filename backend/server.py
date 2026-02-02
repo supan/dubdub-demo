@@ -291,6 +291,92 @@ async def logout(authorization: Optional[str] = Header(None)):
 
 # ==================== CATEGORY ENDPOINTS ====================
 
+# Valid Ionicons names (comprehensive list for validation)
+# Source: https://ionic.io/ionicons
+VALID_IONICONS = {
+    # General
+    "add", "add-circle", "remove", "remove-circle", "close", "close-circle",
+    "checkmark", "checkmark-circle", "checkmark-done", "alert", "alert-circle",
+    "information", "information-circle", "help", "help-circle", "warning",
+    
+    # Navigation & Actions
+    "arrow-back", "arrow-forward", "arrow-up", "arrow-down", "chevron-back",
+    "chevron-forward", "chevron-up", "chevron-down", "caret-back", "caret-forward",
+    "caret-up", "caret-down", "menu", "ellipsis-horizontal", "ellipsis-vertical",
+    "options", "settings", "cog", "build", "construct", "hammer", "key",
+    
+    # Media & Files
+    "play", "pause", "stop", "volume-high", "volume-low", "volume-mute",
+    "mic", "mic-off", "camera", "videocam", "image", "images", "film",
+    "musical-notes", "musical-note", "headset", "radio", "tv", "desktop",
+    "laptop", "phone-portrait", "tablet-portrait", "watch", "print",
+    "document", "documents", "folder", "folder-open", "file-tray",
+    "archive", "trash", "download", "cloud-download", "upload", "cloud-upload",
+    "share", "share-social", "link", "copy", "clipboard", "cut",
+    
+    # Communication
+    "mail", "mail-open", "send", "chatbox", "chatbubble", "chatbubbles",
+    "call", "notifications", "notifications-off", "megaphone", "at",
+    
+    # People & Social
+    "person", "person-add", "people", "body", "man", "woman",
+    "happy", "sad", "skull", "heart", "heart-dislike", "thumbs-up", "thumbs-down",
+    
+    # Nature & Weather
+    "sunny", "moon", "cloudy", "rainy", "thunderstorm", "snow", "flame", "bonfire",
+    "water", "leaf", "flower", "rose", "earth", "globe", "planet", "star",
+    
+    # Objects
+    "home", "business", "storefront", "cafe", "restaurant", "fast-food", "pizza", "beer",
+    "wine", "ice-cream", "nutrition", "fitness", "medkit", "bandage", "pulse",
+    "eye", "eye-off", "glasses", "shirt", "gift", "pricetag", "pricetags",
+    "cart", "bag", "basket", "wallet", "card", "cash", "calculator", "receipt",
+    "barcode", "qr-code", "scan", "sparkles", "ribbon", "medal", "trophy",
+    
+    # Transportation
+    "airplane", "car", "bus", "train", "subway", "boat", "bicycle", "walk",
+    "navigate", "compass", "map", "location", "pin", "flag",
+    
+    # Technology & Science
+    "bulb", "flashlight", "flash", "battery-charging", "battery-full",
+    "wifi", "bluetooth", "cellular", "radio-button-on", "toggle",
+    "hardware-chip", "server", "terminal", "code", "code-slash",
+    "git-branch", "git-commit", "git-merge", "git-pull-request",
+    "logo-github", "logo-javascript", "logo-python", "logo-react",
+    "flask", "beaker", "nuclear", "magnet", "prism", "cube", "shapes",
+    
+    # Sports & Games
+    "football", "american-football", "basketball", "baseball", "tennisball",
+    "golf", "fish", "game-controller", "dice", "extension-puzzle",
+    
+    # Education & Culture
+    "book", "library", "school", "easel", "color-palette", "brush", "pencil",
+    "create", "newspaper", "reader", "language", "text",
+    
+    # Time & Calendar
+    "time", "timer", "stopwatch", "hourglass", "alarm", "calendar", "today",
+    
+    # Security
+    "lock-closed", "lock-open", "shield", "shield-checkmark", "finger-print",
+    
+    # Misc
+    "infinite", "rocket", "telescope", "binoculars", "aperture", "contrast",
+    "layers", "grid", "apps", "analytics", "bar-chart", "pie-chart", "stats-chart",
+    "trending-up", "trending-down", "podium", "funnel", "filter",
+    "refresh", "reload", "sync", "repeat", "shuffle", "swap-horizontal",
+    "expand", "contract", "resize", "move", "crop", "color-fill",
+    "attach", "paperclip", "push", "pulse", "log-in", "log-out", "exit",
+    "enter", "return-down-back", "save", "search", "bug", "skull-outline",
+}
+
+def is_valid_icon(icon_name: str) -> bool:
+    """Check if icon name is a valid Ionicons name"""
+    if not icon_name:
+        return False
+    # Also accept outline/sharp variants
+    base_icon = icon_name.replace("-outline", "").replace("-sharp", "")
+    return icon_name in VALID_IONICONS or base_icon in VALID_IONICONS
+
 # Default category icons and colors mapping (used for initialization)
 DEFAULT_CATEGORY_STYLES = {
     "SCIENCE": {"icon": "flask", "color": "#4CAF50"},
