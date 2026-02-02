@@ -2115,10 +2115,32 @@ async def get_template_formats(_: bool = Depends(verify_admin_token)):
     }
 
 # ==================== API DOCUMENTATION ENDPOINT ====================
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║  IMPORTANT MAINTENANCE INSTRUCTION                                         ║
+# ║  ─────────────────────────────────────────────────────────────────────────║
+# ║  When adding NEW playable types/formats or modifying the API:              ║
+# ║                                                                            ║
+# ║  1. Update the "type" enum in playable_schema.required_fields              ║
+# ║  2. Add new fields to optional_fields if applicable                        ║
+# ║  3. Add example payload in example_payloads section                        ║
+# ║  4. Update /app/API_TEMPLATE.md documentation                              ║
+# ║  5. Increment the version number                                           ║
+# ║                                                                            ║
+# ║  This schema is consumed by external agents for API integration.           ║
+# ║  Keeping it updated prevents integration errors.                           ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
 
 @api_router.get("/docs/schema")
 async def get_api_schema():
-    """Get API schema documentation for agents/programmatic consumption"""
+    """
+    Get API schema documentation for agents/programmatic consumption.
+    
+    MAINTENANCE: When adding new playable types or API changes:
+    1. Update the enum values in this schema
+    2. Add example payloads for new types
+    3. Update /app/API_TEMPLATE.md
+    4. Increment version number
+    """
     return {
         "version": "1.0",
         "base_endpoints": {
