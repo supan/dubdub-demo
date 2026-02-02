@@ -1245,8 +1245,55 @@ export default function AdminDashboard() {
               </>
             )}
 
+            {/* This or That Fields */}
+            {contentType === 'this_or_that' && (
+              <>
+                <Text style={styles.label}>Left Image URL</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="https://example.com/image1.png"
+                  placeholderTextColor="#666"
+                  value={imageLeftUrl}
+                  onChangeText={setImageLeftUrl}
+                  autoCapitalize="none"
+                />
+                <Text style={styles.label}>Left Image Label</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g., Apple"
+                  placeholderTextColor="#666"
+                  value={labelLeft}
+                  onChangeText={setLabelLeft}
+                />
+                <Text style={styles.hintText}>
+                  This label is used for answer matching (not shown to users)
+                </Text>
+                
+                <Text style={styles.label}>Right Image URL</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="https://example.com/image2.png"
+                  placeholderTextColor="#666"
+                  value={imageRightUrl}
+                  onChangeText={setImageRightUrl}
+                  autoCapitalize="none"
+                />
+                <Text style={styles.label}>Right Image Label</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g., Samsung"
+                  placeholderTextColor="#666"
+                  value={labelRight}
+                  onChangeText={setLabelRight}
+                />
+                <Text style={styles.hintText}>
+                  This label is used for answer matching (not shown to users)
+                </Text>
+              </>
+            )}
+
             {/* Correct Answer */}
-            <Text style={styles.label}>Correct Answer</Text>
+            <Text style={styles.label}>Correct Answer {contentType === 'this_or_that' && '(must match one of the labels)'}</Text>
             <TextInput
               style={styles.input}
               placeholder={answerType === 'mcq' ? 'Must match one of the options' : 'Expected answer'}
