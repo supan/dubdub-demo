@@ -1476,6 +1476,14 @@ async def admin_get_categories(_: bool = Depends(verify_admin_token)):
 async def admin_add_category(request: AddCategoryRequest, _: bool = Depends(verify_admin_token)):
     """Add a new category (admin only)"""
     try:
+        # Validate icon name
+        icon_to_use = request.icon or "help-circle"
+        if not is_valid_icon(icon_to_use):
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Invalid icon '{icon_to_use}'. Please use a valid Ionicons name (e.g., 'flask', 'globe', 'star', 'rocket')"
+            )
+        
         # Check if category already exists (case-insensitive)
         existing = await db.categories.find_one({"name": {"$regex": f"^{request.name}$", "$options": "i"}})
         if existing:
@@ -1485,7 +1493,7 @@ async def admin_add_category(request: AddCategoryRequest, _: bool = Depends(veri
         category_doc = {
             "category_id": category_id,
             "name": request.name,
-            "icon": request.icon or "help-circle",
+            "icon": icon_to_use,
             "color": request.color or "#00FF87",
             "created_at": datetime.now(timezone.utc)
         }
