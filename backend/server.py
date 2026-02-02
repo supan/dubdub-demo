@@ -2187,7 +2187,7 @@ async def get_api_schema():
             "required_fields": {
                 "type": {
                     "type": "string",
-                    "enum": ["text", "image", "video", "image_text", "video_text", "guess_the_x", "chess_mate_in_2"],
+                    "enum": ["text", "image", "video", "image_text", "video_text", "guess_the_x", "chess_mate_in_2", "this_or_that"],
                     "description": "Type of playable content",
                     "type_descriptions": {
                         "text": "Text-only question",
@@ -2196,12 +2196,13 @@ async def get_api_schema():
                         "image_text": "Image with text question",
                         "video_text": "Video with text question",
                         "guess_the_x": "5 hints • Next hint revealed on wrong answer",
-                        "chess_mate_in_2": "Chess puzzle - find mate in 2 moves"
+                        "chess_mate_in_2": "Chess puzzle - find mate in 2 moves",
+                        "this_or_that": "Two images • Tap to select the correct one"
                     }
                 },
                 "answer_type": {
                     "type": "string",
-                    "enum": ["mcq", "text_input"],
+                    "enum": ["mcq", "text_input", "tap_select"],
                     "description": "How user answers the question"
                 },
                 "category": {
@@ -2214,7 +2215,7 @@ async def get_api_schema():
                 },
                 "correct_answer": {
                     "type": "string",
-                    "description": "The correct answer"
+                    "description": "The correct answer (for this_or_that: must match label_left or label_right)"
                 }
             },
             "optional_fields": {
@@ -2237,6 +2238,22 @@ async def get_api_schema():
                 "image_url": {
                     "type": "string",
                     "description": "URL to image or base64 data URL (NOT nested under 'question')"
+                },
+                "image_left_url": {
+                    "type": "string",
+                    "description": "Left image URL (for this_or_that only)"
+                },
+                "image_right_url": {
+                    "type": "string",
+                    "description": "Right image URL (for this_or_that only)"
+                },
+                "label_left": {
+                    "type": "string",
+                    "description": "Label for left image - used for answer matching (for this_or_that only)"
+                },
+                "label_right": {
+                    "type": "string",
+                    "description": "Label for right image - used for answer matching (for this_or_that only)"
                 },
                 "options": {
                     "type": "array",
