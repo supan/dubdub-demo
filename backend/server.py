@@ -1519,6 +1519,66 @@ async def admin_add_category(request: AddCategoryRequest, _: bool = Depends(veri
         logging.error(f"Error adding category: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# Model for updating a category
+class UpdateCategoryRequest(BaseModel):
+    icon: Optional[str] = None
+    color: Optional[str] = None
+
+@api_router.patch("/admin/categories/{category_id}")
+async def admin_update_category(
+    category_id: str, 
+    request: UpdateCategoryRequest, 
+    _: bool = Depends(verify_admin_token)
+):
+    """Update a category's icon and/or color (admin only)"""
+    try:
+        # Find category
+        category = await db.categories.find_one({"category_id": category_id})
+        if not category:
+            raise HTTPException(status_code=404, detail="Category not found")
+        
+        # Build update dict
+        update_fields = {}
+        
+        if request.icon is not None:
+            # Validate icon
+            if not is_valid_icon(request.icon):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid icon '{request.icon}'. Please use a valid Ionicons name."
+                )
+            update_fields["icon"] = request.icon
+        
+        if request.color is not None:
+            # Basic color validation (hex format)
+            color = request.color.strip()
+            if not color.startswith("#") or len(color) not in [4, 7]:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid color '{color}'. Please use hex format (e.g., '#FF5722')"
+                )
+            update_fields["color"] = color
+        
+        if not update_fields:
+            raise HTTPException(status_code=400, detail="No fields to update. Provide 'icon' and/or 'color'.")
+        
+        # Update category
+        await db.categories.update_one(
+            {"category_id": category_id},
+            {"$set": update_fields}
+        )
+        
+        return {
+            "success": True,
+            "message": f"Category '{category['name']}' updated successfully",
+            "updated_fields": list(update_fields.keys())
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating category: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.delete("/admin/categories/{category_id}")
 async def admin_delete_category(category_id: str, _: bool = Depends(verify_admin_token)):
     """Delete a category (admin only) - only if no playables use it"""
