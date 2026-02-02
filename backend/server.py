@@ -1472,6 +1472,14 @@ async def admin_get_categories(_: bool = Depends(verify_admin_token)):
         logging.error(f"Error getting categories: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/admin/valid-icons")
+async def get_valid_icons(_: bool = Depends(verify_admin_token)):
+    """Get list of all valid Ionicons names for category icons"""
+    return {
+        "icons": sorted(list(VALID_IONICONS)),
+        "count": len(VALID_IONICONS)
+    }
+
 @api_router.post("/admin/categories")
 async def admin_add_category(request: AddCategoryRequest, _: bool = Depends(verify_admin_token)):
     """Add a new category (admin only)"""
