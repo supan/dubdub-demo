@@ -1974,6 +1974,13 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     fontStyle: 'italic',
   },
+  formatHint: {
+    color: '#888',
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginTop: 8,
+    marginBottom: 4,
+  },
   typeSelectorDisabled: {
     opacity: 0.6,
   },
