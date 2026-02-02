@@ -1413,6 +1413,8 @@ async def admin_update_playable(playable_id: str, request: AddPlayableRequest, _
         
         # Build update document
         update_doc = {
+            "type": request.type,
+            "answer_type": request.answer_type,
             "category": request.category,
             "title": request.title,
             "question": question,
@@ -1423,6 +1425,8 @@ async def admin_update_playable(playable_id: str, request: AddPlayableRequest, _
             "hints": request.hints if request.type == "guess_the_x" else None,
             "fen": request.fen if request.type == "chess_mate_in_2" else None,
             "solution": request.solution if request.type == "chess_mate_in_2" else None,
+            "video_start": request.video_start,
+            "video_end": request.video_end,
             "difficulty": request.difficulty,
             "updated_at": datetime.now(timezone.utc)
         }
