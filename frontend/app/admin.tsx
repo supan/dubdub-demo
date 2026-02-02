@@ -69,6 +69,11 @@ export default function AdminDashboard() {
   const [hints, setHints] = useState(['', '', '']);  // For guess_the_x: 3-5 hints
   const [fenPosition, setFenPosition] = useState('');  // For chess_mate_in_2
   const [solutionMoves, setSolutionMoves] = useState(['', '']);  // For chess_mate_in_2: typically 2 moves
+  // This or That state
+  const [imageLeftUrl, setImageLeftUrl] = useState('');
+  const [imageRightUrl, setImageRightUrl] = useState('');
+  const [labelLeft, setLabelLeft] = useState('');
+  const [labelRight, setLabelRight] = useState('');
   const [difficulty, setDifficulty] = useState('medium');
   const [addLoading, setAddLoading] = useState(false);
   const [addMessage, setAddMessage] = useState('');
