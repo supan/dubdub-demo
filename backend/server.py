@@ -1399,16 +1399,21 @@ async def admin_update_playable(playable_id: str, request: AddPlayableRequest, _
         if not existing:
             raise HTTPException(status_code=404, detail="Playable not found")
         
-        # Build question object based on type
-        question = {}
-        if request.question_text:
+        # Build question object - MERGE with existing question data
+        existing_question = existing.get("question", {})
+        question = existing_question.copy()  # Start with existing data
+        
+        # Update only the fields that are provided
+        if request.question_text is not None:
             question["text"] = request.question_text
-        if request.image_url:
+        if request.image_url is not None:
             if request.image_url.startswith("data:"):
                 question["image_base64"] = request.image_url
+                question.pop("image_url", None)  # Remove other image field
             else:
                 question["image_url"] = request.image_url
-        if request.video_url:
+                question.pop("image_base64", None)  # Remove other image field
+        if request.video_url is not None:
             question["video_url"] = request.video_url
         
         # Build update document
