@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,15 +7,9 @@ import {
   Image,
   Dimensions,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const IMAGE_SIZE = (SCREEN_WIDTH - 60) / 2;
@@ -43,10 +37,10 @@ export default function ThisOrThatCard({
   const [loadingLeft, setLoadingLeft] = useState(true);
   const [loadingRight, setLoadingRight] = useState(true);
   
-  const leftScale = useSharedValue(1);
-  const rightScale = useSharedValue(1);
-  const leftOpacity = useSharedValue(1);
-  const rightOpacity = useSharedValue(1);
+  const leftScale = useRef(new Animated.Value(1)).current;
+  const rightScale = useRef(new Animated.Value(1)).current;
+  const leftOpacity = useRef(new Animated.Value(1)).current;
+  const rightOpacity = useRef(new Animated.Value(1)).current;
 
   const handleSelect = (side: 'left' | 'right') => {
     if (disabled || selectedSide) return;
@@ -58,19 +52,19 @@ export default function ThisOrThatCard({
     
     // Animate selection
     if (side === 'left') {
-      leftScale.value = withSequence(
-        withSpring(0.95),
-        withSpring(1.02),
-        withSpring(1)
-      );
-      rightOpacity.value = withTiming(0.4, { duration: 300 });
+      Animated.sequence([
+        Animated.timing(leftScale, { toValue: 0.95, duration: 100, useNativeDriver: true }),
+        Animated.timing(leftScale, { toValue: 1.02, duration: 100, useNativeDriver: true }),
+        Animated.timing(leftScale, { toValue: 1, duration: 100, useNativeDriver: true }),
+      ]).start();
+      Animated.timing(rightOpacity, { toValue: 0.4, duration: 300, useNativeDriver: true }).start();
     } else {
-      rightScale.value = withSequence(
-        withSpring(0.95),
-        withSpring(1.02),
-        withSpring(1)
-      );
-      leftOpacity.value = withTiming(0.4, { duration: 300 });
+      Animated.sequence([
+        Animated.timing(rightScale, { toValue: 0.95, duration: 100, useNativeDriver: true }),
+        Animated.timing(rightScale, { toValue: 1.02, duration: 100, useNativeDriver: true }),
+        Animated.timing(rightScale, { toValue: 1, duration: 100, useNativeDriver: true }),
+      ]).start();
+      Animated.timing(leftOpacity, { toValue: 0.4, duration: 300, useNativeDriver: true }).start();
     }
     
     // Delay callback slightly for animation
@@ -78,16 +72,6 @@ export default function ThisOrThatCard({
       onAnswer(selectedLabel || '', isCorrect);
     }, 400);
   };
-
-  const leftAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: leftScale.value }],
-    opacity: leftOpacity.value,
-  }));
-
-  const rightAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: rightScale.value }],
-    opacity: rightOpacity.value,
-  }));
 
   return (
     <View style={styles.container}>
@@ -101,7 +85,10 @@ export default function ThisOrThatCard({
       {/* Two Images Side by Side */}
       <View style={styles.imagesContainer}>
         {/* Left Image */}
-        <Animated.View style={[styles.imageWrapper, leftAnimatedStyle]}>
+        <Animated.View style={[
+          styles.imageWrapper,
+          { transform: [{ scale: leftScale }], opacity: leftOpacity }
+        ]}>
           <TouchableOpacity
             activeOpacity={0.9}
             onPress={() => handleSelect('left')}
@@ -147,7 +134,10 @@ export default function ThisOrThatCard({
         </View>
 
         {/* Right Image */}
-        <Animated.View style={[styles.imageWrapper, rightAnimatedStyle]}>
+        <Animated.View style={[
+          styles.imageWrapper,
+          { transform: [{ scale: rightScale }], opacity: rightOpacity }
+        ]}>
           <TouchableOpacity
             activeOpacity={0.9}
             onPress={() => handleSelect('right')}
