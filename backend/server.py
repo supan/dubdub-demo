@@ -514,6 +514,8 @@ async def get_playables_feed(
         # Build variety scoring expressions
         category_score = {"$cond": [{"$ne": ["$category", last_category or ""]}, 2, 0]}
         format_score = {"$cond": [{"$ne": ["$type", last_format or ""]}, 1, 0]}
+        # TEMP: Boost this_or_that to top for testing
+        this_or_that_boost = {"$cond": [{"$eq": ["$type", "this_or_that"]}, 100, 0]}
         
         # Optimized aggregation pipeline
         pipeline = [
@@ -547,10 +549,10 @@ async def get_playables_feed(
             # 4. Keep only unplayed (empty played array)
             {"$match": {"played": {"$size": 0}}},
             
-            # 5. Add variety score
+            # 5. Add variety score (TEMP: includes this_or_that boost)
             {
                 "$addFields": {
-                    "variety_score": {"$add": [category_score, format_score]}
+                    "variety_score": {"$add": [category_score, format_score, this_or_that_boost]}
                 }
             },
             
