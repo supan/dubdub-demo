@@ -1539,13 +1539,52 @@ const styles = StyleSheet.create({
   thisOrThatHeader: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    alignItems: 'center',
   },
-  categoryBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#00FF87',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+  topRowStandard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
   },
 });
+
+/* ============================================================================
+   IMPORTANT: UI CONSISTENCY CHECKLIST FOR NEW FORMATS
+   ============================================================================
+   When adding a new playable format, ensure the following:
+   
+   1. HEADER (Category + Progress):
+      - Use styles.categoryBadge for the category container
+      - Use styles.categoryText for the category text
+      - Use styles.standardProgressBadge for the progress container
+      - Use styles.standardProgressText for progress text (e.g., "3 / 10")
+      - Layout: Category on left, Progress on right
+   
+   2. PROPS TO PASS:
+      - currentIndex: number (0-based index of current playable)
+      - totalCount: number (total playables in the set)
+      - These are used for the progress indicator
+   
+   3. CONSISTENT STYLING:
+      - Background: '#0D0D1A' or use gradient
+      - Text colors: '#FFFFFF' for primary, '#888' for secondary
+      - Accent color: '#00FF87' for highlights
+   
+   4. ANSWER HANDLING:
+      - Call onAnswer(answer, isCorrect) when user submits
+      - Respect hasSubmitted prop to disable further input
+   
+   Example header structure:
+   <View style={styles.topRowStandard}>
+     <View style={styles.categoryBadge}>
+       <Text style={styles.categoryText}>{playable.category}</Text>
+     </View>
+     {totalCount > 0 && (
+       <View style={styles.standardProgressBadge}>
+         <Text style={styles.standardProgressText}>
+           {currentIndex + 1} / {totalCount}
+         </Text>
+       </View>
+     )}
+   </View>
+   ============================================================================ */
