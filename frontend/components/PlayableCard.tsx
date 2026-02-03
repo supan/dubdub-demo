@@ -793,14 +793,16 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
           <Text style={styles.immersiveTitle}>{playable.title}</Text>
         </View>
 
-        {/* Centered Replay Icon Button */}
-        <TouchableOpacity 
-          style={styles.replayButtonCentered}
-          onPress={handleReplay}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="play" size={32} color="#FFFFFF" />
-        </TouchableOpacity>
+        {/* Centered Replay Icon Button - Only show when video has finished */}
+        {videoFinished && (
+          <TouchableOpacity 
+            style={styles.replayButtonCentered}
+            onPress={handleReplay}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="play" size={32} color="#FFFFFF" />
+          </TouchableOpacity>
+        )}
 
         {/* Bottom Half - Question & Options appear after video ends */}
         <View style={styles.bottomHalf}>
