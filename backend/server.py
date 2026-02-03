@@ -496,24 +496,19 @@ async def get_playables_feed(
     last_format: Optional[str] = None,
     current_user: User = Depends(require_auth)
 ):
-    """Get playables feed with variety optimization
+    """Get playables feed - simplified logic
     
-    Uses a smart selection algorithm:
-    1. First serve curated demo playables in order (if not played/skipped)
-    2. Then sample random candidates from user's selected categories
-    3. Filter out already played
-    4. Score by variety (different category/format from last played)
-    5. Return top scoring playables
+    1. First serve curated 10 playables in order (if not played/skipped)
+    2. After that, show all remaining playables in random order
     """
     try:
         # ============ CURATED DEMO PLAYABLES (HARDCODED ORDER) ============
         # These 10 playables will be shown first, in this exact order
-        # IDs are from PRODUCTION database
         CURATED_PLAYABLE_IDS = [
             "play_fbf745c05db8",   # 1. Bollywood
             "play_9c2d0aedae90",   # 2. Indian PM no confidence
             "play_79d9fe88f784",   # 3. Australia Capital
-            "play_1fdb01350d05",   # 4. Right or Wrong logo
+            "play_1fdb01350d05",   # 4. Right or Wrong logo (This or That)
             "play_87f944dcfcb1",   # 5. Maths Puzzle
             "play_520619533384",   # 6. Chess Mate in 2
             "play_9ddad6ff412e",   # 7. Cricket (Guess in 5)
@@ -526,97 +521,45 @@ async def get_playables_feed(
         played_records = await db.user_progress.find(
             {"user_id": current_user.user_id},
             {"playable_id": 1}
-        ).to_list(length=1000)
+        ).to_list(length=10000)
         played_ids = {r["playable_id"] for r in played_records}
         
-        # Filter curated list to only unplayed ones (preserving order)
+        result_playables = []
+        
+        # ============ PHASE 1: Serve curated playables first ============
         unplayed_curated_ids = [pid for pid in CURATED_PLAYABLE_IDS if pid not in played_ids]
         
-        # If there are unplayed curated playables, serve them first
-        if unplayed_curated_ids:
-            # Fetch the unplayed curated playables
-            curated_playables = []
-            for pid in unplayed_curated_ids[:limit]:
-                playable = await db.playables.find_one({"playable_id": pid})
-                if playable:
-                    playable["_id"] = str(playable["_id"])
-                    curated_playables.append(playable)
-            
-            # If we got enough curated playables, return them
-            if curated_playables:
-                return curated_playables  # Return array directly like regular feed
+        for pid in unplayed_curated_ids[:limit]:
+            playable = await db.playables.find_one({"playable_id": pid})
+            if playable:
+                playable["_id"] = str(playable["_id"])
+                result_playables.append(playable)
         
-        # ============ REGULAR FEED (after curated are exhausted) ============
-        # Build category filter
-        category_filter = {}
-        is_dev_user = "supanshah51191" in current_user.email
-        if not is_dev_user and current_user.selected_categories and len(current_user.selected_categories) > 0:
-            category_filter["category"] = {"$in": current_user.selected_categories}
+        # If we have enough curated, return them
+        if len(result_playables) >= limit:
+            return result_playables[:limit]
         
-        # Exclude curated playables from regular feed (they're already handled)
-        curated_filter = {"playable_id": {"$nin": CURATED_PLAYABLE_IDS}}
+        # ============ PHASE 2: Fill remaining with random playables ============
+        remaining_needed = limit - len(result_playables)
         
-        # Build variety scoring expressions
-        category_score = {"$cond": [{"$ne": ["$category", last_category or ""]}, 2, 0]}
-        format_score = {"$cond": [{"$ne": ["$type", last_format or ""]}, 1, 0]}
+        if remaining_needed > 0:
+            # Get random playables that are:
+            # 1. Not in curated list (already handled above)
+            # 2. Not already played/skipped
+            exclude_ids = list(played_ids) + CURATED_PLAYABLE_IDS
+            
+            random_pipeline = [
+                {"$match": {"playable_id": {"$nin": exclude_ids}}},
+                {"$sample": {"size": remaining_needed}},
+            ]
+            
+            random_playables = await db.playables.aggregate(random_pipeline).to_list(remaining_needed)
+            
+            for p in random_playables:
+                p["_id"] = str(p["_id"])
+                result_playables.append(p)
         
-        # Optimized aggregation pipeline
-        pipeline = [
-            # 1. Exclude curated playables and filter by user's selected categories
-            {"$match": {**curated_filter, **category_filter}} if category_filter else {"$match": curated_filter},
-            
-            # 2. Random sample FIRST - get 100 candidates (fast)
-            {"$sample": {"size": 100}},
-            
-            # 3. Lookup to check if played (only 100 lookups, not thousands)
-            {
-                "$lookup": {
-                    "from": "user_progress",
-                    "let": {"pid": "$playable_id"},
-                    "pipeline": [
-                        {
-                            "$match": {
-                                "$expr": {
-                                    "$and": [
-                                        {"$eq": ["$playable_id", "$$pid"]},
-                                        {"$eq": ["$user_id", current_user.user_id]}
-                                    ]
-                                }
-                            }
-                        }
-                    ],
-                    "as": "played"
-                }
-            },
-            
-            # 4. Keep only unplayed (empty played array)
-            {"$match": {"played": {"$size": 0}}},
-            
-            # 5. Add variety score
-            {
-                "$addFields": {
-                    "variety_score": {"$add": [category_score, format_score]}
-                }
-            },
-            
-            # 6. Sort by variety score (highest first)
-            {"$sort": {"variety_score": -1}},
-            
-            # 7. Limit to requested amount
-            {"$limit": limit},
-            
-            # 8. Remove helper fields and _id
-            {"$project": {"played": 0, "variety_score": 0, "_id": 0}}
-        ]
-        
-        # Remove empty $match if no category filter
-        if not category_filter:
-            pipeline = pipeline[1:]
-        
-        playables = await db.playables.aggregate(pipeline).to_list(limit)
-        
-        # If we got fewer than requested, try again without variety scoring
-        # (fallback for when most content is exhausted)
+        return result_playables
         if len(playables) < limit:
             # Get any remaining unplayed content
             fallback_pipeline = [
