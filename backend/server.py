@@ -544,7 +544,7 @@ async def get_playables_feed(
             
             # If we got enough curated playables, return them
             if curated_playables:
-                return {"playables": curated_playables}
+                return curated_playables  # Return array directly like regular feed
         
         # ============ REGULAR FEED (after curated are exhausted) ============
         # Build category filter
