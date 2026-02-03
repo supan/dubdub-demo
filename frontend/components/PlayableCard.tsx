@@ -1248,6 +1248,20 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 4,
   },
+  guessFormatHint: {
+    fontSize: 13,
+    color: '#888',
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 8,
+    fontStyle: 'italic',
+  },
+  guessFormatHintImmersive: {
+    color: 'rgba(255,255,255,0.7)',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
   hintsContainer: {
     marginTop: 16,
     marginBottom: 24,
