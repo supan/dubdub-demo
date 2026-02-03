@@ -275,6 +275,11 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
           <Text style={[styles.title, hasImage && styles.guessTitleImmersive]}>
             {playable.title}
           </Text>
+          
+          {/* Format Description */}
+          <Text style={[styles.guessFormatHint, hasImage && styles.guessFormatHintImmersive]}>
+            5 hints • Next hint revealed on wrong answer
+          </Text>
 
           {/* All Hints Display - Shows all hints, revealed or locked */}
           <View style={styles.hintsContainer}>
