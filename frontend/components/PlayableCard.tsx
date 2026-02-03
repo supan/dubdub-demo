@@ -125,6 +125,10 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
   // Autoplay video when navigating to a new video question
   useEffect(() => {
     const autoplayVideo = async () => {
+      // Reset video state for new playable
+      setVideoFinished(false);
+      setIsReplaying(false);
+      
       if (videoRef.current && isVideoType) {
         try {
           await videoRef.current.setPositionAsync(0);
