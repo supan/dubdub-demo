@@ -14,12 +14,8 @@ export default function LoginScreen() {
   const [devLoading, setDevLoading] = useState(false);
 
   const navigateAfterLogin = (userData: any) => {
-    // Check if user has completed onboarding
-    if (!userData.onboarding_complete) {
-      router.replace('/onboarding');
-    } else {
-      router.replace('/feed');
-    }
+    // Skip onboarding - show all playables to everyone
+    router.replace('/feed');
   };
 
   const devLogin = async () => {
