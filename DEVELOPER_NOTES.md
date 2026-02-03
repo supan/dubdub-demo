@@ -1,6 +1,60 @@
 # Developer Notes - DubDub App
 
-## 🔴 CRITICAL: API Schema Maintenance
+## 🔴 CRITICAL: Adding New Playable Formats
+
+**When adding a NEW playable type/format, you MUST do ALL of the following:**
+
+### 1. Backend Updates (`/app/backend/server.py`)
+- [ ] Add type to `AddPlayableRequest` model
+- [ ] Add validation in `add-playable` endpoint
+- [ ] Update `get_api_schema()` function - add to enum, add fields, add example
+- [ ] Update `/api/playable-types` endpoint with new type + description
+- [ ] Update `/api/admin/template-formats` endpoint
+
+### 2. Frontend Updates (`/app/frontend/components/PlayableCard.tsx`)
+- [ ] Add rendering logic for new type
+- [ ] **CRITICAL: Use consistent header UI** (see checklist below)
+- [ ] Handle answer submission via `onAnswer(answer, isCorrect)`
+
+### 3. Documentation Updates
+- [ ] Update `/app/API_TEMPLATE.md` with example payload
+- [ ] Update `/app/DEVELOPER_NOTES.md` if needed
+
+---
+
+## 🔴 CRITICAL: UI Consistency Checklist for New Formats
+
+**Every format MUST have consistent header UI:**
+
+```jsx
+// REQUIRED: Category badge (left) + Progress badge (right)
+<View style={styles.topRowStandard}>
+  <View style={styles.categoryBadge}>
+    <Text style={styles.categoryText}>{playable.category}</Text>
+  </View>
+  {totalCount > 0 && (
+    <View style={styles.standardProgressBadge}>
+      <Text style={styles.standardProgressText}>
+        {currentIndex + 1} / {totalCount}
+      </Text>
+    </View>
+  )}
+</View>
+```
+
+**DO NOT:**
+- ❌ Create custom category badge styles
+- ❌ Skip the progress indicator
+- ❌ Use different colors/fonts for category
+
+**DO:**
+- ✅ Use `styles.categoryBadge` and `styles.categoryText`
+- ✅ Use `styles.standardProgressBadge` and `styles.standardProgressText`
+- ✅ Pass `currentIndex` and `totalCount` props
+
+---
+
+## API Schema Maintenance
 
 **When adding NEW playable types, formats, or API fields:**
 
