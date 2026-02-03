@@ -560,41 +560,6 @@ async def get_playables_feed(
                 result_playables.append(p)
         
         return result_playables
-        if len(playables) < limit:
-            # Get any remaining unplayed content
-            fallback_pipeline = [
-                {"$match": category_filter} if category_filter else {"$match": {}},
-                {"$sample": {"size": 200}},
-                {
-                    "$lookup": {
-                        "from": "user_progress",
-                        "let": {"pid": "$playable_id"},
-                        "pipeline": [
-                            {
-                                "$match": {
-                                    "$expr": {
-                                        "$and": [
-                                            {"$eq": ["$playable_id", "$$pid"]},
-                                            {"$eq": ["$user_id", current_user.user_id]}
-                                        ]
-                                    }
-                                }
-                            }
-                        ],
-                        "as": "played"
-                    }
-                },
-                {"$match": {"played": {"$size": 0}}},
-                {"$limit": limit},
-                {"$project": {"played": 0, "_id": 0}}
-            ]
-            
-            if not category_filter:
-                fallback_pipeline = fallback_pipeline[1:]
-            
-            playables = await db.playables.aggregate(fallback_pipeline).to_list(limit)
-        
-        return playables
     except Exception as e:
         logging.error(f"Error fetching playables: {e}")
         raise HTTPException(status_code=500, detail=str(e))
