@@ -561,8 +561,8 @@ async def get_playables_feed(
         
         # Optimized aggregation pipeline
         pipeline = [
-            # 1. Filter by user's selected categories (reduces dataset)
-            {"$match": category_filter} if category_filter else {"$match": {}},
+            # 1. Exclude curated playables and filter by user's selected categories
+            {"$match": {**curated_filter, **category_filter}} if category_filter else {"$match": curated_filter},
             
             # 2. Random sample FIRST - get 100 candidates (fast)
             {"$sample": {"size": 100}},
@@ -591,10 +591,10 @@ async def get_playables_feed(
             # 4. Keep only unplayed (empty played array)
             {"$match": {"played": {"$size": 0}}},
             
-            # 5. Add variety score (TEMP: includes this_or_that boost)
+            # 5. Add variety score
             {
                 "$addFields": {
-                    "variety_score": {"$add": [category_score, format_score, this_or_that_boost]}
+                    "variety_score": {"$add": [category_score, format_score]}
                 }
             },
             
