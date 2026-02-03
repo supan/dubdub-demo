@@ -499,23 +499,65 @@ async def get_playables_feed(
     """Get playables feed with variety optimization
     
     Uses a smart selection algorithm:
-    1. Sample random candidates from user's selected categories
-    2. Filter out already played
-    3. Score by variety (different category/format from last played)
-    4. Return top scoring playables
+    1. First serve curated demo playables in order (if not played/skipped)
+    2. Then sample random candidates from user's selected categories
+    3. Filter out already played
+    4. Score by variety (different category/format from last played)
+    5. Return top scoring playables
     """
     try:
+        # ============ CURATED DEMO PLAYABLES (HARDCODED ORDER) ============
+        # These 10 playables will be shown first, in this exact order
+        CURATED_PLAYABLE_IDS = [
+            "play_fbf745c05db8",   # 1. Bollywood
+            "play_9c2d0aedae90",   # 2. Indian PM no confidence
+            "play_79d9fe88f784",   # 3. Australia Capital
+            "play_1fdb01350d05",   # 4. Right or Wrong logo (This or That)
+            "play_87f944dcfcb1",   # 5. Maths Puzzle
+            "play_520619533384",   # 6. Chess Mate in 2
+            "play_9ddad6ff412e",   # 7. Cricket (Guess in 5)
+            "play_3db9f04a1b9b",   # 8. AI or not
+            "play_ae527aa40493",   # 9. Quick Estimation
+            "play_8b45d1dfbb71",   # 10. Grammy
+        ]
+        
+        # Get user's played/skipped playable IDs
+        played_records = await db.user_progress.find(
+            {"user_id": current_user.user_id},
+            {"playable_id": 1}
+        ).to_list(length=1000)
+        played_ids = {r["playable_id"] for r in played_records}
+        
+        # Filter curated list to only unplayed ones (preserving order)
+        unplayed_curated_ids = [pid for pid in CURATED_PLAYABLE_IDS if pid not in played_ids]
+        
+        # If there are unplayed curated playables, serve them first
+        if unplayed_curated_ids:
+            # Fetch the unplayed curated playables
+            curated_playables = []
+            for pid in unplayed_curated_ids[:limit]:
+                playable = await db.playables.find_one({"playable_id": pid})
+                if playable:
+                    playable["_id"] = str(playable["_id"])
+                    curated_playables.append(playable)
+            
+            # If we got enough curated playables, return them
+            if curated_playables:
+                return {"playables": curated_playables}
+        
+        # ============ REGULAR FEED (after curated are exhausted) ============
         # Build category filter
         category_filter = {}
         is_dev_user = "supanshah51191" in current_user.email
         if not is_dev_user and current_user.selected_categories and len(current_user.selected_categories) > 0:
             category_filter["category"] = {"$in": current_user.selected_categories}
         
+        # Exclude curated playables from regular feed (they're already handled)
+        curated_filter = {"playable_id": {"$nin": CURATED_PLAYABLE_IDS}}
+        
         # Build variety scoring expressions
         category_score = {"$cond": [{"$ne": ["$category", last_category or ""]}, 2, 0]}
         format_score = {"$cond": [{"$ne": ["$type", last_format or ""]}, 1, 0]}
-        # TEMP: Boost this_or_that to top for testing
-        this_or_that_boost = {"$cond": [{"$eq": ["$type", "this_or_that"]}, 100, 0]}
         
         # Optimized aggregation pipeline
         pipeline = [
