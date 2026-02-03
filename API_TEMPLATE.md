@@ -10,6 +10,7 @@
    - Add new type to `"enum"` in `playable_schema.required_fields.type`
    - Add new fields to `optional_fields` if applicable
    - Add example payload in `example_payloads` section
+   - Update `/api/playable-types` endpoint
    - Increment `version` number
 
 2. **Update this Documentation** (`/app/API_TEMPLATE.md`):
@@ -18,7 +19,7 @@
    - Update field reference tables if needed
 
 3. **Files to Update Checklist**:
-   - [ ] `/app/backend/server.py` - Schema API endpoint
+   - [ ] `/app/backend/server.py` - Schema API endpoint + playable-types endpoint
    - [ ] `/app/API_TEMPLATE.md` - This file
    - [ ] Frontend components if new rendering logic needed
 
@@ -27,6 +28,51 @@
 ## Base URL
 - **Preview:** `https://your-app.preview.emergent.sh`
 - **Production:** `https://your-app.emergent.host`
+
+---
+
+## Quick Reference Endpoints (No Auth Required)
+
+### Get All Playable Types with Descriptions
+```http
+GET /api/playable-types
+```
+
+**Response:**
+```json
+{
+  "types": [
+    {
+      "id": "text",
+      "name": "Text",
+      "description": "Text-only question",
+      "supported_answer_types": ["mcq", "text_input"]
+    },
+    {
+      "id": "guess_the_x",
+      "name": "Guess the X",
+      "description": "5 hints • Next hint revealed on wrong answer",
+      "supported_answer_types": ["text_input"],
+      "required_fields": ["hints"],
+      "hints_count": "3-5"
+    },
+    {
+      "id": "this_or_that",
+      "name": "This or That",
+      "description": "Two images • Tap to select the correct one",
+      "supported_answer_types": ["tap_select"],
+      "required_fields": ["image_left_url", "image_right_url", "label_left", "label_right"]
+    }
+    // ... more types
+  ]
+}
+```
+
+### Get API Schema
+```http
+GET /api/docs/schema
+```
+Returns full API documentation including all endpoints, field schemas, and example payloads.
 
 ---
 
