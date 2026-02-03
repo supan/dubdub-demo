@@ -458,10 +458,24 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
     
     return (
       <View style={styles.thisOrThatContainer}>
-        {/* Header with Category Badge */}
+        {/* ============================================================
+            IMPORTANT: Keep header UI consistent with other formats!
+            - Category badge (left) + Progress badge (right)
+            - Use styles.categoryBadge and styles.categoryText
+            - Use styles.standardProgressBadge and styles.standardProgressText
+            ============================================================ */}
         <View style={styles.thisOrThatHeader}>
-          <View style={[styles.categoryBadge, { backgroundColor: 'rgba(0, 255, 135, 0.15)' }]}>
-            <Text style={styles.categoryBadgeText}>{playable.category}</Text>
+          <View style={styles.topRowStandard}>
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryText}>{playable.category}</Text>
+            </View>
+            {totalCount > 0 && (
+              <View style={styles.standardProgressBadge}>
+                <Text style={styles.standardProgressText}>
+                  {currentIndex + 1} / {totalCount}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
         
