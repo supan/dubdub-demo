@@ -2079,15 +2079,83 @@ async def bulk_upload_playables(
 
 @api_router.get("/admin/template-formats")
 async def get_template_formats(_: bool = Depends(verify_admin_token)):
-    """Get list of available template formats"""
+    """Get list of available template formats with descriptions"""
     return {
         "formats": [
-            {"id": "text_mcq", "name": "Text + MCQ", "description": "Text question with 4 multiple choice options"},
-            {"id": "text_input", "name": "Text + Text Input", "description": "Text question with typed answer"},
-            {"id": "image_mcq", "name": "Image + MCQ", "description": "Image with text question and 4 MCQ options"},
-            {"id": "image_text_input", "name": "Image + Text Input", "description": "Image with text question and typed answer"},
-            {"id": "video_mcq", "name": "Video + MCQ", "description": "Video with text question and 4 MCQ options"},
-            {"id": "video_text_input", "name": "Video + Text Input", "description": "Video with text question and typed answer"},
+            {"id": "text", "name": "Text", "description": "Text-only question"},
+            {"id": "image", "name": "Image", "description": "Image-based question"},
+            {"id": "video", "name": "Video", "description": "Video-based question"},
+            {"id": "image_text", "name": "Image + Text", "description": "Image with text question"},
+            {"id": "video_text", "name": "Video + Text", "description": "Video with text question"},
+            {"id": "guess_the_x", "name": "Guess the X", "description": "5 hints • Next hint revealed on wrong answer"},
+            {"id": "chess_mate_in_2", "name": "Chess Mate in 2", "description": "Chess puzzle - find mate in 2 moves"},
+            {"id": "this_or_that", "name": "This or That", "description": "Two images • Tap to select the correct one"},
+        ],
+        "answer_types": [
+            {"id": "mcq", "name": "Multiple Choice", "description": "4 options to choose from"},
+            {"id": "text_input", "name": "Text Input", "description": "User types the answer"},
+            {"id": "tap_select", "name": "Tap Select", "description": "User taps to select (for This or That)"},
+        ]
+    }
+
+# Public endpoint to get playable types (no auth required - for agents)
+@api_router.get("/playable-types")
+async def get_playable_types():
+    """Get all playable types with descriptions (public endpoint for agents)"""
+    return {
+        "types": [
+            {
+                "id": "text",
+                "name": "Text",
+                "description": "Text-only question",
+                "supported_answer_types": ["mcq", "text_input"]
+            },
+            {
+                "id": "image",
+                "name": "Image",
+                "description": "Image-based question",
+                "supported_answer_types": ["mcq", "text_input"]
+            },
+            {
+                "id": "video",
+                "name": "Video",
+                "description": "Video-based question",
+                "supported_answer_types": ["mcq", "text_input"]
+            },
+            {
+                "id": "image_text",
+                "name": "Image + Text",
+                "description": "Image with text question",
+                "supported_answer_types": ["mcq", "text_input"]
+            },
+            {
+                "id": "video_text",
+                "name": "Video + Text",
+                "description": "Video with text question",
+                "supported_answer_types": ["mcq", "text_input"]
+            },
+            {
+                "id": "guess_the_x",
+                "name": "Guess the X",
+                "description": "5 hints • Next hint revealed on wrong answer",
+                "supported_answer_types": ["text_input"],
+                "required_fields": ["hints"],
+                "hints_count": "3-5"
+            },
+            {
+                "id": "chess_mate_in_2",
+                "name": "Chess Mate in 2",
+                "description": "Chess puzzle - find mate in 2 moves",
+                "supported_answer_types": ["text_input"],
+                "required_fields": ["fen", "solution"]
+            },
+            {
+                "id": "this_or_that",
+                "name": "This or That",
+                "description": "Two images • Tap to select the correct one",
+                "supported_answer_types": ["tap_select"],
+                "required_fields": ["image_left_url", "image_right_url", "label_left", "label_right"]
+            }
         ]
     }
 
