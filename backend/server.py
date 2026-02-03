@@ -508,18 +508,18 @@ async def get_playables_feed(
     try:
         # ============ CURATED DEMO PLAYABLES (HARDCODED ORDER) ============
         # These 10 playables will be shown first, in this exact order
-        # Points to production database playables
+        # Using playables that exist in PREVIEW database
         CURATED_PLAYABLE_IDS = [
-            "play_fbf745c05db8",   # 1. Bollywood
-            "play_9c2d0aedae90",   # 2. Indian PM no confidence
-            "play_79d9fe88f784",   # 3. Australia Capital
-            "play_1fdb01350d05",   # 4. Right or Wrong logo (This or That)
-            "play_87f944dcfcb1",   # 5. Maths Puzzle
-            "play_520619533384",   # 6. Chess Mate in 2
-            "play_9ddad6ff412e",   # 7. Cricket (Guess in 5)
-            "play_3db9f04a1b9b",   # 8. AI or not
-            "play_ae527aa40493",   # 9. Quick Estimation
-            "play_8b45d1dfbb71",   # 10. Grammy
+            "play_fbf745c05db8",   # 1. Bollywood - Eyes Don't Lie (video_text)
+            "play_9c2d0aedae90",   # 2. Indian PM (video_text)
+            "play_79d9fe88f784",   # 3. Capital Cities (text)
+            "play_0b19b3bf6664",   # 4. Logo Challenge - This or That
+            "play_87f944dcfcb1",   # 5. Be Careful - Maths Puzzle (video)
+            "play_520619533384",   # 6. Mate in 2 (chess_mate_in_2)
+            "play_9ddad6ff412e",   # 7. Guess the Cricketer (guess_the_x)
+            "play_9127a837e539",   # 8. Spot the Animal (video)
+            "play_ff28267f08ed",   # 9. Guess the Shot (video)
+            "play_8b45d1dfbb71",   # 10. No Grammy? (video_text)
         ]
         
         # Get user's played/skipped playable IDs
