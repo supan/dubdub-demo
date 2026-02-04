@@ -505,16 +505,14 @@ async def get_playables_feed(
         # ============ CURATED DEMO PLAYABLES (HARDCODED ORDER) ============
         # These 10 playables will be shown first, in this exact order
         CURATED_PLAYABLE_IDS = [
-            "play_fbf745c05db8",   # 1. Bollywood
-            "play_9c2d0aedae90",   # 2. Indian PM no confidence
-            "play_79d9fe88f784",   # 3. Australia Capital
-            "play_1fdb01350d05",   # 4. Right or Wrong logo (This or That)
+            "play_0b19b3bf6664",   # 1. Logo Challenge (This or That) - Put first for testing
+            "play_fbf745c05db8",   # 2. Bollywood
+            "play_9c2d0aedae90",   # 3. Indian PM no confidence
+            "play_79d9fe88f784",   # 4. Australia Capital
             "play_87f944dcfcb1",   # 5. Maths Puzzle
             "play_520619533384",   # 6. Chess Mate in 2
             "play_9ddad6ff412e",   # 7. Cricket (Guess in 5)
-            "play_3db9f04a1b9b",   # 8. AI or not
-            "play_ae527aa40493",   # 9. Quick Estimation
-            "play_8b45d1dfbb71",   # 10. Grammy
+            "play_8b45d1dfbb71",   # 8. Grammy
         ]
         
         # Get user's played/skipped playable IDs
