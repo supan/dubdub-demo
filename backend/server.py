@@ -2652,19 +2652,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-@app.on_event("startup")
-async def startup_db_client():
-    """Create indexes for optimized queries"""
-    try:
-        # Index for variety-based feed query (user_progress lookup)
-        await db.user_progress.create_index([("user_id", 1), ("playable_id", 1)])
-        # Index for playable queries
-        await db.playables.create_index([("category", 1)])
-        await db.playables.create_index([("playable_id", 1)])
-        logging.info("Database indexes created successfully")
-    except Exception as e:
-        logging.error(f"Error creating indexes: {e}")
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
+# Note: Startup and shutdown events are defined at the top of the file
+# in the TaskManager section. The following duplicate events have been removed:
+# - startup_db_client() - indexes are now created in startup_event()
+# - shutdown_db_client() - client closure is now handled in shutdown_event()
