@@ -493,8 +493,6 @@ async def select_categories(
 @api_router.get("/playables/feed")
 async def get_playables_feed(
     limit: int = 10,
-    last_category: Optional[str] = None,
-    last_format: Optional[str] = None,
     current_user: User = Depends(require_auth)
 ):
     """Get playables feed - weight-based ranking
