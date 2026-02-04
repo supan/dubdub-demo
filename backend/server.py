@@ -1633,6 +1633,21 @@ async def admin_get_users(_: bool = Depends(verify_admin_token)):
         logging.error(f"Error getting users: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/admin/task-status")
+async def admin_get_task_status(_: bool = Depends(verify_admin_token)):
+    """Get background task manager status (admin only)
+    
+    Returns:
+    - pending_count: Number of tasks currently queued
+    - is_shutdown: Whether shutdown has been initiated
+    """
+    return {
+        "pending_count": task_manager.pending_count,
+        "is_shutdown": task_manager._shutdown,
+        "max_retries": task_manager._max_retries,
+        "retry_delay": task_manager._retry_delay
+    }
+
 @api_router.post("/admin/reconcile-user-stats")
 async def admin_reconcile_user_stats(request: dict, _: bool = Depends(verify_admin_token)):
     """Reconcile user stats from user_progress records (admin only)
