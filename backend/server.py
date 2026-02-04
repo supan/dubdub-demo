@@ -8,7 +8,7 @@ import logging
 import asyncio
 from pathlib import Path
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Set
 import uuid
 from datetime import datetime, timezone, timedelta
 import httpx
@@ -26,6 +26,139 @@ app = FastAPI()
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+# ==================== ASYNC TASK MANAGER ====================
+
+class TaskManager:
+    """
+    Manages background tasks with tracking and graceful shutdown.
+    
+    Features:
+    - Tracks all pending tasks
+    - Ensures tasks complete on shutdown
+    - Retries failed tasks (configurable)
+    - Logs task status for monitoring
+    """
+    
+    def __init__(self, max_retries: int = 2, retry_delay: float = 0.5):
+        self._pending_tasks: Set[asyncio.Task] = set()
+        self._max_retries = max_retries
+        self._retry_delay = retry_delay
+        self._shutdown = False
+        self._lock = asyncio.Lock()
+    
+    async def create_task(self, coro, task_name: str = "unnamed"):
+        """Create and track a background task with retry support"""
+        if self._shutdown:
+            logging.warning(f"Task '{task_name}' rejected - shutdown in progress")
+            return None
+        
+        async def wrapped_task():
+            retries = 0
+            while retries <= self._max_retries:
+                try:
+                    await coro
+                    logging.debug(f"Task '{task_name}' completed successfully")
+                    return
+                except Exception as e:
+                    retries += 1
+                    if retries <= self._max_retries:
+                        logging.warning(f"Task '{task_name}' failed (attempt {retries}/{self._max_retries + 1}): {e}")
+                        await asyncio.sleep(self._retry_delay * retries)  # Exponential backoff
+                    else:
+                        logging.error(f"Task '{task_name}' failed permanently after {self._max_retries + 1} attempts: {e}")
+        
+        task = asyncio.create_task(wrapped_task())
+        
+        async with self._lock:
+            self._pending_tasks.add(task)
+        
+        # Auto-cleanup when task completes
+        task.add_done_callback(lambda t: asyncio.create_task(self._remove_task(t)))
+        
+        return task
+    
+    async def _remove_task(self, task: asyncio.Task):
+        """Remove completed task from tracking set"""
+        async with self._lock:
+            self._pending_tasks.discard(task)
+    
+    @property
+    def pending_count(self) -> int:
+        """Number of tasks still pending"""
+        return len(self._pending_tasks)
+    
+    async def shutdown(self, timeout: float = 10.0):
+        """
+        Graceful shutdown - wait for all pending tasks to complete.
+        
+        Args:
+            timeout: Maximum seconds to wait before force-cancelling tasks
+        """
+        self._shutdown = True
+        
+        if not self._pending_tasks:
+            logging.info("TaskManager: No pending tasks, shutdown complete")
+            return
+        
+        logging.info(f"TaskManager: Waiting for {len(self._pending_tasks)} pending tasks...")
+        
+        try:
+            # Wait for all tasks with timeout
+            async with self._lock:
+                tasks = list(self._pending_tasks)
+            
+            done, pending = await asyncio.wait(
+                tasks,
+                timeout=timeout,
+                return_when=asyncio.ALL_COMPLETED
+            )
+            
+            if pending:
+                logging.warning(f"TaskManager: {len(pending)} tasks didn't complete in time, cancelling...")
+                for task in pending:
+                    task.cancel()
+                # Wait briefly for cancellation
+                await asyncio.gather(*pending, return_exceptions=True)
+            
+            logging.info(f"TaskManager: Shutdown complete. {len(done)} tasks finished, {len(pending)} cancelled")
+            
+        except Exception as e:
+            logging.error(f"TaskManager: Error during shutdown: {e}")
+
+
+# Global task manager instance
+task_manager = TaskManager(max_retries=2, retry_delay=0.5)
+
+
+# ==================== APP LIFECYCLE EVENTS ====================
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize app on startup"""
+    logging.info("Application starting up...")
+    # Create indexes
+    try:
+        await db.users.create_index("user_id", unique=True)
+        await db.users.create_index("email", unique=True)
+        await db.playables.create_index("playable_id", unique=True)
+        await db.playables.create_index("category")
+        await db.playables.create_index("weight")
+        await db.user_progress.create_index([("user_id", 1), ("playable_id", 1)], unique=True)
+        await db.sessions.create_index("session_token", unique=True)
+        await db.sessions.create_index("expires_at", expireAfterSeconds=0)
+        logging.info("Database indexes created successfully")
+    except Exception as e:
+        logging.error(f"Error creating indexes: {e}")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Graceful shutdown - ensure all background tasks complete"""
+    logging.info("Application shutting down...")
+    await task_manager.shutdown(timeout=10.0)
+    logging.info("Shutdown complete")
+
 
 # ==================== MODELS ====================
 
