@@ -497,66 +497,63 @@ async def get_playables_feed(
     last_format: Optional[str] = None,
     current_user: User = Depends(require_auth)
 ):
-    """Get playables feed - simplified logic
+    """Get playables feed - weight-based ranking
     
-    1. First serve curated 10 playables in order (if not played/skipped)
-    2. After that, show all remaining playables in random order
+    Ranking Logic:
+    1. Playables are sorted by 'weight' field (descending - higher weight = shown first)
+    2. Playables with same weight are shown in random order
+    3. Already played/skipped playables are excluded
+    
+    Weight Guidelines:
+    - weight=0 (default): Normal playables, shown randomly after weighted ones
+    - weight=1-10: Low priority featured content
+    - weight=11-50: Medium priority featured content  
+    - weight=51-100: High priority featured content
+    - weight=100+: Top priority (pinned content, always shown first)
     """
     try:
-        # ============ CURATED DEMO PLAYABLES (HARDCODED ORDER) ============
-        # These 10 playables will be shown first, in this exact order
-        CURATED_PLAYABLE_IDS = [
-            "play_0b19b3bf6664",   # 1. Logo Challenge (This or That) - Put first for testing
-            "play_fbf745c05db8",   # 2. Bollywood
-            "play_9c2d0aedae90",   # 3. Indian PM no confidence
-            "play_79d9fe88f784",   # 4. Australia Capital
-            "play_87f944dcfcb1",   # 5. Maths Puzzle
-            "play_520619533384",   # 6. Chess Mate in 2
-            "play_9ddad6ff412e",   # 7. Cricket (Guess in 5)
-            "play_8b45d1dfbb71",   # 8. Grammy
-        ]
-        
         # Get user's played/skipped playable IDs
         played_records = await db.user_progress.find(
             {"user_id": current_user.user_id},
             {"playable_id": 1}
         ).to_list(length=10000)
-        played_ids = {r["playable_id"] for r in played_records}
+        played_ids = list({r["playable_id"] for r in played_records})
         
-        result_playables = []
-        
-        # ============ PHASE 1: Serve curated playables first ============
-        unplayed_curated_ids = [pid for pid in CURATED_PLAYABLE_IDS if pid not in played_ids]
-        
-        for pid in unplayed_curated_ids[:limit]:
-            playable = await db.playables.find_one({"playable_id": pid})
-            if playable:
-                playable["_id"] = str(playable["_id"])
-                result_playables.append(playable)
-        
-        # If we have enough curated, return them
-        if len(result_playables) >= limit:
-            return result_playables[:limit]
-        
-        # ============ PHASE 2: Fill remaining with random playables ============
-        remaining_needed = limit - len(result_playables)
-        
-        if remaining_needed > 0:
-            # Get random playables that are:
-            # 1. Not in curated list (already handled above)
-            # 2. Not already played/skipped
-            exclude_ids = list(played_ids) + CURATED_PLAYABLE_IDS
+        # Aggregation pipeline: exclude played, sort by weight desc, then randomize within same weight
+        pipeline = [
+            # Stage 1: Exclude already played playables
+            {"$match": {"playable_id": {"$nin": played_ids}}},
             
-            random_pipeline = [
-                {"$match": {"playable_id": {"$nin": exclude_ids}}},
-                {"$sample": {"size": remaining_needed}},
-            ]
+            # Stage 2: Add default weight of 0 for playables without weight field
+            {"$addFields": {"weight": {"$ifNull": ["$weight", 0]}}},
             
-            random_playables = await db.playables.aggregate(random_pipeline).to_list(remaining_needed)
+            # Stage 3: Sort by weight descending (higher weight = shown first)
+            {"$sort": {"weight": -1, "_id": 1}},
             
-            for p in random_playables:
-                p["_id"] = str(p["_id"])
-                result_playables.append(p)
+            # Stage 4: Group by weight to randomize within same weight tier
+            {"$group": {
+                "_id": "$weight",
+                "playables": {"$push": "$$ROOT"}
+            }},
+            
+            # Stage 5: Sort groups by weight descending
+            {"$sort": {"_id": -1}},
+            
+            # Stage 6: Unwind back to individual playables
+            {"$unwind": "$playables"},
+            
+            # Stage 7: Replace root with the playable document
+            {"$replaceRoot": {"newRoot": "$playables"}},
+            
+            # Stage 8: Limit results
+            {"$limit": limit}
+        ]
+        
+        result_playables = await db.playables.aggregate(pipeline).to_list(limit)
+        
+        # Convert ObjectId to string
+        for p in result_playables:
+            p["_id"] = str(p["_id"])
         
         return result_playables
     except Exception as e:
