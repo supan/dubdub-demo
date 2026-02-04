@@ -61,6 +61,7 @@ class Playable(BaseModel):
     answer_explanation: Optional[str] = None  # Brief explanation of the answer
     hints: Optional[List[str]] = None  # For guess_the_x: 3-5 hints revealed progressively
     difficulty: str = "medium"
+    weight: int = 0  # Ranking weight: higher = shown first (0 = default/lowest priority)
     created_at: datetime
 
 class AnswerSubmission(BaseModel):
