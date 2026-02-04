@@ -1411,6 +1411,7 @@ async def admin_update_playable(playable_id: str, request: AddPlayableRequest, _
             "video_start": request.video_start,
             "video_end": request.video_end,
             "difficulty": request.difficulty,
+            "weight": max(0, request.weight),  # Ensure weight is 0 or positive
             "updated_at": datetime.now(timezone.utc)
         }
         
