@@ -558,13 +558,89 @@ async def get_playables_feed(
         logging.error(f"Error fetching playables: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ==================== ASYNC DATABASE HELPERS ====================
+
+async def save_answer_progress(user_id: str, playable_id: str, is_correct: bool):
+    """Save user progress to database (fire-and-forget)"""
+    try:
+        progress = {
+            "user_id": user_id,
+            "playable_id": playable_id,
+            "answered": True,
+            "correct": is_correct,
+            "timestamp": datetime.now(timezone.utc)
+        }
+        await db.user_progress.insert_one(progress)
+        logging.info(f"Progress saved: user={user_id}, playable={playable_id}, correct={is_correct}")
+    except Exception as e:
+        logging.error(f"Failed to save progress: {e}")
+
+async def update_user_stats(user_id: str, is_correct: bool):
+    """Update user stats in database (fire-and-forget)"""
+    try:
+        user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+        if not user_doc:
+            logging.error(f"User not found for stats update: {user_id}")
+            return
+        
+        new_total_played = user_doc.get("total_played", 0) + 1
+        new_correct_answers = user_doc.get("correct_answers", 0) + (1 if is_correct else 0)
+        
+        if is_correct:
+            new_current_streak = user_doc.get("current_streak", 0) + 1
+            new_best_streak = max(user_doc.get("best_streak", 0), new_current_streak)
+        else:
+            new_current_streak = 0
+            new_best_streak = user_doc.get("best_streak", 0)
+        
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "total_played": new_total_played,
+                "correct_answers": new_correct_answers,
+                "current_streak": new_current_streak,
+                "best_streak": new_best_streak
+            }}
+        )
+        logging.info(f"Stats updated: user={user_id}, total={new_total_played}, streak={new_current_streak}")
+    except Exception as e:
+        logging.error(f"Failed to update user stats: {e}")
+
+async def save_skip_progress(user_id: str, playable_id: str):
+    """Save skip progress to database (fire-and-forget)"""
+    try:
+        progress = {
+            "user_id": user_id,
+            "playable_id": playable_id,
+            "answered": False,
+            "skipped": True,
+            "correct": False,
+            "timestamp": datetime.now(timezone.utc)
+        }
+        await db.user_progress.insert_one(progress)
+        
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$inc": {"skipped": 1}}
+        )
+        logging.info(f"Skip saved: user={user_id}, playable={playable_id}")
+    except Exception as e:
+        logging.error(f"Failed to save skip: {e}")
+
 @api_router.post("/playables/{playable_id}/answer")
 async def submit_answer(
     playable_id: str,
     submission: AnswerSubmission,
     current_user: User = Depends(require_auth)
 ):
-    """Submit answer for a playable"""
+    """Submit answer for a playable
+    
+    Flow:
+    1. Validate answer (synchronous - needed for response)
+    2. Calculate new stats (synchronous - needed for response)
+    3. Return response immediately
+    4. Persist to database (asynchronous - fire and forget)
+    """
     try:
         # Get playable
         playable = await db.playables.find_one(
@@ -575,7 +651,7 @@ async def submit_answer(
         if not playable:
             raise HTTPException(status_code=404, detail="Playable not found")
         
-        # Check answer
+        # Check answer (synchronous - needed for response)
         is_correct = submission.answer.strip().lower() == playable["correct_answer"].strip().lower()
         
         # Also check alternate answers for text input questions
@@ -586,39 +662,25 @@ async def submit_answer(
                     is_correct = True
                     break
         
-        # Save progress
-        progress = {
-            "user_id": current_user.user_id,
-            "playable_id": playable_id,
-            "answered": True,
-            "correct": is_correct,
-            "timestamp": datetime.now(timezone.utc)
-        }
-        await db.user_progress.insert_one(progress)
-        
-        # Update user stats
+        # Calculate new stats (synchronous - needed for response)
         user_doc = await db.users.find_one({"user_id": current_user.user_id}, {"_id": 0})
         
-        new_total_played = user_doc["total_played"] + 1
-        new_correct_answers = user_doc["correct_answers"] + (1 if is_correct else 0)
+        new_total_played = user_doc.get("total_played", 0) + 1
+        new_correct_answers = user_doc.get("correct_answers", 0) + (1 if is_correct else 0)
         
         if is_correct:
-            new_current_streak = user_doc["current_streak"] + 1
-            new_best_streak = max(user_doc["best_streak"], new_current_streak)
+            new_current_streak = user_doc.get("current_streak", 0) + 1
+            new_best_streak = max(user_doc.get("best_streak", 0), new_current_streak)
         else:
             new_current_streak = 0
-            new_best_streak = user_doc["best_streak"]
+            new_best_streak = user_doc.get("best_streak", 0)
         
-        await db.users.update_one(
-            {"user_id": current_user.user_id},
-            {"$set": {
-                "total_played": new_total_played,
-                "correct_answers": new_correct_answers,
-                "current_streak": new_current_streak,
-                "best_streak": new_best_streak
-            }}
-        )
+        # Fire-and-forget: Persist to database asynchronously
+        # These run in background and don't block the response
+        asyncio.create_task(save_answer_progress(current_user.user_id, playable_id, is_correct))
+        asyncio.create_task(update_user_stats(current_user.user_id, is_correct))
         
+        # Return immediately with calculated results
         return {
             "correct": is_correct,
             "correct_answer": playable["correct_answer"],
