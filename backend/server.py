@@ -1432,6 +1432,74 @@ async def admin_get_users(_: bool = Depends(verify_admin_token)):
         logging.error(f"Error getting users: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/admin/reconcile-user-stats")
+async def admin_reconcile_user_stats(request: dict, _: bool = Depends(verify_admin_token)):
+    """Reconcile user stats from user_progress records (admin only)
+    
+    This fixes any mismatch between user_progress records and users.total_played
+    """
+    try:
+        email = request.get("email")
+        if not email:
+            raise HTTPException(status_code=400, detail="Email is required")
+        
+        # Find user
+        user = await db.users.find_one({"email": email})
+        if not user:
+            raise HTTPException(status_code=404, detail=f"User with email {email} not found")
+        
+        user_id = user["user_id"]
+        
+        # Count actual progress records (excluding skipped)
+        answered_records = await db.user_progress.find({
+            "user_id": user_id,
+            "answered": True
+        }).to_list(10000)
+        
+        total_played = len(answered_records)
+        correct_answers = sum(1 for r in answered_records if r.get("correct", False))
+        
+        # Get skipped count
+        skipped_records = await db.user_progress.find({
+            "user_id": user_id,
+            "skipped": True
+        }).to_list(10000)
+        skipped_count = len(skipped_records)
+        
+        # Update user record
+        old_stats = {
+            "total_played": user.get("total_played", 0),
+            "correct_answers": user.get("correct_answers", 0),
+            "skipped": user.get("skipped", 0)
+        }
+        
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "total_played": total_played,
+                "correct_answers": correct_answers,
+                "skipped": skipped_count
+            }}
+        )
+        
+        return {
+            "success": True,
+            "email": email,
+            "user_id": user_id,
+            "old_stats": old_stats,
+            "new_stats": {
+                "total_played": total_played,
+                "correct_answers": correct_answers,
+                "skipped": skipped_count
+            },
+            "message": f"Reconciled stats: {total_played} played, {correct_answers} correct, {skipped_count} skipped"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error reconciling user stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ==================== ADMIN CATEGORY MANAGEMENT ====================
 
 @api_router.get("/admin/categories")
