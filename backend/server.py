@@ -1386,7 +1386,12 @@ async def admin_reset_user_progress(
     request: AdminResetProgressRequest,
     _: bool = Depends(verify_admin_token)
 ):
-    """Reset progress for a specific user by email (admin only)"""
+    """Reset progress for a specific user by email (admin only)
+    
+    This will:
+    1. Delete all entries from user_progress collection
+    2. Reset all stats in users collection to zero
+    """
     try:
         # Find user by email
         user = await db.users.find_one({"email": request.email})
@@ -1395,24 +1400,26 @@ async def admin_reset_user_progress(
         
         user_id = user.get("user_id", str(user.get("_id")))
         
-        # Delete user's progress
+        # Delete ALL user's progress entries (both answered and skipped)
         deleted = await db.user_progress.delete_many({"user_id": user_id})
         
-        # Reset user stats
+        # Reset ALL user stats to zero
         await db.users.update_one(
             {"email": request.email},
             {"$set": {
                 "total_played": 0,
                 "correct_answers": 0,
                 "current_streak": 0,
-                "best_streak": 0
+                "best_streak": 0,
+                "skipped": 0
             }}
         )
         
         return {
             "success": True,
-            "message": f"Progress reset for {request.email}",
-            "deleted_progress_count": deleted.deleted_count
+            "message": f"Progress fully reset for {request.email}",
+            "deleted_progress_count": deleted.deleted_count,
+            "stats_reset": ["total_played", "correct_answers", "current_streak", "best_streak", "skipped"]
         }
     
     except HTTPException:
