@@ -901,7 +901,14 @@ async def skip_playable(
     playable_id: str,
     current_user: User = Depends(require_auth)
 ):
-    """Skip a playable without affecting streak"""
+    """Skip a playable without affecting streak
+    
+    Flow:
+    1. Validate playable exists (synchronous)
+    2. Get current stats (synchronous - needed for response)
+    3. Return response immediately
+    4. Persist to database (asynchronous - fire and forget)
+    """
     try:
         # Get playable to verify it exists
         playable = await db.playables.find_one(
@@ -912,31 +919,20 @@ async def skip_playable(
         if not playable:
             raise HTTPException(status_code=404, detail="Playable not found")
         
-        # Save progress as skipped (so it doesn't appear again)
-        progress = {
-            "user_id": current_user.user_id,
-            "playable_id": playable_id,
-            "answered": False,
-            "skipped": True,
-            "correct": False,
-            "timestamp": datetime.now(timezone.utc)
-        }
-        await db.user_progress.insert_one(progress)
-        
-        # Update user's skipped count (streak stays the same)
-        await db.users.update_one(
-            {"user_id": current_user.user_id},
-            {"$inc": {"skipped": 1}}
-        )
-        
-        # Get updated user stats
+        # Get current user stats for response
         user_doc = await db.users.find_one({"user_id": current_user.user_id}, {"_id": 0})
+        current_streak = user_doc.get("current_streak", 0)
+        current_skipped = user_doc.get("skipped", 0)
         
+        # Fire-and-forget: Persist skip to database asynchronously
+        asyncio.create_task(save_skip_progress(current_user.user_id, playable_id))
+        
+        # Return immediately
         return {
             "skipped": True,
             "playable_id": playable_id,
-            "current_streak": user_doc.get("current_streak", 0),
-            "total_skipped": user_doc.get("skipped", 1)
+            "current_streak": current_streak,
+            "total_skipped": current_skipped + 1  # Optimistic update
         }
     
     except HTTPException:
