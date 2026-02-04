@@ -1234,23 +1234,32 @@ async def seed_data():
 
 @api_router.delete("/user/reset-progress")
 async def reset_user_progress(current_user: User = Depends(require_auth)):
-    """Reset current user's progress (for testing)"""
+    """Reset current user's progress (for Play Again feature)
+    
+    This will:
+    1. Delete all entries from user_progress collection
+    2. Reset all stats in users collection to zero
+    """
     try:
-        # Delete user's progress
-        await db.user_progress.delete_many({"user_id": current_user.user_id})
+        # Delete ALL user's progress entries
+        deleted = await db.user_progress.delete_many({"user_id": current_user.user_id})
         
-        # Reset user stats
+        # Reset ALL user stats to zero
         await db.users.update_one(
             {"user_id": current_user.user_id},
             {"$set": {
                 "total_played": 0,
                 "correct_answers": 0,
                 "current_streak": 0,
-                "best_streak": 0
+                "best_streak": 0,
+                "skipped": 0
             }}
         )
         
-        return {"message": "Progress reset successfully"}
+        return {
+            "message": "Progress reset successfully",
+            "deleted_progress_count": deleted.deleted_count
+        }
     
     except Exception as e:
         logging.error(f"Error resetting progress: {e}")
