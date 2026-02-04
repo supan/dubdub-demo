@@ -1987,8 +1987,13 @@ async def admin_get_stats(date: str = None, _: bool = Depends(verify_admin_token
             # Filter progress for this user on target date
             user_progress = [p for p in progress_records if p.get("user_id") == user_id]
             
-            played_count = len(user_progress)
-            correct_count = sum(1 for p in user_progress if p.get("correct", False))
+            # Separate answered vs skipped
+            answered_progress = [p for p in user_progress if p.get("answered", False)]
+            skipped_progress = [p for p in user_progress if p.get("skipped", False)]
+            
+            played_count = len(answered_progress)
+            skipped_count = len(skipped_progress)
+            correct_count = sum(1 for p in answered_progress if p.get("correct", False))
             incorrect_count = played_count - correct_count
             
             # Calculate accuracy
@@ -1999,6 +2004,7 @@ async def admin_get_stats(date: str = None, _: bool = Depends(verify_admin_token
                 "email": email,
                 "name": name,
                 "played": played_count,
+                "skipped": skipped_count,
                 "correct": correct_count,
                 "incorrect": incorrect_count,
                 "accuracy": accuracy,
@@ -2006,6 +2012,7 @@ async def admin_get_stats(date: str = None, _: bool = Depends(verify_admin_token
                 "best_streak": user.get("best_streak", 0),
                 "total_played_all_time": user.get("total_played", 0),
                 "total_correct_all_time": user.get("correct_answers", 0),
+                "total_skipped_all_time": user.get("skipped", 0),
             })
         
         # Sort by played count (descending)
