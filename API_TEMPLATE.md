@@ -244,7 +244,8 @@ The API accepts flat fields which are internally converted to nested `question` 
   "options": ["Au", "Ag", "Fe", "Cu"],
   "correct_answer": "Au",
   "answer_explanation": "Au comes from the Latin word 'Aurum'",
-  "difficulty": "easy"
+  "difficulty": "easy",
+  "weight": 50
 }
 ```
 
@@ -259,7 +260,8 @@ The API accepts flat fields which are internally converted to nested `question` 
   "correct_answer": "Paris",
   "alternate_answers": ["paris", "PARIS"],
   "answer_explanation": "Paris has been the capital since 987 AD",
-  "difficulty": "easy"
+  "difficulty": "easy",
+  "weight": 0
 }
 ```
 
