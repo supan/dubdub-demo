@@ -1323,6 +1323,7 @@ async def admin_add_playable(
             "video_start": request.video_start if request.type in ["video", "video_text"] else None,
             "video_end": request.video_end if request.type in ["video", "video_text"] else None,
             "difficulty": request.difficulty,
+            "weight": max(0, request.weight),  # Ensure weight is 0 or positive
             "created_at": datetime.now(timezone.utc)
         }
         
