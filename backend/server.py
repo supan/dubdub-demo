@@ -1127,6 +1127,7 @@ class AddPlayableRequest(BaseModel):
     label_left: Optional[str] = None  # Label for left image (used for answer matching)
     label_right: Optional[str] = None  # Label for right image (used for answer matching)
     difficulty: str = "medium"
+    weight: int = 0  # Ranking weight: 0 or positive integer. Higher = shown first
 
 @api_router.post("/admin/login")
 async def admin_login(request: AdminLoginRequest):
