@@ -1064,8 +1064,11 @@ async def skip_playable(
         current_streak = user_doc.get("current_streak", 0)
         current_skipped = user_doc.get("skipped", 0)
         
-        # Fire-and-forget: Persist skip to database asynchronously
-        asyncio.create_task(save_skip_progress(current_user.user_id, playable_id))
+        # Fire-and-forget: Persist skip to database asynchronously with tracking
+        await task_manager.create_task(
+            save_skip_progress(current_user.user_id, playable_id),
+            task_name=f"save_skip:{current_user.user_id}:{playable_id}"
+        )
         
         # Return immediately
         return {
