@@ -443,6 +443,24 @@ Authorization: Bearer <admin_token>
 | `fen` | string | null | Chess position in FEN notation (for chess_mate_in_2 only) |
 | `solution` | array | null | Chess moves in UCI format (for chess_mate_in_2 only) |
 | `difficulty` | string | `"medium"` | One of: `easy`, `medium`, `hard` |
+| `weight` | integer | `0` | Ranking weight (0 or positive). Higher = shown first in feed |
+
+### Weight Field Guidelines
+
+The `weight` field controls the order playables appear in the user's feed:
+
+| Weight Range | Priority | Use Case |
+|--------------|----------|----------|
+| `0` | Default | Normal playables, shown after weighted ones |
+| `1-10` | Low | Slightly promoted content |
+| `11-50` | Medium | Featured content |
+| `51-100` | High | Premium/sponsored content |
+| `100+` | Top | Pinned content, always shown first |
+
+**Behavior:**
+- Playables are sorted by weight (descending)
+- Playables with same weight appear in random order
+- Already played/skipped playables are excluded
 
 ---
 
