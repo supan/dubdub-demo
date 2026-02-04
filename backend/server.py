@@ -2020,8 +2020,9 @@ async def admin_get_stats(date: str = None, _: bool = Depends(verify_admin_token
         
         # Calculate totals
         total_played = sum(u["played"] for u in user_stats)
+        total_skipped = sum(u["skipped"] for u in user_stats)
         total_correct = sum(u["correct"] for u in user_stats)
-        active_users = sum(1 for u in user_stats if u["played"] > 0)
+        active_users = sum(1 for u in user_stats if u["played"] > 0 or u["skipped"] > 0)
         
         return {
             "date": target_date.strftime("%Y-%m-%d"),
@@ -2029,6 +2030,7 @@ async def admin_get_stats(date: str = None, _: bool = Depends(verify_admin_token
                 "total_users": len(all_users),
                 "active_users": active_users,
                 "total_played": total_played,
+                "total_skipped": total_skipped,
                 "total_correct": total_correct,
                 "overall_accuracy": round((total_correct / total_played * 100), 1) if total_played > 0 else 0
             },
