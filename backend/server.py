@@ -809,10 +809,16 @@ async def submit_answer(
             new_current_streak = 0
             new_best_streak = user_doc.get("best_streak", 0)
         
-        # Fire-and-forget: Persist to database asynchronously
-        # These run in background and don't block the response
-        asyncio.create_task(save_answer_progress(current_user.user_id, playable_id, is_correct))
-        asyncio.create_task(update_user_stats(current_user.user_id, is_correct))
+        # Fire-and-forget: Persist to database asynchronously with tracking
+        # TaskManager ensures tasks complete on shutdown and retries on failure
+        await task_manager.create_task(
+            save_answer_progress(current_user.user_id, playable_id, is_correct),
+            task_name=f"save_progress:{current_user.user_id}:{playable_id}"
+        )
+        await task_manager.create_task(
+            update_user_stats(current_user.user_id, is_correct),
+            task_name=f"update_stats:{current_user.user_id}"
+        )
         
         # Return immediately with calculated results
         return {
