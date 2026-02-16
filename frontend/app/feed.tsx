@@ -310,8 +310,9 @@ export default function FeedScreen() {
     const hasNoMore = noMorePlayablesRef.current;
     
     // If showing set feedback AND no more playables, swipe should do nothing
+    // (User is on final summary screen - nowhere to go)
     if (isShowingSetFeedback && hasNoMore) {
-      console.log('[Feed] Swipe blocked - no more playables');
+      console.log('[Feed] Swipe blocked - on final summary, no more playables');
       return;
     }
     
@@ -331,12 +332,6 @@ export default function FeedScreen() {
         // Fetch more playables
         await fetchMoreIfNeeded();
       });
-      return;
-    }
-    
-    // If on last playable and no more available, block swipe
-    if (idx >= items.length - 1 && hasNoMore) {
-      console.log('[Feed] Swipe blocked - on last playable');
       return;
     }
     
