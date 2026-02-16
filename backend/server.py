@@ -651,6 +651,9 @@ async def get_playables_feed(
         ).to_list(length=10000)
         played_ids = list({r["playable_id"] for r in played_records})
         
+        # DEBUG: Log what we're excluding
+        logging.info(f"Feed for user {current_user.user_id}: excluding {len(played_ids)} playables: {played_ids[:5]}...")
+        
         # Aggregation pipeline: exclude played, sort by weight desc, then randomize within same weight
         pipeline = [
             # Stage 1: Exclude already played playables
