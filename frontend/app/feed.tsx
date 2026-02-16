@@ -156,8 +156,15 @@ export default function FeedScreen() {
         setSetStartIndex(0);
         setNoMorePlayables(newPlayables.length < 10);
       } else {
-        // Append new playables
-        setPlayables(prev => [...prev, ...newPlayables]);
+        // Append new playables, but DEDUPLICATE to prevent showing same playable twice
+        setPlayables(prev => {
+          const existingIds = new Set(prev.map(p => p.playable_id));
+          const uniqueNewPlayables = newPlayables.filter(
+            (p: Playable) => !existingIds.has(p.playable_id)
+          );
+          console.log(`[Feed] Appending ${uniqueNewPlayables.length} new playables (${newPlayables.length - uniqueNewPlayables.length} duplicates filtered)`);
+          return [...prev, ...uniqueNewPlayables];
+        });
         if (newPlayables.length < 5) {
           setNoMorePlayables(true);
         }
