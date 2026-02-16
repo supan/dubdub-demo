@@ -771,9 +771,9 @@ async def submit_answer(
     
     Flow:
     1. Validate answer (synchronous - needed for response)
-    2. Calculate new stats (synchronous - needed for response)
-    3. Return response immediately
-    4. Persist to database (asynchronous - fire and forget)
+    2. Save progress SYNCHRONOUSLY (critical for feed filtering)
+    3. Calculate new stats (synchronous - needed for response)
+    4. Update user stats asynchronously (non-critical)
     """
     try:
         # Get playable
@@ -796,6 +796,22 @@ async def submit_answer(
                     is_correct = True
                     break
         
+        # CRITICAL: Save progress SYNCHRONOUSLY to prevent duplicates in feed
+        # This ensures the playable is excluded from the next feed request
+        try:
+            progress = {
+                "user_id": current_user.user_id,
+                "playable_id": playable_id,
+                "answered": True,
+                "correct": is_correct,
+                "timestamp": datetime.now(timezone.utc)
+            }
+            await db.user_progress.insert_one(progress)
+            logging.info(f"Progress saved (sync): user={current_user.user_id}, playable={playable_id}")
+        except Exception as e:
+            # Log but don't fail the request - duplicate key error is OK
+            logging.warning(f"Progress save warning: {e}")
+        
         # Calculate new stats (synchronous - needed for response)
         user_doc = await db.users.find_one({"user_id": current_user.user_id}, {"_id": 0})
         
@@ -809,12 +825,7 @@ async def submit_answer(
             new_current_streak = 0
             new_best_streak = user_doc.get("best_streak", 0)
         
-        # Fire-and-forget: Persist to database asynchronously with tracking
-        # TaskManager ensures tasks complete on shutdown and retries on failure
-        await task_manager.create_task(
-            save_answer_progress(current_user.user_id, playable_id, is_correct),
-            task_name=f"save_progress:{current_user.user_id}:{playable_id}"
-        )
+        # ASYNC: Update user stats (non-critical for feed, can be async)
         await task_manager.create_task(
             update_user_stats(current_user.user_id, is_correct),
             task_name=f"update_stats:{current_user.user_id}"
