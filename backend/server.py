@@ -1056,9 +1056,8 @@ async def skip_playable(
     
     Flow:
     1. Validate playable exists (synchronous)
-    2. Get current stats (synchronous - needed for response)
-    3. Return response immediately
-    4. Persist to database (asynchronous - fire and forget)
+    2. Save skip progress SYNCHRONOUSLY (critical for feed filtering)
+    3. Update user stats asynchronously (non-critical)
     """
     try:
         # Get playable to verify it exists
@@ -1070,15 +1069,40 @@ async def skip_playable(
         if not playable:
             raise HTTPException(status_code=404, detail="Playable not found")
         
+        # CRITICAL: Save skip progress SYNCHRONOUSLY to prevent duplicates in feed
+        try:
+            progress = {
+                "user_id": current_user.user_id,
+                "playable_id": playable_id,
+                "answered": False,
+                "skipped": True,
+                "correct": False,
+                "timestamp": datetime.now(timezone.utc)
+            }
+            await db.user_progress.insert_one(progress)
+            logging.info(f"Skip saved (sync): user={current_user.user_id}, playable={playable_id}")
+        except Exception as e:
+            # Log but don't fail - duplicate key error is OK
+            logging.warning(f"Skip save warning: {e}")
+        
         # Get current user stats for response
         user_doc = await db.users.find_one({"user_id": current_user.user_id}, {"_id": 0})
         current_streak = user_doc.get("current_streak", 0)
         current_skipped = user_doc.get("skipped", 0)
         
-        # Fire-and-forget: Persist skip to database asynchronously with tracking
+        # ASYNC: Update skip count (non-critical)
+        async def update_skip_count():
+            try:
+                await db.users.update_one(
+                    {"user_id": current_user.user_id},
+                    {"$inc": {"skipped": 1}}
+                )
+            except Exception as e:
+                logging.error(f"Failed to update skip count: {e}")
+        
         await task_manager.create_task(
-            save_skip_progress(current_user.user_id, playable_id),
-            task_name=f"save_skip:{current_user.user_id}:{playable_id}"
+            update_skip_count(),
+            task_name=f"update_skip_count:{current_user.user_id}"
         )
         
         # Return immediately
