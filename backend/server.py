@@ -1684,6 +1684,66 @@ async def admin_get_users(_: bool = Depends(verify_admin_token)):
         logging.error(f"Error getting users: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/admin/user-progress/{email}")
+async def admin_get_user_progress(email: str, _: bool = Depends(verify_admin_token)):
+    """Get user progress records for debugging (admin only)"""
+    try:
+        # Find user by email
+        user = await db.users.find_one({"email": email})
+        if not user:
+            raise HTTPException(status_code=404, detail=f"User with email {email} not found")
+        
+        user_id = user.get("user_id")
+        
+        # Get all progress records
+        progress_records = await db.user_progress.find(
+            {"user_id": user_id}
+        ).to_list(1000)
+        
+        # Get all playables for reference
+        all_playables = await db.playables.find({}, {"playable_id": 1, "title": 1, "weight": 1}).to_list(100)
+        playable_map = {p["playable_id"]: p for p in all_playables}
+        
+        # Enrich progress with playable info
+        enriched_progress = []
+        for p in progress_records:
+            playable_info = playable_map.get(p["playable_id"], {})
+            enriched_progress.append({
+                "playable_id": p["playable_id"],
+                "title": playable_info.get("title", "UNKNOWN"),
+                "weight": playable_info.get("weight", 0),
+                "answered": p.get("answered", False),
+                "skipped": p.get("skipped", False),
+                "correct": p.get("correct", False),
+                "timestamp": str(p.get("timestamp", ""))
+            })
+        
+        # Sort by timestamp
+        enriched_progress.sort(key=lambda x: x["timestamp"])
+        
+        # Find which playables are NOT in progress (remaining)
+        progress_ids = {p["playable_id"] for p in progress_records}
+        remaining = [p for p in all_playables if p["playable_id"] not in progress_ids]
+        remaining.sort(key=lambda x: x.get("weight", 0), reverse=True)
+        
+        return {
+            "email": email,
+            "user_id": user_id,
+            "total_playables": len(all_playables),
+            "progress_count": len(progress_records),
+            "remaining_count": len(remaining),
+            "progress": enriched_progress,
+            "remaining_playables": [
+                {"playable_id": p["playable_id"], "title": p.get("title"), "weight": p.get("weight", 0)}
+                for p in remaining
+            ]
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error getting user progress: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/admin/task-status")
 async def admin_get_task_status(_: bool = Depends(verify_admin_token)):
     """Get background task manager status (admin only)
