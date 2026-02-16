@@ -84,12 +84,14 @@ export default function FeedScreen() {
   const currentIndexRef = useRef(currentIndex);
   const playablesRef = useRef(playables);
   const showSetFeedbackRef = useRef(showSetFeedback);
+  const noMorePlayablesRef = useRef(noMorePlayables);
   
   // Keep refs in sync with state
   useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
   useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
   useEffect(() => { playablesRef.current = playables; }, [playables]);
   useEffect(() => { showSetFeedbackRef.current = showSetFeedback; }, [showSetFeedback]);
+  useEffect(() => { noMorePlayablesRef.current = noMorePlayables; }, [noMorePlayables]);
 
   // STATE 1: Auto-skip feedback screen if nothing was attempted (all skipped)
   useEffect(() => {
