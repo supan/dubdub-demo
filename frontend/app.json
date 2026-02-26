@@ -18,7 +18,19 @@
         "backgroundColor": "#0F0F1E"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.emergent.invin"
+      "package": "com.emergent.invin",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "invin"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -37,7 +49,8 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-linking"
     ],
     "experiments": {
       "typedRoutes": true
