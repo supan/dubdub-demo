@@ -1505,14 +1505,22 @@ async def admin_add_playable(
         if request.video_url:
             question["video_url"] = request.video_url
         
+        # Validate type is one of the supported formats
+        SUPPORTED_TYPES = ["text", "image_text", "video_text", "guess_the_x", "chess_mate_in_2", "this_or_that"]
+        if request.type not in SUPPORTED_TYPES:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Unsupported type '{request.type}'. Supported types: {', '.join(SUPPORTED_TYPES)}"
+            )
+        
         # Validate required fields based on type
-        if request.type in ["text", "text_mcq"] and not request.question_text:
+        if request.type == "text" and not request.question_text:
             raise HTTPException(status_code=400, detail="Text question requires question_text")
         
-        if request.type in ["image", "image_text"] and not request.image_url:
+        if request.type == "image_text" and not request.image_url:
             raise HTTPException(status_code=400, detail="Image question requires image_url")
         
-        if request.type in ["video", "video_text"] and not request.video_url:
+        if request.type == "video_text" and not request.video_url:
             raise HTTPException(status_code=400, detail="Video question requires video_url")
         
         # Validate guess_the_x has hints
