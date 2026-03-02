@@ -74,9 +74,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     // Handle deep link when app is running (native only)
     let subscription: { remove: () => void } | null = null;
-    if (Platform.OS !== 'web' && ExpoLinking) {
+    const Linking = getExpoLinking();
+    if (Platform.OS !== 'web' && Linking) {
       try {
-        subscription = ExpoLinking.addEventListener('url', handleDeepLink);
+        subscription = Linking.addEventListener('url', handleDeepLink);
       } catch (e) {
         console.log('Could not add linking listener:', e);
       }
@@ -88,10 +89,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const handleInitialURL = async () => {
-    if (Platform.OS === 'web' || !ExpoLinking) return;
+    const Linking = getExpoLinking();
+    if (Platform.OS === 'web' || !Linking) return;
     
     try {
-      const initialUrl = await ExpoLinking.getInitialURL();
+      const initialUrl = await Linking.getInitialURL();
       if (initialUrl) {
         processAuthURL(initialUrl);
       }
