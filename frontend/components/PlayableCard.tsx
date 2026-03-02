@@ -1521,8 +1521,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.55)',
   },
   glassOptionSelectedVideo: {
-    borderColor: '#00FF87',
-    backgroundColor: 'rgba(0,255,135,0.25)',
+    borderColor: '#00D9FF',
+    backgroundColor: 'rgba(0,217,255,0.25)',
   },
   glassInputWrapperVideo: {
     borderRadius: 12,
