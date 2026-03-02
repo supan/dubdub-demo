@@ -138,6 +138,19 @@ export default function FeedbackOverlay({
             <Text style={styles.psychMessage}>{psychMessage}</Text>
           )}
 
+          {/* Time Display - Only for correct answers */}
+          {correct && timeTaken !== undefined && (
+            <View style={styles.timeContainer}>
+              <View style={styles.timeRow}>
+                <Ionicons name="timer-outline" size={16} color="#00D9FF" />
+                <Text style={styles.timeText}>{timeTaken.toFixed(1)}s</Text>
+              </View>
+              {avgTime !== undefined && (
+                <Text style={styles.avgTimeText}>Avg: {avgTime.toFixed(1)}s</Text>
+              )}
+            </View>
+          )}
+
           {/* Correct Answer (for wrong answers only) */}
           {!correct && correctAnswer && (
             <View style={styles.answerBox}>
