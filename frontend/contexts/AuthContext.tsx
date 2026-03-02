@@ -1,17 +1,22 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import axios from 'axios';
-import { Platform, Linking as RNLinking } from 'react-native';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// Conditionally import expo-linking only on native platforms
-let ExpoLinking: typeof import('expo-linking') | null = null;
-if (Platform.OS !== 'web') {
-  ExpoLinking = require('expo-linking');
-}
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const SESSION_TOKEN_KEY = '@invin_session_token';
+
+// Helper to safely get expo-linking (lazy loaded to avoid web issues)
+const getExpoLinking = () => {
+  if (Platform.OS === 'web') return null;
+  try {
+    return require('expo-linking');
+  } catch (e) {
+    console.log('expo-linking not available');
+    return null;
+  }
+};
 
 interface User {
   user_id: string;
