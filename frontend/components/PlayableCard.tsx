@@ -82,6 +82,7 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
     setVideoFinished(false);
     setIsReplaying(false);
     setWrongGuesses([]);
+    setTimerStartTime(null); // Reset timer
   }, [playable.playable_id]);
 
   // Check if this is a video type playable (needed early for autoplay effect)
