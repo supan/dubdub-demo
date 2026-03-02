@@ -60,8 +60,8 @@ export default function AdminDashboard() {
   const [questionText, setQuestionText] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
-  const [videoStart, setVideoStart] = useState('');  // Start time in seconds (for YouTube clips)
-  const [videoEnd, setVideoEnd] = useState('');      // End time in seconds (for YouTube clips)
+  const [videoStart, setVideoStart] = useState('');  // Start time in seconds
+  const [videoEnd, setVideoEnd] = useState('');      // End time in seconds
   const [options, setOptions] = useState(['', '', '', '']);
   const [correctAnswer, setCorrectAnswer] = useState('');
   const [alternateAnswers, setAlternateAnswers] = useState('');
