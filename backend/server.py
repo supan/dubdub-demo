@@ -2644,15 +2644,15 @@ async def get_api_schema():
                 },
                 "video_url": {
                     "type": "string",
-                    "description": "URL to video - MP4 or YouTube (NOT nested under 'question')"
+                    "description": "URL to video - MP4 format only (NOT nested under 'question')"
                 },
                 "video_start": {
                     "type": "integer",
-                    "description": "Start time in seconds for YouTube clips"
+                    "description": "Start time in seconds for video clips"
                 },
                 "video_end": {
                     "type": "integer",
-                    "description": "End time in seconds for YouTube clips"
+                    "description": "End time in seconds for video clips"
                 },
                 "image_url": {
                     "type": "string",
