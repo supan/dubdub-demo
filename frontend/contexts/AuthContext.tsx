@@ -189,17 +189,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       let redirectUrl: string;
       if (Platform.OS === 'web') {
         redirectUrl = `${BACKEND_URL}/`;
-      } else if (ExpoLinking) {
-        // For native, use expo-linking
-        try {
-          redirectUrl = ExpoLinking.createURL('/');
-        } catch (e) {
-          // Fallback if linking context isn't available
+      } else {
+        const Linking = getExpoLinking();
+        if (Linking) {
+          // For native, use expo-linking
+          try {
+            redirectUrl = Linking.createURL('/');
+          } catch (e) {
+            // Fallback if linking context isn't available
+            redirectUrl = 'invin:///';
+          }
+        } else {
+          // Ultimate fallback
           redirectUrl = 'invin:///';
         }
-      } else {
-        // Ultimate fallback
-        redirectUrl = 'invin:///';
       }
       
       const authUrl = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
