@@ -21,43 +21,6 @@ import ThisOrThatCard from './ThisOrThatCard';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Helper to extract YouTube video ID from URL
-const getYouTubeVideoId = (url: string): string | null => {
-  if (!url) return null;
-  
-  // Match various YouTube URL formats
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\?\/]+)/,
-    /youtube\.com\/watch\?.*v=([^&]+)/,
-  ];
-  
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match && match[1]) {
-      return match[1];
-    }
-  }
-  return null;
-};
-
-// Check if URL is a YouTube URL
-const isYouTubeUrl = (url: string): boolean => {
-  if (!url) return false;
-  return url.includes('youtube.com') || url.includes('youtu.be');
-};
-
-// Timer overlay for YouTube videos (approximate end detection on web)
-const TimerOverlay = ({ duration, onComplete }: { duration: number; onComplete: () => void }) => {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onComplete();
-    }, duration);
-    return () => clearTimeout(timer);
-  }, [duration, onComplete]);
-  
-  return null; // Invisible component
-};
-
 interface PlayableCardProps {
   playable: any;
   onAnswer: (answer: string) => void;
