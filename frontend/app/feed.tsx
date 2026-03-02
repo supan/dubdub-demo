@@ -409,6 +409,8 @@ export default function FeedScreen() {
         category: playable.category,
         categoryCorrectCount: (sessionStats.categoryStats[playable.category] || 0) + (result.correct ? 1 : 0),
         previousStreak: prevStreak,
+        time_taken: timeTaken,
+        avg_time: 5.2, // Placeholder for now - will come from playable data later
       });
       setTotalPlayed(prev => prev + 1);
       setGameState('SHOWING_FEEDBACK');
