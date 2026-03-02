@@ -200,10 +200,12 @@ class Playable(BaseModel):
 
 class AnswerSubmission(BaseModel):
     answer: str
+    time_taken: Optional[float] = None  # Time taken to answer in seconds
 
 class GuessAnswerSubmission(BaseModel):
     answer: str
     hint_number: int  # Which hint the user is on (1-based)
+    time_taken: Optional[float] = None  # Time taken to answer in seconds
 
 class UserProgress(BaseModel):
     user_id: str
