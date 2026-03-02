@@ -1,9 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import * as WebBrowser from 'expo-web-browser';
-import * as Linking from 'expo-linking';
 import axios from 'axios';
 import { Platform, Linking as RNLinking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Conditionally import expo-linking only on native platforms
+let ExpoLinking: typeof import('expo-linking') | null = null;
+if (Platform.OS !== 'web') {
+  ExpoLinking = require('expo-linking');
+}
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const SESSION_TOKEN_KEY = '@invin_session_token';
@@ -34,7 +39,10 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-WebBrowser.maybeCompleteAuthSession();
+// Only call maybeCompleteAuthSession on native
+if (Platform.OS !== 'web') {
+  WebBrowser.maybeCompleteAuthSession();
+}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -44,8 +52,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Handle deep link on cold start
-        await handleInitialURL();
+        // Handle deep link on cold start (native only)
+        if (Platform.OS !== 'web') {
+          await handleInitialURL();
+        }
         
         // Check for existing session on mount
         await checkExistingSession();
@@ -57,15 +67,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     initializeAuth();
     
-    // Handle deep link when app is running
-    // Use try-catch to handle cases where LinkingContext is not available (web preview)
+    // Handle deep link when app is running (native only)
     let subscription: { remove: () => void } | null = null;
-    try {
-      subscription = Linking.addEventListener('url', handleDeepLink);
-    } catch (e) {
-      // Fallback to React Native Linking for web preview
-      console.log('Using fallback linking listener');
-      subscription = RNLinking.addEventListener('url', handleDeepLink);
+    if (Platform.OS !== 'web' && ExpoLinking) {
+      try {
+        subscription = ExpoLinking.addEventListener('url', handleDeepLink);
+      } catch (e) {
+        console.log('Could not add linking listener:', e);
+      }
     }
     
     return () => {
@@ -74,22 +83,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const handleInitialURL = async () => {
+    if (Platform.OS === 'web' || !ExpoLinking) return;
+    
     try {
-      // Try expo-linking first
-      const initialUrl = await Linking.getInitialURL();
+      const initialUrl = await ExpoLinking.getInitialURL();
       if (initialUrl) {
         processAuthURL(initialUrl);
       }
     } catch (e) {
-      // Fallback to React Native Linking for web preview
-      try {
-        const initialUrl = await RNLinking.getInitialURL();
-        if (initialUrl) {
-          processAuthURL(initialUrl);
-        }
-      } catch (e2) {
-        console.log('Could not get initial URL:', e2);
-      }
+      console.log('Could not get initial URL:', e);
     }
   };
 
