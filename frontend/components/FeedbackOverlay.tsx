@@ -22,6 +22,8 @@ interface FeedbackOverlayProps {
   hintsUsed?: number;
   category?: string;
   categoryCorrectCount?: number;
+  timeTaken?: number;  // Time taken in seconds
+  avgTime?: number;    // Average time in seconds (placeholder for now)
 }
 
 // Single psychological message based on context
