@@ -51,6 +51,8 @@ export default function FeedbackOverlay({
   currentStreak = 0,
   previousStreak = 0,
   hintsUsed,
+  timeTaken,
+  avgTime,
 }: FeedbackOverlayProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
