@@ -941,8 +941,8 @@ export default function FeedScreen() {
               </TouchableOpacity>
             )}
             
-            {/* Reset & Reload - Only show on last set */}
-            {isLastSet && (
+            {/* Reset & Reload - Only show for supanpshah@gmail.com on last set */}
+            {isLastSet && user?.email === 'supanpshah@gmail.com' && (
               <TouchableOpacity 
                 style={styles.refreshBtn}
                 onPress={handlePlayAgain}
