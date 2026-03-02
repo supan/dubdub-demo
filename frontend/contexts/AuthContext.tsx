@@ -57,8 +57,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Handle deep link on cold start (native only)
-        if (Platform.OS !== 'web') {
+        // Handle auth callback on web - check URL for session_id
+        if (Platform.OS === 'web') {
+          await handleWebAuthCallback();
+        } else {
+          // Handle deep link on cold start (native only)
           await handleInitialURL();
         }
         
