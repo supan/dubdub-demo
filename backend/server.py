@@ -1348,7 +1348,7 @@ class AdminResetProgressRequest(BaseModel):
     email: str
 
 class AddPlayableRequest(BaseModel):
-    type: str  # "text", "image", "video", "image_text", "video_text", "guess_the_x", "chess_mate_in_2", "this_or_that"
+    type: str  # "text", "image_text", "video_text", "guess_the_x", "chess_mate_in_2", "this_or_that"
     answer_type: str  # "mcq", "text_input", "tap_select"
     category: str
     title: str
