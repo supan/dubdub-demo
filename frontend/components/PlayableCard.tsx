@@ -118,6 +118,30 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
     }
   };
 
+  // Start timer when question becomes visible
+  // For video_text: starts after video finishes
+  // For other types: starts immediately when card is shown
+  useEffect(() => {
+    const shouldStartTimer = () => {
+      // For video types, wait until video finishes
+      if (isVideoType) {
+        return videoFinished;
+      }
+      // For all other types, start immediately
+      return true;
+    };
+
+    if (shouldStartTimer() && !timerStartTime && !hasSubmitted) {
+      setTimerStartTime(Date.now());
+    }
+  }, [isVideoType, videoFinished, timerStartTime, hasSubmitted]);
+
+  // Calculate elapsed time in seconds
+  const getElapsedTime = (): number => {
+    if (!timerStartTime) return 0;
+    return (Date.now() - timerStartTime) / 1000;
+  };
+
   // Handle replay button press
   const handleReplay = async () => {
     setVideoFinished(false);
