@@ -1175,8 +1175,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.3)',
   },
   glassOptionSelected: {
-    borderColor: '#00FF87',
-    backgroundColor: 'rgba(0,255,135,0.15)',
+    borderColor: '#00D9FF',
+    backgroundColor: 'rgba(0,217,255,0.15)',
   },
   glassOptionInner: {
     padding: 14,
