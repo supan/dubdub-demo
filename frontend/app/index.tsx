@@ -1,45 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
-
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 export default function LoginScreen() {
-  const { user, login, loading, setUser, setSessionToken } = useAuth();
+  const { user, login, loading } = useAuth();
   const router = useRouter();
-  const [devLoading, setDevLoading] = useState(false);
-
-  const navigateAfterLogin = (userData: any) => {
-    // Skip onboarding - show all playables to everyone
-    router.replace('/feed');
-  };
-
-  const devLogin = async () => {
-    try {
-      setDevLoading(true);
-      
-      const response = await axios.post(`${BACKEND_URL}/api/auth/dev-login`);
-      const { session_token, user: userData } = response.data;
-      
-      setSessionToken(session_token);
-      
-      const userResponse = await axios.get(`${BACKEND_URL}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${session_token}` },
-      });
-      
-      setUser(userResponse.data);
-      navigateAfterLogin(userResponse.data);
-    } catch (error) {
-      console.error('Dev login error:', error);
-      alert('Dev login failed');
-    } finally {
-      setDevLoading(false);
-    }
-  };
 
   useEffect(() => {
     if (user && !loading) {
