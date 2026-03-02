@@ -41,6 +41,9 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
   const [videoFinished, setVideoFinished] = useState(false);
   const [isReplaying, setIsReplaying] = useState(false);
   
+  // Timer state - starts when question becomes visible
+  const [timerStartTime, setTimerStartTime] = useState<number | null>(null);
+  
   // Guess the X specific state
   const [currentHintIndex, setCurrentHintIndex] = useState(0);
   const [guessResult, setGuessResult] = useState<any>(null);
