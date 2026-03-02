@@ -82,14 +82,6 @@ export default function LoginScreen() {
             </LinearGradient>
           </TouchableOpacity>
 
-          {/* Dev Login - Quick Test */}
-          <TouchableOpacity style={styles.devButton} onPress={devLogin} activeOpacity={0.8} disabled={devLoading}>
-            <Ionicons name="code" size={20} color="#00FF87" style={styles.devIcon} />
-            <Text style={styles.devButtonText}>
-              {devLoading ? 'Logging in...' : 'Dev Login (Quick Test)'}
-            </Text>
-          </TouchableOpacity>
-
           <Text style={styles.footerText}>Join the winners community</Text>
           <Text style={styles.versionText}>v1.3.0</Text>
         </View>
