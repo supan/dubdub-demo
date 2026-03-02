@@ -364,7 +364,7 @@ export default function FeedScreen() {
     });
   }, [handleSkip, animateToNext, setStartIndex, fetchMoreIfNeeded]);
 
-  const handleAnswer = useCallback(async (answer: string) => {
+  const handleAnswer = useCallback(async (answer: string, timeTaken?: number) => {
     if (gameState !== 'PLAYING' || !playables[currentIndex]) return;
 
     try {
@@ -377,7 +377,7 @@ export default function FeedScreen() {
 
       const response = await axios.post(
         `${BACKEND_URL}/api/playables/${playable.playable_id}/answer`,
-        { answer },
+        { answer, time_taken: timeTaken },
         { headers: { Authorization: `Bearer ${sessionToken}` } }
       );
 
