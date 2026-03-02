@@ -2495,8 +2495,6 @@ async def get_template_formats(_: bool = Depends(verify_admin_token)):
     return {
         "formats": [
             {"id": "text", "name": "Text", "description": "Text-only question"},
-            {"id": "image", "name": "Image", "description": "Image-based question"},
-            {"id": "video", "name": "Video", "description": "Video-based question"},
             {"id": "image_text", "name": "Image + Text", "description": "Image with text question"},
             {"id": "video_text", "name": "Video + Text", "description": "Video with text question"},
             {"id": "guess_the_x", "name": "Guess the X", "description": "5 hints • Next hint revealed on wrong answer"},
@@ -2520,18 +2518,6 @@ async def get_playable_types():
                 "id": "text",
                 "name": "Text",
                 "description": "Text-only question",
-                "supported_answer_types": ["mcq", "text_input"]
-            },
-            {
-                "id": "image",
-                "name": "Image",
-                "description": "Image-based question",
-                "supported_answer_types": ["mcq", "text_input"]
-            },
-            {
-                "id": "video",
-                "name": "Video",
-                "description": "Video-based question",
                 "supported_answer_types": ["mcq", "text_input"]
             },
             {
