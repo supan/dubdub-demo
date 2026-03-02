@@ -811,8 +811,11 @@ async def submit_answer(
                 "correct": is_correct,
                 "timestamp": datetime.now(timezone.utc)
             }
+            # Add time_taken if provided
+            if submission.time_taken is not None:
+                progress["time_taken"] = round(submission.time_taken, 2)
             await db.user_progress.insert_one(progress)
-            logging.info(f"Progress saved (sync): user={current_user.user_id}, playable={playable_id}")
+            logging.info(f"Progress saved (sync): user={current_user.user_id}, playable={playable_id}, time={submission.time_taken}")
         except Exception as e:
             # Log but don't fail the request - duplicate key error is OK
             logging.warning(f"Progress save warning: {e}")
