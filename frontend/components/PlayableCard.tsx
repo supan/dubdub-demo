@@ -120,13 +120,6 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
     setVideoFinished(false);
     setIsReplaying(true);
     
-    // For YouTube videos, just reset the state - the player will restart
-    const videoUrl = playable.question?.video_url;
-    if (videoUrl && isYouTubeUrl(videoUrl)) {
-      // YouTube player will restart automatically when play prop changes
-      return;
-    }
-    
     // For regular videos, use the video ref
     if (videoRef.current) {
       try {
