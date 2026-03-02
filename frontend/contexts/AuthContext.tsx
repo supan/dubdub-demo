@@ -105,6 +105,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Handle auth callback on web - check current URL for session_id
+  const handleWebAuthCallback = async () => {
+    if (Platform.OS !== 'web') return;
+    
+    try {
+      const currentUrl = window.location.href;
+      console.log('Web auth callback check, URL:', currentUrl);
+      
+      // Check if URL contains session_id (from Emergent OAuth redirect)
+      if (currentUrl.includes('session_id=')) {
+        await processAuthURL(currentUrl);
+        
+        // Clean up URL by removing the session_id parameter
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    } catch (e) {
+      console.log('Web auth callback error:', e);
+    }
+  };
+
   const handleDeepLink = (event: { url: string }) => {
     processAuthURL(event.url);
   };
