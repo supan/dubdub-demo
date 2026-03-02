@@ -1194,7 +1194,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   glassOptionTextSelected: {
-    color: '#00FF87',
+    color: '#00D9FF',
     fontWeight: '700',
   },
   immersiveInputContainer: {
