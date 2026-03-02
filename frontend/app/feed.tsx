@@ -1224,6 +1224,8 @@ export default function FeedScreen() {
           hintsUsed={feedbackData?.hints_used}
           category={feedbackData?.category || currentPlayable?.category}
           categoryCorrectCount={feedbackData?.categoryCorrectCount || 0}
+          timeTaken={feedbackData?.time_taken}
+          avgTime={feedbackData?.avg_time}
         />
       </Animated.View>
       
