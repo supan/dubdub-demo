@@ -22,8 +22,8 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface PlayableCardProps {
   playable: any;
-  onAnswer: (answer: string) => void;
-  onGuessAnswer?: (answer: string, hintNumber: number) => Promise<any>;  // For guess_the_x
+  onAnswer: (answer: string, timeTaken?: number) => void;
+  onGuessAnswer?: (answer: string, hintNumber: number, timeTaken?: number) => Promise<any>;  // For guess_the_x
   submitting: boolean;
   currentIndex?: number;
   totalCount?: number;
