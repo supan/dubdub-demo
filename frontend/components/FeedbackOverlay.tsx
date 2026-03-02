@@ -261,6 +261,31 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
   },
+  timeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 217, 255, 0.1)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    gap: 12,
+    marginBottom: 16,
+  },
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  timeText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#00D9FF',
+  },
+  avgTimeText: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontWeight: '500',
+  },
   answerBox: {
     backgroundColor: 'rgba(0, 255, 135, 0.1)',
     borderRadius: 12,
