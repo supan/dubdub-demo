@@ -184,7 +184,7 @@ class SessionDataResponse(BaseModel):
 
 class Playable(BaseModel):
     playable_id: str
-    type: str  # "video", "image", "text", "video_text", "image_text", "chess", "guess_the_x"
+    type: str  # "text", "image_text", "video_text", "guess_the_x", "chess_mate_in_2", "this_or_that"
     answer_type: str  # "mcq", "text_input"
     category: str
     title: str
