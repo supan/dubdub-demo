@@ -165,7 +165,8 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
     if (answer) {
       Keyboard.dismiss();
       setHasSubmitted(true);
-      onAnswer(answer);
+      const timeTaken = getElapsedTime();
+      onAnswer(answer, timeTaken);
     }
   };
 
