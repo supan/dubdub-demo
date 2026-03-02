@@ -205,7 +205,8 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
       
       if (onGuessAnswer) {
         try {
-          const result = await onGuessAnswer(userAnswer, currentHintIndex + 1);
+          const timeTaken = getElapsedTime();
+          const result = await onGuessAnswer(userAnswer, currentHintIndex + 1, timeTaken);
           
           if (!result) {
             // API call failed
