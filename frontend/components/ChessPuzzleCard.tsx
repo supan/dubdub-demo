@@ -60,22 +60,58 @@ export default function ChessPuzzleCard({
   const [board, setBoard] = useState(chess.board());
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
   const [legalMoves, setLegalMoves] = useState<Square[]>([]);
-  const [moveIndex, setMoveIndex] = useState(0);
-  const [puzzleState, setPuzzleState] = useState<PuzzleState>('PLAYING');
+  const [moveIndex, setMoveIndex] = useState(0); // Current position in solution array
+  const [puzzleState, setPuzzleState] = useState<PuzzleState>('OPPONENT_MOVING'); // Start with opponent moving
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
-  const [message, setMessage] = useState<string>('Your turn - Find the winning move!');
+  const [message, setMessage] = useState<string>('Watch the opponent\'s move...');
 
-  // Reset when playable changes
+  // Reset when playable changes and auto-play opponent's first move
   useEffect(() => {
     chess.load(playable.fen);
     setBoard(chess.board());
     setSelectedSquare(null);
     setLegalMoves([]);
     setMoveIndex(0);
-    setPuzzleState('PLAYING');
+    setPuzzleState('OPPONENT_MOVING');
     setLastMove(null);
-    setMessage('Your turn - Find the winning move!');
+    setMessage('Watch the opponent\'s move...');
+
+    // Auto-play opponent's first move (solution[0]) after a brief delay
+    const timer = setTimeout(() => {
+      playOpponentMove(0);
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, [playable.playable_id]);
+
+  // Play opponent's move at given index (even indices: 0, 2, 4...)
+  const playOpponentMove = (idx: number) => {
+    const moveUCI = playable.solution[idx];
+    
+    if (!moveUCI || moveUCI.length < 4) {
+      console.error('Invalid opponent move in solution:', moveUCI);
+      return;
+    }
+
+    // Parse UCI move
+    const from = moveUCI.substring(0, 2) as Square;
+    const to = moveUCI.substring(2, 4) as Square;
+    const promotion = moveUCI.length > 4 ? moveUCI[4] : undefined;
+
+    // Make the opponent's move
+    const move = chess.move({ from, to, promotion: promotion as any });
+    
+    if (!move) {
+      console.error('Failed to make opponent move:', moveUCI);
+      return;
+    }
+    
+    setBoard(chess.board());
+    setLastMove({ from, to });
+    setMoveIndex(idx + 1); // Move to next index (player's turn)
+    setPuzzleState('PLAYING');
+    setMessage('Your turn - Find the best move!');
+  };
 
   const getSquareName = (row: number, col: number): Square => {
     const file = String.fromCharCode(97 + col); // a-h
@@ -117,14 +153,14 @@ export default function ChessPuzzleCard({
   };
 
   const makeMove = (from: Square, to: Square) => {
-    // Solution contains ALL moves in UCI format: [playerMove1, opponentMove1, playerMove2, ...]
-    // For mate-in-1: solution has 1 move (player's checkmate)
-    // For mate-in-2: solution has 3 moves (player, opponent, player checkmate)
+    // Lichess format: solution = [opponent_move, player_move, opponent_move, player_move, ...]
+    // Odd indices (1, 3, 5...) are player moves
+    // Even indices (0, 2, 4...) are opponent moves (auto-played)
     
     // Convert from-to to UCI format
     const userMoveUCI = `${from}${to}`;
     
-    // Get the expected player move (even indices: 0, 2, 4...)
+    // Get the expected player move at current moveIndex (should be odd: 1, 3, 5...)
     const expectedMoveUCI = playable.solution[moveIndex];
     
     // Try to make the move
@@ -154,7 +190,7 @@ export default function ChessPuzzleCard({
       
       // Give them another chance
       setTimeout(() => {
-        setMessage('Your turn - Find the winning move!');
+        setMessage('Your turn - Find the best move!');
       }, 1500);
       return;
     }
@@ -165,67 +201,37 @@ export default function ChessPuzzleCard({
     setSelectedSquare(null);
     setLegalMoves([]);
 
-    // Check if puzzle is solved (checkmate or no more moves)
+    // Check if puzzle is solved (checkmate or no more moves in solution)
     if (chess.isCheckmate()) {
       setPuzzleState('SOLVED');
       setMessage('Checkmate! Puzzle solved!');
       setTimeout(() => {
-        onPuzzleSolved(Math.floor(moveIndex / 2) + 1);
+        // Calculate hints used based on how many player moves were made
+        const playerMovesMade = Math.ceil(moveIndex / 2);
+        onPuzzleSolved(playerMovesMade);
       }, 1000);
       return;
     }
 
-    // Check if there's an opponent response in the solution
-    const opponentMoveIndex = moveIndex + 1;
-    if (opponentMoveIndex < playable.solution.length) {
+    // Check if there's an opponent response in the solution (next even index)
+    const nextOpponentMoveIndex = moveIndex + 1;
+    if (nextOpponentMoveIndex < playable.solution.length) {
       // Opponent needs to respond
       setPuzzleState('OPPONENT_MOVING');
-      setMessage('Opponent is thinking...');
+      setMessage('Opponent is responding...');
 
       setTimeout(() => {
-        makeOpponentMove(opponentMoveIndex);
+        playOpponentMove(nextOpponentMoveIndex);
       }, 800);
     } else {
-      // No more moves but not checkmate - puzzle might be incorrectly set up
+      // No more moves - puzzle complete (might be winning position, not necessarily checkmate)
       setPuzzleState('SOLVED');
-      setMessage('Puzzle complete!');
+      setMessage('Puzzle complete! Well done!');
       setTimeout(() => {
-        onPuzzleSolved(Math.floor(moveIndex / 2) + 1);
+        const playerMovesMade = Math.ceil(moveIndex / 2);
+        onPuzzleSolved(playerMovesMade);
       }, 1000);
     }
-  };
-
-  const makeOpponentMove = (opponentMoveIdx: number) => {
-    // Get the hardcoded opponent move from solution (UCI format)
-    const opponentMoveUCI = playable.solution[opponentMoveIdx];
-    
-    if (!opponentMoveUCI || opponentMoveUCI.length < 4) {
-      console.error('Invalid opponent move in solution:', opponentMoveUCI);
-      return;
-    }
-
-    // Parse UCI move
-    const from = opponentMoveUCI.substring(0, 2) as Square;
-    const to = opponentMoveUCI.substring(2, 4) as Square;
-    const promotion = opponentMoveUCI.length > 4 ? opponentMoveUCI[4] : undefined;
-
-    // Make the opponent's move
-    const move = chess.move({ from, to, promotion: promotion as any });
-    
-    if (!move) {
-      console.error('Failed to make opponent move:', opponentMoveUCI);
-      return;
-    }
-    
-    setBoard(chess.board());
-    setLastMove({ from, to });
-    
-    // Update move index to next player move
-    setMoveIndex(opponentMoveIdx + 1);
-    
-    // Player's turn again
-    setPuzzleState('PLAYING');
-    setMessage('Your turn - Finish the checkmate!');
   };
 
   const renderSquare = (row: number, col: number) => {
