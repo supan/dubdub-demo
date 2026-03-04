@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import * as WebBrowser from 'expo-web-browser';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import axios from 'axios';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -35,6 +36,8 @@ interface AuthContextType {
   user: User | null;
   sessionToken: string | null;
   login: () => Promise<void>;
+  loginWithApple: () => Promise<void>;
+  isAppleAuthAvailable: boolean;
   logout: () => void;
   loading: boolean;
   refreshUser: () => Promise<void>;
@@ -53,6 +56,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAppleAuthAvailable, setIsAppleAuthAvailable] = useState(false);
+
+  // Check if Apple Auth is available (iOS only)
+  useEffect(() => {
+    const checkAppleAuth = async () => {
+      if (Platform.OS === 'ios') {
+        const available = await AppleAuthentication.isAvailableAsync();
+        setIsAppleAuthAvailable(available);
+      }
+    };
+    checkAppleAuth();
+  }, []);
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -251,6 +266,65 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Apple Sign In (iOS only) - uses Emergent's auth service
+  const loginWithApple = async () => {
+    if (Platform.OS !== 'ios') {
+      console.log('Apple Sign In is only available on iOS');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Request Apple credentials
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      // Extract user info from Apple credential
+      const { identityToken, user: appleUserId, email, fullName } = credential;
+      
+      if (!identityToken) {
+        throw new Error('No identity token received from Apple');
+      }
+
+      // Build display name from Apple's fullName object
+      let displayName = '';
+      if (fullName) {
+        const parts = [fullName.givenName, fullName.familyName].filter(Boolean);
+        displayName = parts.join(' ');
+      }
+
+      // Send to backend for verification and session creation
+      const response = await axios.post(`${BACKEND_URL}/api/auth/apple`, {
+        identity_token: identityToken,
+        apple_user_id: appleUserId,
+        email: email || undefined,
+        name: displayName || undefined,
+      });
+
+      const { session_token, user: userData } = response.data;
+      
+      // Store session and update state
+      await AsyncStorage.setItem(SESSION_TOKEN_KEY, session_token);
+      setSessionToken(session_token);
+      setUser(userData);
+      
+    } catch (error: any) {
+      if (error.code === 'ERR_REQUEST_CANCELED') {
+        // User cancelled the sign-in
+        console.log('Apple Sign In cancelled by user');
+      } else {
+        console.error('Apple Sign In error:', error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
       if (sessionToken) {
@@ -301,7 +375,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, sessionToken, login, logout, loading, refreshUser, setUser, setSessionToken: saveSessionToken }}
+      value={{ user, sessionToken, login, loginWithApple, isAppleAuthAvailable, logout, loading, refreshUser, setUser, setSessionToken: saveSessionToken }}
     >
       {children}
     </AuthContext.Provider>

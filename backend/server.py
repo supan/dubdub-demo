@@ -426,6 +426,122 @@ async def logout(authorization: Optional[str] = Header(None)):
     
     return {"message": "Logged out successfully"}
 
+class AppleAuthRequest(BaseModel):
+    identity_token: str
+    apple_user_id: str
+    email: Optional[str] = None
+    name: Optional[str] = None
+
+@api_router.post("/auth/apple")
+async def apple_auth(request: AppleAuthRequest):
+    """
+    Handle Apple Sign In authentication.
+    Verifies the identity token and creates/retrieves user account.
+    """
+    try:
+        import jwt
+        from jwt import PyJWKClient
+        
+        # Apple's public keys URL for token verification
+        APPLE_KEYS_URL = "https://appleid.apple.com/auth/keys"
+        
+        # Verify the identity token
+        try:
+            # Get Apple's public keys
+            jwks_client = PyJWKClient(APPLE_KEYS_URL)
+            signing_key = jwks_client.get_signing_key_from_jwt(request.identity_token)
+            
+            # Decode and verify the token
+            decoded = jwt.decode(
+                request.identity_token,
+                signing_key.key,
+                algorithms=["RS256"],
+                audience="com.emergent.invin",  # Your bundle ID
+                issuer="https://appleid.apple.com"
+            )
+            
+            # Extract user info from token
+            apple_user_id = decoded.get("sub")
+            email = decoded.get("email") or request.email
+            
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Apple token has expired")
+        except jwt.InvalidTokenError as e:
+            logging.error(f"Apple token validation error: {e}")
+            raise HTTPException(status_code=401, detail="Invalid Apple token")
+        
+        # Check if user exists by apple_user_id or email
+        existing_user = await db.users.find_one(
+            {"$or": [
+                {"apple_user_id": apple_user_id},
+                {"email": email} if email else {"_id": None}
+            ]},
+            {"_id": 0}
+        )
+        
+        if not existing_user:
+            # Create new user
+            user_id = f"user_{uuid.uuid4().hex[:12]}"
+            new_user = {
+                "user_id": user_id,
+                "apple_user_id": apple_user_id,
+                "email": email,
+                "name": request.name or "Apple User",
+                "picture": None,
+                "total_played": 0,
+                "correct_answers": 0,
+                "current_streak": 0,
+                "best_streak": 0,
+                "selected_categories": None,
+                "onboarding_complete": False,
+                "created_at": datetime.now(timezone.utc)
+            }
+            await db.users.insert_one(new_user)
+            user_id_to_use = user_id
+            user_email = email
+            user_name = request.name or "Apple User"
+        else:
+            user_id_to_use = existing_user["user_id"]
+            user_email = existing_user.get("email") or email
+            user_name = existing_user.get("name") or request.name or "Apple User"
+            
+            # Update apple_user_id if not set (user previously logged in with Google)
+            if not existing_user.get("apple_user_id"):
+                await db.users.update_one(
+                    {"user_id": user_id_to_use},
+                    {"$set": {"apple_user_id": apple_user_id}}
+                )
+        
+        # Create session token
+        session_token = f"apple_{uuid.uuid4().hex}"
+        
+        # Store session in database
+        session_doc = {
+            "user_id": user_id_to_use,
+            "session_token": session_token,
+            "expires_at": datetime.now(timezone.utc) + timedelta(days=180),
+            "created_at": datetime.now(timezone.utc),
+            "auth_provider": "apple"
+        }
+        await db.user_sessions.insert_one(session_doc)
+        
+        # Return session data
+        return {
+            "session_token": session_token,
+            "user": {
+                "user_id": user_id_to_use,
+                "email": user_email,
+                "name": user_name,
+                "picture": None
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Apple auth error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ==================== CATEGORY ENDPOINTS ====================
 
 # Valid Ionicons names (comprehensive list for validation)

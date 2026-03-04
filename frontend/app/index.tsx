@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as AppleAuthentication from 'expo-apple-authentication';
 
 export default function LoginScreen() {
-  const { user, login, loading } = useAuth();
+  const { user, login, loginWithApple, isAppleAuthAvailable, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -42,6 +43,17 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.bottomContent}>
+          {/* Apple Sign In - iOS only */}
+          {Platform.OS === 'ios' && isAppleAuthAvailable && (
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+              cornerRadius={30}
+              style={styles.appleButton}
+              onPress={loginWithApple}
+            />
+          )}
+
           {/* Google OAuth Login */}
           <TouchableOpacity style={styles.loginButton} onPress={login} activeOpacity={0.8}>
             <LinearGradient colors={['#00FF87', '#00D9FF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.buttonGradient}>
@@ -51,7 +63,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <Text style={styles.footerText}>Join the winners community</Text>
-          <Text style={styles.versionText}>v1.3.4</Text>
+          <Text style={styles.versionText}>v1.3.5</Text>
         </View>
       </View>
     </LinearGradient>
@@ -67,6 +79,7 @@ const styles = StyleSheet.create({
   centerContent: { alignItems: 'center', paddingHorizontal: 20 },
   description: { fontSize: 20, fontWeight: '600', color: '#00D9FF', textAlign: 'center', lineHeight: 28 },
   bottomContent: { width: '100%', alignItems: 'center' },
+  appleButton: { width: '100%', height: 56, marginBottom: 12 },
   loginButton: { width: '100%', borderRadius: 30, overflow: 'hidden', marginBottom: 12 },
   buttonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, paddingHorizontal: 40 },
   googleIcon: { marginRight: 12 },
