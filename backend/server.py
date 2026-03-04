@@ -542,6 +542,48 @@ async def apple_auth(request: AppleAuthRequest):
         logging.error(f"Apple auth error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.delete("/auth/delete-account")
+async def delete_account(current_user: User = Depends(require_auth)):
+    """
+    Delete user account and all associated data.
+    This permanently removes:
+    - User profile from users collection
+    - All progress records from user_progress collection
+    - All active sessions from user_sessions collection
+    """
+    try:
+        user_id = current_user.user_id
+        
+        # Delete user progress records
+        progress_result = await db.user_progress.delete_many({"user_id": user_id})
+        logging.info(f"Deleted {progress_result.deleted_count} progress records for user {user_id}")
+        
+        # Delete all user sessions
+        sessions_result = await db.user_sessions.delete_many({"user_id": user_id})
+        logging.info(f"Deleted {sessions_result.deleted_count} sessions for user {user_id}")
+        
+        # Delete the user account
+        user_result = await db.users.delete_one({"user_id": user_id})
+        logging.info(f"Deleted user account: {user_id}")
+        
+        if user_result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {
+            "message": "Account deleted successfully",
+            "deleted": {
+                "user": True,
+                "progress_records": progress_result.deleted_count,
+                "sessions": sessions_result.deleted_count
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error deleting account for user {current_user.user_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete account")
+
 # ==================== CATEGORY ENDPOINTS ====================
 
 # Valid Ionicons names (comprehensive list for validation)

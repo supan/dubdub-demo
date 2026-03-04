@@ -10,6 +10,8 @@ import {
   Animated,
   PanResponder,
   Share,
+  Modal,
+  Alert,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'expo-router';
@@ -74,6 +76,10 @@ export default function FeedScreen() {
     categoryStats: {} as Record<string, number>,
   });
   const [previousStreak, setPreviousStreak] = useState(0);
+
+  // Settings modal state
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   // Animated values
   const translateY = useRef(new Animated.Value(0)).current;
@@ -648,8 +654,48 @@ export default function FeedScreen() {
   ).current;
 
   const handleLogout = async () => {
+    setShowSettingsModal(false);
     await logout();
     router.replace('/');
+  };
+
+  const handleDeleteAccount = async () => {
+    // Show confirmation dialog
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action cannot be undone. All your progress and data will be permanently deleted.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setDeletingAccount(true);
+              
+              // Call delete account API
+              await axios.delete(`${BACKEND_URL}/api/auth/delete-account`, {
+                headers: { Authorization: `Bearer ${sessionToken}` },
+              });
+              
+              // Close modal and logout
+              setShowSettingsModal(false);
+              await logout();
+              router.replace('/');
+              
+            } catch (error) {
+              console.error('Error deleting account:', error);
+              Alert.alert('Error', 'Failed to delete account. Please try again.');
+            } finally {
+              setDeletingAccount(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const isLoading = gameState === 'LOADING';
@@ -1159,8 +1205,85 @@ export default function FeedScreen() {
 
   const currentPlayable = playables[currentIndex];
 
+  // Settings Modal Component
+  const renderSettingsModal = () => (
+    <Modal
+      visible={showSettingsModal}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => setShowSettingsModal(false)}
+    >
+      <TouchableOpacity 
+        style={styles.modalOverlay} 
+        activeOpacity={1} 
+        onPress={() => setShowSettingsModal(false)}
+      >
+        <View style={styles.settingsModal}>
+          {/* User Info */}
+          <View style={styles.settingsUserInfo}>
+            <View style={styles.settingsAvatar}>
+              <Ionicons name="person" size={32} color="#00FF87" />
+            </View>
+            <View style={styles.settingsUserDetails}>
+              <Text style={styles.settingsUserName}>{user?.name || 'Player'}</Text>
+              <Text style={styles.settingsUserEmail}>{user?.email || ''}</Text>
+            </View>
+          </View>
+
+          <View style={styles.settingsDivider} />
+
+          {/* Stats Summary */}
+          <View style={styles.settingsStatsRow}>
+            <View style={styles.settingsStatItem}>
+              <Text style={styles.settingsStatValue}>{user?.total_played || 0}</Text>
+              <Text style={styles.settingsStatLabel}>Played</Text>
+            </View>
+            <View style={styles.settingsStatItem}>
+              <Text style={styles.settingsStatValue}>{user?.correct_answers || 0}</Text>
+              <Text style={styles.settingsStatLabel}>Correct</Text>
+            </View>
+            <View style={styles.settingsStatItem}>
+              <Text style={styles.settingsStatValue}>{user?.best_streak || 0}</Text>
+              <Text style={styles.settingsStatLabel}>Best Streak</Text>
+            </View>
+          </View>
+
+          <View style={styles.settingsDivider} />
+
+          {/* Logout Option */}
+          <TouchableOpacity 
+            style={styles.settingsOption} 
+            onPress={handleLogout}
+          >
+            <Ionicons name="log-out-outline" size={22} color="#B0B0C8" />
+            <Text style={styles.settingsOptionText}>Log Out</Text>
+          </TouchableOpacity>
+
+          {/* Delete Account Option */}
+          <TouchableOpacity 
+            style={styles.settingsOptionDanger} 
+            onPress={handleDeleteAccount}
+            disabled={deletingAccount}
+          >
+            {deletingAccount ? (
+              <ActivityIndicator size="small" color="#FF4444" />
+            ) : (
+              <Ionicons name="trash-outline" size={22} color="#FF4444" />
+            )}
+            <Text style={styles.settingsOptionTextDanger}>
+              {deletingAccount ? 'Deleting...' : 'Delete Account'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+
   return (
     <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
+      {/* Settings Modal */}
+      {renderSettingsModal()}
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -1169,8 +1292,8 @@ export default function FeedScreen() {
             <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
           </View>
           <Text style={styles.headerTitle}>dubdub</Text>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={24} color="#B0B0C8" />
+          <TouchableOpacity onPress={() => setShowSettingsModal(true)} style={styles.settingsButton}>
+            <Ionicons name="settings-outline" size={24} color="#B0B0C8" />
           </TouchableOpacity>
         </View>
       </View>
@@ -1624,5 +1747,96 @@ const styles = StyleSheet.create({
     color: '#FFB800',
     flex: 1,
     lineHeight: 18,
+  },
+  // Settings Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  settingsModal: {
+    backgroundColor: '#1A1A2E',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 340,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  settingsUserInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  settingsAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  settingsUserDetails: {
+    flex: 1,
+  },
+  settingsUserName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  settingsUserEmail: {
+    fontSize: 13,
+    color: '#888',
+  },
+  settingsDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginVertical: 16,
+  },
+  settingsStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  settingsStatItem: {
+    alignItems: 'center',
+  },
+  settingsStatValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#00FF87',
+  },
+  settingsStatLabel: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 2,
+  },
+  settingsOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    gap: 12,
+  },
+  settingsOptionText: {
+    fontSize: 16,
+    color: '#B0B0C8',
+    fontWeight: '500',
+  },
+  settingsOptionDanger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    gap: 12,
+  },
+  settingsOptionTextDanger: {
+    fontSize: 16,
+    color: '#FF4444',
+    fontWeight: '500',
+  },
+  settingsButton: {
+    padding: 8,
   },
 });
