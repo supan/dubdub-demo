@@ -23,6 +23,7 @@ import FeedbackOverlay from '../components/FeedbackOverlay';
 import ChessPuzzleCard from '../components/ChessPuzzleCard';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+const APP_VERSION = '1.3.8';  // Must match the version shown in login screen
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SWIPE_THRESHOLD = 80;
 const SWIPE_VELOCITY = 0.5;
@@ -150,6 +151,9 @@ export default function FeedScreen() {
       if (lastPlayedFormat) {
         params.last_format = lastPlayedFormat;
       }
+      
+      // Always include app version for compatibility filtering
+      params.app_version = APP_VERSION;
       
       const response = await axios.get(`${BACKEND_URL}/api/playables/feed`, {
         headers: { Authorization: `Bearer ${sessionToken}` },

@@ -8,10 +8,11 @@ import logging
 import asyncio
 from pathlib import Path
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any, Set
+from typing import List, Optional, Dict, Any, Set, Tuple
 import uuid
 from datetime import datetime, timezone, timedelta
 import httpx
+import re
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -26,6 +27,49 @@ app = FastAPI()
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+# ==================== VERSION COMPARISON HELPER ====================
+
+def parse_version(version_str: str) -> Tuple[int, int, int]:
+    """Parse version string like '1.3.7' into tuple (1, 3, 7)"""
+    # Remove 'v' prefix if present
+    version_str = version_str.lstrip('v').strip()
+    
+    # Match semantic version pattern
+    match = re.match(r'^(\d+)\.(\d+)\.(\d+)', version_str)
+    if match:
+        return (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+    
+    # Fallback: try to parse whatever we can
+    parts = version_str.split('.')
+    try:
+        major = int(parts[0]) if len(parts) > 0 else 0
+        minor = int(parts[1]) if len(parts) > 1 else 0
+        patch = int(parts[2]) if len(parts) > 2 else 0
+        return (major, minor, patch)
+    except (ValueError, IndexError):
+        return (0, 0, 0)
+
+def compare_versions(version1: str, version2: str) -> int:
+    """
+    Compare two version strings.
+    Returns:
+        -1 if version1 < version2
+         0 if version1 == version2
+         1 if version1 > version2
+    """
+    v1 = parse_version(version1)
+    v2 = parse_version(version2)
+    
+    if v1 < v2:
+        return -1
+    elif v1 > v2:
+        return 1
+    return 0
+
+def is_version_compatible(app_version: str, min_required_version: str) -> bool:
+    """Check if app_version meets the minimum required version"""
+    return compare_versions(app_version, min_required_version) >= 0
 
 # ==================== ASYNC TASK MANAGER ====================
 
@@ -787,14 +831,16 @@ async def select_categories(
 @api_router.get("/playables/feed")
 async def get_playables_feed(
     limit: int = 10,
+    app_version: Optional[str] = None,
     current_user: User = Depends(require_auth)
 ):
-    """Get playables feed - weight-based ranking
+    """Get playables feed - weight-based ranking with version filtering
     
     Ranking Logic:
     1. Playables are sorted by 'weight' field (descending - higher weight = shown first)
     2. Playables with same weight are shown in random order
     3. Already played/skipped playables are excluded
+    4. Playables requiring newer app version are excluded
     
     Weight Guidelines:
     - weight=0 (default): Normal playables, shown randomly after weighted ones
@@ -802,6 +848,10 @@ async def get_playables_feed(
     - weight=11-50: Medium priority featured content  
     - weight=51-100: High priority featured content
     - weight=100+: Top priority (pinned content, always shown first)
+    
+    Version Filtering:
+    - If app_version is provided, only playables with min_app_version <= app_version are returned
+    - Playables without min_app_version are treated as requiring "1.0.0"
     """
     try:
         # Get user's played/skipped playable IDs
@@ -812,15 +862,21 @@ async def get_playables_feed(
         played_ids = list({r["playable_id"] for r in played_records})
         
         # DEBUG: Log what we're excluding
-        logging.info(f"Feed for user {current_user.user_id}: excluding {len(played_ids)} playables: {played_ids[:5]}...")
+        logging.info(f"Feed for user {current_user.user_id}: excluding {len(played_ids)} playables, app_version={app_version}")
+        
+        # Build base match criteria
+        match_criteria: Dict[str, Any] = {"playable_id": {"$nin": played_ids}}
         
         # Aggregation pipeline: exclude played, sort by weight desc, then randomize within same weight
         pipeline = [
             # Stage 1: Exclude already played playables
-            {"$match": {"playable_id": {"$nin": played_ids}}},
+            {"$match": match_criteria},
             
-            # Stage 2: Add default weight of 0 for playables without weight field
-            {"$addFields": {"weight": {"$ifNull": ["$weight", 0]}}},
+            # Stage 2: Add default values for weight and min_app_version
+            {"$addFields": {
+                "weight": {"$ifNull": ["$weight", 0]},
+                "min_app_version": {"$ifNull": ["$min_app_version", "1.0.0"]}
+            }},
             
             # Stage 3: Sort by weight descending (higher weight = shown first)
             {"$sort": {"weight": -1, "_id": 1}},
@@ -840,11 +896,22 @@ async def get_playables_feed(
             # Stage 7: Replace root with the playable document
             {"$replaceRoot": {"newRoot": "$playables"}},
             
-            # Stage 8: Limit results
-            {"$limit": limit}
+            # Stage 8: Limit results (get more than needed for version filtering)
+            {"$limit": limit * 3}  # Get extra to account for version filtering
         ]
         
-        result_playables = await db.playables.aggregate(pipeline).to_list(limit)
+        result_playables = await db.playables.aggregate(pipeline).to_list(limit * 3)
+        
+        # Filter by app version compatibility (if app_version provided)
+        if app_version:
+            result_playables = [
+                p for p in result_playables 
+                if is_version_compatible(app_version, p.get("min_app_version", "1.0.0"))
+            ]
+            logging.info(f"After version filtering ({app_version}): {len(result_playables)} playables")
+        
+        # Trim to requested limit
+        result_playables = result_playables[:limit]
         
         # Convert ObjectId to string
         for p in result_playables:
@@ -1534,6 +1601,7 @@ class AddPlayableRequest(BaseModel):
     label_right: Optional[str] = None  # Label for right image (used for answer matching)
     difficulty: str = "medium"
     weight: int = 0  # Ranking weight: 0 or positive integer. Higher = shown first
+    min_app_version: str = "1.0.0"  # Minimum app version required to play this content
 
 @api_router.post("/admin/login")
 async def admin_login(request: AdminLoginRequest):
@@ -1745,6 +1813,7 @@ async def admin_add_playable(
             "video_end": request.video_end if request.type in ["video", "video_text"] else None,
             "difficulty": request.difficulty,
             "weight": max(0, request.weight),  # Ensure weight is 0 or positive
+            "min_app_version": request.min_app_version,  # Minimum app version required
             "created_at": datetime.now(timezone.utc)
         }
         
@@ -1833,6 +1902,7 @@ async def admin_update_playable(playable_id: str, request: AddPlayableRequest, _
             "video_end": request.video_end,
             "difficulty": request.difficulty,
             "weight": max(0, request.weight),  # Ensure weight is 0 or positive
+            "min_app_version": request.min_app_version,  # Minimum app version
             "updated_at": datetime.now(timezone.utc)
         }
         
@@ -1846,6 +1916,48 @@ async def admin_update_playable(playable_id: str, request: AddPlayableRequest, _
         raise
     except Exception as e:
         logging.error(f"Error updating playable: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class PartialUpdateRequest(BaseModel):
+    """Partial update request - all fields optional"""
+    min_app_version: Optional[str] = None
+    weight: Optional[int] = None
+    difficulty: Optional[str] = None
+
+@api_router.patch("/admin/playables/{playable_id}")
+async def admin_patch_playable(playable_id: str, request: PartialUpdateRequest, _: bool = Depends(verify_admin_token)):
+    """Partially update a playable - only updates provided fields (admin only)"""
+    try:
+        # Check if playable exists
+        existing = await db.playables.find_one({"playable_id": playable_id})
+        if not existing:
+            raise HTTPException(status_code=404, detail="Playable not found")
+        
+        # Build update document with only provided fields
+        update_doc = {}
+        
+        if request.min_app_version is not None:
+            update_doc["min_app_version"] = request.min_app_version
+        if request.weight is not None:
+            update_doc["weight"] = max(0, request.weight)
+        if request.difficulty is not None:
+            update_doc["difficulty"] = request.difficulty
+        
+        if not update_doc:
+            raise HTTPException(status_code=400, detail="No fields provided for update")
+        
+        update_doc["updated_at"] = datetime.now(timezone.utc)
+        
+        await db.playables.update_one(
+            {"playable_id": playable_id},
+            {"$set": update_doc}
+        )
+        
+        return {"success": True, "message": "Playable updated successfully", "playable_id": playable_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error patching playable: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/admin/users")
