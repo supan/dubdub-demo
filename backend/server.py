@@ -2684,6 +2684,7 @@ async def bulk_upload_playables(
                         continue
                 
                 # Determine type and answer_type
+                # Note: "image" and "video" types are deprecated, use "image_text" and "video_text"
                 if format_type == "text_mcq":
                     playable_type = "text"
                     answer_type = "mcq"
@@ -2691,13 +2692,13 @@ async def bulk_upload_playables(
                     playable_type = "text"
                     answer_type = "text_input"
                 elif format_type == "image_mcq":
-                    playable_type = "image"
+                    playable_type = "image_text"  # Changed from "image" (deprecated)
                     answer_type = "mcq"
                 elif format_type == "image_text_input":
                     playable_type = "image_text"
                     answer_type = "text_input"
                 elif format_type == "video_mcq":
-                    playable_type = "video"
+                    playable_type = "video_text"  # Changed from "video" (deprecated)
                     answer_type = "mcq"
                 elif format_type == "video_text_input":
                     playable_type = "video_text"
@@ -2747,6 +2748,8 @@ async def bulk_upload_playables(
                     "alternate_answers": alternate_answers,
                     "answer_explanation": answer_explanation,
                     "difficulty": difficulty if difficulty in ["easy", "medium", "hard"] else "medium",
+                    "weight": 0,  # Default weight for bulk uploads
+                    "min_app_version": "1.0.0",  # Default min version for bulk uploads
                     "created_at": datetime.now(timezone.utc)
                 }
                 
