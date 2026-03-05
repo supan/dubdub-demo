@@ -1567,8 +1567,11 @@ async def dev_reset_progress(email: str = "supanshah51191@gmail.com"):
 # ==================== ADMIN ENDPOINTS ====================
 
 # Admin credentials (in production, use environment variables)
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "@dm!n!spl@ying"
+# Admin credentials - multiple admins supported
+ADMIN_USERS = {
+    "admin": "@dm!n!spl@ying",
+    "meenal": "M3en@ladmin"
+}
 
 class AdminLoginRequest(BaseModel):
     username: str
@@ -1606,7 +1609,8 @@ class AddPlayableRequest(BaseModel):
 @api_router.post("/admin/login")
 async def admin_login(request: AdminLoginRequest):
     """Admin login endpoint"""
-    if request.username == ADMIN_USERNAME and request.password == ADMIN_PASSWORD:
+    # Check if username exists and password matches
+    if request.username in ADMIN_USERS and ADMIN_USERS[request.username] == request.password:
         # Generate admin session token
         admin_token = f"admin_{uuid.uuid4().hex}"
         
@@ -1614,10 +1618,11 @@ async def admin_login(request: AdminLoginRequest):
             # Store admin session (expires in 24 hours)
             result = await db.admin_sessions.insert_one({
                 "token": admin_token,
+                "username": request.username,  # Track which admin logged in
                 "created_at": datetime.now(timezone.utc),
                 "expires_at": datetime.now(timezone.utc) + timedelta(hours=24)
             })
-            logging.info(f"Admin session created: {admin_token}, inserted_id: {result.inserted_id}")
+            logging.info(f"Admin session created for {request.username}: {admin_token}, inserted_id: {result.inserted_id}")
         except Exception as e:
             logging.error(f"Failed to create admin session: {e}")
             raise HTTPException(status_code=500, detail="Failed to create session")
