@@ -71,6 +71,21 @@ def is_version_compatible(app_version: str, min_required_version: str) -> bool:
     """Check if app_version meets the minimum required version"""
     return compare_versions(app_version, min_required_version) >= 0
 
+# Minimum app version required for each playable TYPE
+# When introducing breaking changes to a format, update this mapping
+TYPE_MIN_VERSION = {
+    "text": "1.0.0",
+    "image_text": "1.0.0",
+    "video_text": "1.0.0",
+    "guess_the_x": "1.0.0",
+    "this_or_that": "1.0.0",
+    "chess_mate_in_2": "1.3.8",  # New Lichess format with opponent-first moves
+}
+
+def get_type_min_version(playable_type: str) -> str:
+    """Get minimum app version required for a playable type"""
+    return TYPE_MIN_VERSION.get(playable_type, "1.0.0")
+
 # ==================== ASYNC TASK MANAGER ====================
 
 class TaskManager:
@@ -840,7 +855,7 @@ async def get_playables_feed(
     1. Playables are sorted by 'weight' field (descending - higher weight = shown first)
     2. Playables with same weight are shown in random order
     3. Already played/skipped playables are excluded
-    4. Playables requiring newer app version are excluded
+    4. Playables whose TYPE requires a newer app version are excluded
     
     Weight Guidelines:
     - weight=0 (default): Normal playables, shown randomly after weighted ones
@@ -850,8 +865,9 @@ async def get_playables_feed(
     - weight=100+: Top priority (pinned content, always shown first)
     
     Version Filtering:
-    - If app_version is provided, only playables with min_app_version <= app_version are returned
-    - Playables without min_app_version are treated as requiring "1.0.0"
+    - If app_version is provided, playables are filtered by their TYPE's min version requirement
+    - Version requirements are defined per TYPE in TYPE_MIN_VERSION mapping
+    - Example: chess_mate_in_2 requires 1.3.8+, text requires 1.0.0+
     """
     try:
         # Get user's played/skipped playable IDs
@@ -867,15 +883,24 @@ async def get_playables_feed(
         # Build base match criteria
         match_criteria: Dict[str, Any] = {"playable_id": {"$nin": played_ids}}
         
+        # If app_version provided, exclude incompatible types
+        if app_version:
+            incompatible_types = [
+                ptype for ptype, min_ver in TYPE_MIN_VERSION.items()
+                if not is_version_compatible(app_version, min_ver)
+            ]
+            if incompatible_types:
+                match_criteria["type"] = {"$nin": incompatible_types}
+                logging.info(f"Excluding incompatible types for v{app_version}: {incompatible_types}")
+        
         # Aggregation pipeline: exclude played, sort by weight desc, then randomize within same weight
         pipeline = [
-            # Stage 1: Exclude already played playables
+            # Stage 1: Exclude already played playables and incompatible types
             {"$match": match_criteria},
             
-            # Stage 2: Add default values for weight and min_app_version
+            # Stage 2: Add default values for weight
             {"$addFields": {
-                "weight": {"$ifNull": ["$weight", 0]},
-                "min_app_version": {"$ifNull": ["$min_app_version", "1.0.0"]}
+                "weight": {"$ifNull": ["$weight", 0]}
             }},
             
             # Stage 3: Sort by weight descending (higher weight = shown first)
@@ -896,22 +921,11 @@ async def get_playables_feed(
             # Stage 7: Replace root with the playable document
             {"$replaceRoot": {"newRoot": "$playables"}},
             
-            # Stage 8: Limit results (get more than needed for version filtering)
-            {"$limit": limit * 3}  # Get extra to account for version filtering
+            # Stage 8: Limit results
+            {"$limit": limit}
         ]
         
-        result_playables = await db.playables.aggregate(pipeline).to_list(limit * 3)
-        
-        # Filter by app version compatibility (if app_version provided)
-        if app_version:
-            result_playables = [
-                p for p in result_playables 
-                if is_version_compatible(app_version, p.get("min_app_version", "1.0.0"))
-            ]
-            logging.info(f"After version filtering ({app_version}): {len(result_playables)} playables")
-        
-        # Trim to requested limit
-        result_playables = result_playables[:limit]
+        result_playables = await db.playables.aggregate(pipeline).to_list(limit)
         
         # Convert ObjectId to string
         for p in result_playables:
@@ -1604,7 +1618,6 @@ class AddPlayableRequest(BaseModel):
     label_right: Optional[str] = None  # Label for right image (used for answer matching)
     difficulty: str = "medium"
     weight: int = 0  # Ranking weight: 0 or positive integer. Higher = shown first
-    min_app_version: str = "1.0.0"  # Minimum app version required to play this content
 
 @api_router.post("/admin/login")
 async def admin_login(request: AdminLoginRequest):
@@ -1818,7 +1831,6 @@ async def admin_add_playable(
             "video_end": request.video_end if request.type in ["video", "video_text"] else None,
             "difficulty": request.difficulty,
             "weight": max(0, request.weight),  # Ensure weight is 0 or positive
-            "min_app_version": request.min_app_version,  # Minimum app version required
             "created_at": datetime.now(timezone.utc)
         }
         
@@ -1924,8 +1936,7 @@ async def admin_update_playable(playable_id: str, request: AddPlayableRequest, _
         raise HTTPException(status_code=500, detail=str(e))
 
 class PartialUpdateRequest(BaseModel):
-    """Partial update request - all fields optional"""
-    min_app_version: Optional[str] = None
+    """Partial update request - for updating weight and difficulty only"""
     weight: Optional[int] = None
     difficulty: Optional[str] = None
 
@@ -1941,8 +1952,6 @@ async def admin_patch_playable(playable_id: str, request: PartialUpdateRequest, 
         # Build update document with only provided fields
         update_doc = {}
         
-        if request.min_app_version is not None:
-            update_doc["min_app_version"] = request.min_app_version
         if request.weight is not None:
             update_doc["weight"] = max(0, request.weight)
         if request.difficulty is not None:
@@ -2749,7 +2758,6 @@ async def bulk_upload_playables(
                     "answer_explanation": answer_explanation,
                     "difficulty": difficulty if difficulty in ["easy", "medium", "hard"] else "medium",
                     "weight": 0,  # Default weight for bulk uploads
-                    "min_app_version": "1.0.0",  # Default min version for bulk uploads
                     "created_at": datetime.now(timezone.utc)
                 }
                 
