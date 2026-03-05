@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import {
   View,
   Text,
@@ -29,7 +29,7 @@ interface PlayableCardProps {
   totalCount?: number;
 }
 
-export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIndex = 0, totalCount = 0 }: PlayableCardProps) {
+function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIndex = 0, totalCount = 0 }: PlayableCardProps) {
   const [userAnswer, setUserAnswer] = useState('');
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
@@ -891,6 +891,10 @@ export default function PlayableCard({ playable, onAnswer, onGuessAnswer, submit
     );
   }
 }
+
+
+// Memoize to prevent unnecessary re-renders on Android
+export default memo(PlayableCard);
 
 const styles = StyleSheet.create({
   // ============ STANDARD LAYOUT STYLES ============

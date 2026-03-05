@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import {
   View,
   Text,
@@ -49,7 +49,7 @@ interface ChessPuzzleCardProps {
 
 type PuzzleState = 'PLAYING' | 'OPPONENT_MOVING' | 'SOLVED' | 'FAILED';
 
-export default function ChessPuzzleCard({
+function ChessPuzzleCard({
   playable,
   onPuzzleSolved,
   onPuzzleFailed,
@@ -367,6 +367,10 @@ export default function ChessPuzzleCard({
     </View>
   );
 }
+
+
+// Memoize to prevent unnecessary re-renders on Android
+export default memo(ChessPuzzleCard);
 
 const styles = StyleSheet.create({
   container: {
