@@ -1919,7 +1919,6 @@ async def admin_update_playable(playable_id: str, request: AddPlayableRequest, _
             "video_end": request.video_end,
             "difficulty": request.difficulty,
             "weight": max(0, request.weight),  # Ensure weight is 0 or positive
-            "min_app_version": request.min_app_version,  # Minimum app version
             "updated_at": datetime.now(timezone.utc)
         }
         
