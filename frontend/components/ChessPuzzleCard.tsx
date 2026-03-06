@@ -35,7 +35,6 @@ const getPieceChar = (piece: { type: string; color: string }): string => {
 interface ChessPuzzleCardProps {
   playable: {
     playable_id: string;
-    title: string;
     category: string;
     fen: string;
     solution: string[];
@@ -306,9 +305,6 @@ function ChessPuzzleCard({
           </View>
         )}
       </View>
-
-      {/* Title */}
-      <Text style={styles.title}>{playable.title}</Text>
 
       {/* Status Message */}
       <View style={[

@@ -256,11 +256,6 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
             )}
           </View>
 
-          {/* Title */}
-          <Text style={[styles.title, hasImage && styles.guessTitleImmersive]}>
-            {playable.title}
-          </Text>
-          
           {/* Format Description */}
           <Text style={[styles.guessFormatHint, hasImage && styles.guessFormatHintImmersive]}>
             5 hints • Next hint revealed on wrong answer
@@ -560,9 +555,6 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
           )}
         </View>
 
-        {/* Title */}
-        <Text style={styles.title} numberOfLines={2}>{playable.title}</Text>
-
         {/* Question Text */}
         {playable.question.text && (
           <Text style={styles.questionText}>
@@ -606,8 +598,6 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
               </View>
             )}
           </View>
-          {/* Title right after category */}
-          <Text style={styles.immersiveTitle}>{playable.title}</Text>
         </View>
 
         {/* Bottom Half - Question, Options */}
@@ -701,7 +691,6 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
                 </View>
               )}
             </View>
-            <Text style={styles.immersiveTitle}>{playable.title}</Text>
           </View>
 
           {/* Bottom - Just swipe hint, no watching indicator */}
@@ -732,7 +721,6 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
               </View>
             )}
           </View>
-          <Text style={styles.immersiveTitle}>{playable.title}</Text>
         </View>
 
         {/* Centered Replay Icon Button - Only show when video has finished */}

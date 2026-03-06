@@ -1598,7 +1598,7 @@ class AddPlayableRequest(BaseModel):
     type: str  # "text", "image_text", "video_text", "guess_the_x", "chess_mate_in_2", "this_or_that"
     answer_type: str  # "mcq", "text_input", "tap_select"
     category: str
-    title: str
+    title: Optional[str] = None  # Deprecated - kept for backward compatibility
     question_text: Optional[str] = None
     image_url: Optional[str] = None
     video_url: Optional[str] = None
