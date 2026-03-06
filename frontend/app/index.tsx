@@ -10,12 +10,11 @@ export default function LoginScreen() {
   const { user, login, loginWithApple, isAppleAuthAvailable, loading } = useAuth();
   const router = useRouter();
 
-  // Navigate to feed after successful login
+  // Navigate to appropriate screen after login
   const navigateAfterLogin = (loggedInUser: any) => {
-    // Check if user needs onboarding or go directly to feed
-    if (loggedInUser.onboarding_complete === false) {
-      // Could navigate to onboarding screen if it exists
-      router.replace('/feed');
+    // Check if user needs onboarding (no categories selected or onboarding not complete)
+    if (!loggedInUser.onboarding_complete || !loggedInUser.selected_categories || loggedInUser.selected_categories.length < 3) {
+      router.replace('/onboarding');
     } else {
       router.replace('/feed');
     }

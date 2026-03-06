@@ -1254,6 +1254,18 @@ export default function FeedScreen() {
 
           <View style={styles.settingsDivider} />
 
+          {/* Edit Categories Option */}
+          <TouchableOpacity 
+            style={styles.settingsOption} 
+            onPress={() => {
+              setShowSettingsModal(false);
+              router.push('/onboarding');
+            }}
+          >
+            <Ionicons name="grid-outline" size={22} color="#00FF87" />
+            <Text style={[styles.settingsOptionText, { color: '#00FF87' }]}>Edit Categories</Text>
+          </TouchableOpacity>
+
           {/* Logout Option */}
           <TouchableOpacity 
             style={styles.settingsOption} 

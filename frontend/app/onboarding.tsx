@@ -20,6 +20,7 @@ const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 interface Category {
   category_id: string;
   name: string;
+  description?: string;
   icon: string;
   color: string;
   playable_count: number;
@@ -56,9 +57,14 @@ export default function OnboardingScreen() {
         return;
       }
       await fetchCategories();
+      
+      // Pre-populate with user's existing selections (for edit mode)
+      if (user?.selected_categories && user.selected_categories.length > 0) {
+        setSelectedCategories(user.selected_categories);
+      }
     };
     init();
-  }, [sessionToken]);
+  }, [sessionToken, user]);
 
   const fetchCategories = async () => {
     try {
@@ -125,15 +131,20 @@ export default function OnboardingScreen() {
   }
 
   const canContinue = selectedCategories.length >= 3;
+  const isEditMode = user?.onboarding_complete && user?.selected_categories && user.selected_categories.length >= 3;
 
   return (
     <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <Ionicons name="infinite" size={48} color="#00FF87" />
-        <Text style={styles.title}>What interests you?</Text>
+        <Text style={styles.title}>
+          {isEditMode ? 'Edit Your Categories' : 'What interests you?'}
+        </Text>
         <Text style={styles.subtitle}>
-          Select at least 3 categories to personalize your feed
+          {isEditMode 
+            ? 'Update your preferences anytime' 
+            : 'Select at least 3 categories to personalize your feed'}
         </Text>
         <View style={styles.counterBadge}>
           <Text style={[styles.counterText, canContinue && styles.counterTextGreen]}>
@@ -171,6 +182,9 @@ export default function OnboardingScreen() {
                   <Ionicons name={getIcon(category.icon)} size={28} color={category.color} />
                 </View>
                 <Text style={styles.cardTitle}>{category.name}</Text>
+                {category.description && (
+                  <Text style={styles.cardDescription} numberOfLines={2}>{category.description}</Text>
+                )}
                 <Text style={styles.cardCount}>{category.playable_count} plays</Text>
               </TouchableOpacity>
             );
@@ -204,10 +218,10 @@ export default function OnboardingScreen() {
             ) : (
               <>
                 <Text style={[styles.continueBtnText, !canContinue && { color: '#666' }]}>
-                  Continue
+                  {isEditMode ? 'Save Changes' : 'Continue'}
                 </Text>
                 <Ionicons 
-                  name="arrow-forward" 
+                  name={isEditMode ? 'checkmark' : 'arrow-forward'} 
                   size={18} 
                   color={canContinue ? '#0F0F1E' : '#666'} 
                 />
@@ -311,10 +325,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
+  cardDescription: {
+    color: '#888',
+    fontSize: 10,
+    textAlign: 'center',
+    marginTop: 4,
+    lineHeight: 14,
+  },
   cardCount: {
     color: '#666',
     fontSize: 11,
-    marginTop: 2,
+    marginTop: 4,
   },
   errorBox: {
     flexDirection: 'row',

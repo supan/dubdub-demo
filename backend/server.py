@@ -773,6 +773,7 @@ class AddCategoryRequest(BaseModel):
     name: str
     icon: Optional[str] = "help-circle"
     color: Optional[str] = "#00FF87"
+    description: Optional[str] = None  # Optional description for the category
 
 @api_router.get("/categories")
 async def get_categories(current_user: User = Depends(require_auth)):
@@ -2210,6 +2211,10 @@ async def admin_add_category(request: AddCategoryRequest, _: bool = Depends(veri
             "created_at": datetime.now(timezone.utc)
         }
         
+        # Add description if provided
+        if request.description:
+            category_doc["description"] = request.description
+        
         await db.categories.insert_one(category_doc)
         
         return {
@@ -2227,6 +2232,7 @@ async def admin_add_category(request: AddCategoryRequest, _: bool = Depends(veri
 class UpdateCategoryRequest(BaseModel):
     icon: Optional[str] = None
     color: Optional[str] = None
+    description: Optional[str] = None  # Optional description for the category
 
 @api_router.patch("/admin/categories/{category_id}")
 async def admin_update_category(
@@ -2263,8 +2269,16 @@ async def admin_update_category(
                 )
             update_fields["color"] = color
         
+        # Handle description update (can be set to empty string to clear)
+        if request.description is not None:
+            if request.description.strip():
+                update_fields["description"] = request.description.strip()
+            else:
+                # Empty string means remove the description
+                update_fields["description"] = None
+        
         if not update_fields:
-            raise HTTPException(status_code=400, detail="No fields to update. Provide 'icon' and/or 'color'.")
+            raise HTTPException(status_code=400, detail="No fields to update. Provide 'icon', 'color', and/or 'description'.")
         
         # Update category
         await db.categories.update_one(
