@@ -10,6 +10,17 @@ export default function LoginScreen() {
   const { user, login, loginWithApple, isAppleAuthAvailable, loading } = useAuth();
   const router = useRouter();
 
+  // Navigate to feed after successful login
+  const navigateAfterLogin = (loggedInUser: any) => {
+    // Check if user needs onboarding or go directly to feed
+    if (loggedInUser.onboarding_complete === false) {
+      // Could navigate to onboarding screen if it exists
+      router.replace('/feed');
+    } else {
+      router.replace('/feed');
+    }
+  };
+
   useEffect(() => {
     if (user && !loading) {
       navigateAfterLogin(user);
