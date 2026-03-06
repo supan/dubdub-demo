@@ -1974,6 +1974,33 @@ async def admin_patch_playable(playable_id: str, request: PartialUpdateRequest, 
         logging.error(f"Error patching playable: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/admin/remove-titles")
+async def admin_remove_titles(_: bool = Depends(verify_admin_token)):
+    """Remove title field from all playables (admin only) - one-time migration"""
+    try:
+        # Count before
+        count_before = await db.playables.count_documents({"title": {"$exists": True}})
+        
+        # Remove title field from all playables
+        result = await db.playables.update_many(
+            {},
+            {"$unset": {"title": ""}}
+        )
+        
+        # Verify
+        count_after = await db.playables.count_documents({"title": {"$exists": True}})
+        
+        return {
+            "success": True,
+            "message": "Title field removed from all playables",
+            "playables_with_title_before": count_before,
+            "playables_modified": result.modified_count,
+            "playables_with_title_after": count_after
+        }
+    except Exception as e:
+        logging.error(f"Error removing titles: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/admin/users")
 async def admin_get_users(_: bool = Depends(verify_admin_token)):
     """Get all users (admin only)"""
