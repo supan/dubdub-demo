@@ -227,7 +227,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Create redirect URL based on platform
       let redirectUrl: string;
       if (Platform.OS === 'web') {
-        redirectUrl = `${BACKEND_URL}/`;
+        // Use window.location.origin for web to work across all environments (preview, prod, custom domains)
+        redirectUrl = typeof window !== 'undefined' ? window.location.origin + '/' : `${BACKEND_URL}/`;
       } else {
         const Linking = getExpoLinking();
         if (Linking) {
