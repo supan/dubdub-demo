@@ -850,13 +850,14 @@ async def get_playables_feed(
     app_version: Optional[str] = None,
     current_user: User = Depends(require_auth)
 ):
-    """Get playables feed - weight-based ranking with version filtering
+    """Get playables feed - weight-based ranking with version and category filtering
     
     Ranking Logic:
     1. Playables are sorted by 'weight' field (descending - higher weight = shown first)
     2. Playables with same weight are shown in random order
     3. Already played/skipped playables are excluded
     4. Playables whose TYPE requires a newer app version are excluded
+    5. Only playables from user's selected categories are shown
     
     Weight Guidelines:
     - weight=0 (default): Normal playables, shown randomly after weighted ones
@@ -869,6 +870,10 @@ async def get_playables_feed(
     - If app_version is provided, playables are filtered by their TYPE's min version requirement
     - Version requirements are defined per TYPE in TYPE_MIN_VERSION mapping
     - Example: chess_mate_in_2 requires 1.3.8+, text requires 1.0.0+
+    
+    Category Filtering:
+    - If user has selected categories, only show playables from those categories
+    - If no categories selected (legacy users), show all playables
     """
     try:
         # Get user's played/skipped playable IDs
@@ -878,11 +883,19 @@ async def get_playables_feed(
         ).to_list(length=10000)
         played_ids = list({r["playable_id"] for r in played_records})
         
-        # DEBUG: Log what we're excluding
-        logging.info(f"Feed for user {current_user.user_id}: excluding {len(played_ids)} playables, app_version={app_version}")
+        # Get user's selected categories
+        selected_categories = current_user.selected_categories
+        
+        # DEBUG: Log what we're filtering
+        logging.info(f"Feed for user {current_user.user_id}: excluding {len(played_ids)} playables, app_version={app_version}, categories={selected_categories}")
         
         # Build base match criteria
         match_criteria: Dict[str, Any] = {"playable_id": {"$nin": played_ids}}
+        
+        # Filter by selected categories (if user has selections)
+        if selected_categories and len(selected_categories) > 0:
+            match_criteria["category"] = {"$in": selected_categories}
+            logging.info(f"Filtering to categories: {selected_categories}")
         
         # If app_version provided, exclude incompatible types
         if app_version:
@@ -896,7 +909,7 @@ async def get_playables_feed(
         
         # Aggregation pipeline: exclude played, sort by weight desc, then randomize within same weight
         pipeline = [
-            # Stage 1: Exclude already played playables and incompatible types
+            # Stage 1: Exclude already played playables, filter by categories and incompatible types
             {"$match": match_criteria},
             
             # Stage 2: Add default values for weight

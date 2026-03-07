@@ -30,6 +30,7 @@ A mobile app (React Native/Expo) featuring a scrollable feed of quick, interacti
 - **Descriptions**: Optional descriptions per category (e.g., "Chess: Mate in 2 Puzzles")
 - **Edit Preferences**: Users can edit categories anytime via Settings modal
 - **Admin Support**: Admin APIs support adding/editing category descriptions
+- **Feed Filtering**: Users only see playables from their selected categories (backwards compatible for legacy users)
 
 ### Account Management
 - User stats tracking (played, correct, streak, best streak)
