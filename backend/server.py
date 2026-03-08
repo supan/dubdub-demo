@@ -1618,8 +1618,8 @@ class AdminResetProgressRequest(BaseModel):
     email: str
 
 class AddPlayableRequest(BaseModel):
-    type: str  # "text", "image_text", "video_text", "guess_the_x", "chess_mate_in_2", "this_or_that"
-    answer_type: str  # "mcq", "text_input", "tap_select"
+    type: str  # "text", "image_text", "video_text", "guess_the_x", "chess_mate_in_2", "this_or_that", "wordle"
+    answer_type: Optional[str] = None  # "mcq", "text_input", "tap_select", "wordle_grid" - auto-set for special types
     category: str
     title: Optional[str] = None  # Deprecated - kept for backward compatibility
     question_text: Optional[str] = None
@@ -1778,7 +1778,7 @@ async def admin_add_playable(
             question["video_url"] = request.video_url
         
         # Validate type is one of the supported formats
-        SUPPORTED_TYPES = ["text", "image_text", "video_text", "guess_the_x", "chess_mate_in_2", "this_or_that"]
+        SUPPORTED_TYPES = ["text", "image_text", "video_text", "guess_the_x", "chess_mate_in_2", "this_or_that", "wordle"]
         if request.type not in SUPPORTED_TYPES:
             raise HTTPException(
                 status_code=400, 
@@ -1818,6 +1818,13 @@ async def admin_add_playable(
             if request.correct_answer not in [request.label_left, request.label_right]:
                 raise HTTPException(status_code=400, detail="Correct answer must match one of the labels")
         
+        # Validate wordle has 5-letter word
+        if request.type == "wordle":
+            if not request.correct_answer or len(request.correct_answer) != 5:
+                raise HTTPException(status_code=400, detail="Wordle requires a 5-letter word as correct_answer")
+            if not request.correct_answer.isalpha():
+                raise HTTPException(status_code=400, detail="Wordle word must contain only letters")
+        
         if request.answer_type == "mcq" and request.type not in ["guess_the_x", "chess_mate_in_2", "this_or_that"]:
             if not request.options or len(request.options) < 2:
                 raise HTTPException(status_code=400, detail="MCQ requires at least 2 options")
@@ -1842,7 +1849,7 @@ async def admin_add_playable(
             "answer_type": "tap_select" if request.type == "this_or_that" else ("text_input" if request.type in ["guess_the_x", "chess_mate_in_2"] else request.answer_type),
             "category": request.category,
             "question": question,
-            "options": request.options if request.answer_type == "mcq" and request.type not in ["guess_the_x", "chess_mate_in_2", "this_or_that"] else None,
+            "options": request.options if request.answer_type == "mcq" and request.type not in ["guess_the_x", "chess_mate_in_2", "this_or_that", "wordle"] else None,
             "correct_answer": request.correct_answer,
             "alternate_answers": request.alternate_answers if (request.answer_type == "text_input" or request.type in ["guess_the_x", "chess_mate_in_2"]) else None,
             "answer_explanation": request.answer_explanation,
@@ -1855,6 +1862,16 @@ async def admin_add_playable(
             "weight": max(0, request.weight),  # Ensure weight is 0 or positive
             "created_at": datetime.now(timezone.utc)
         }
+        
+        # Auto-set answer_type based on type
+        if request.type == "wordle":
+            playable_doc["answer_type"] = "wordle_grid"
+        elif request.type == "this_or_that":
+            playable_doc["answer_type"] = "tap_select"
+        elif request.type in ["guess_the_x", "chess_mate_in_2"]:
+            playable_doc["answer_type"] = "text_input"
+        else:
+            playable_doc["answer_type"] = request.answer_type
         
         # Use the validated category name
         playable_doc["category"] = category_name

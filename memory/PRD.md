@@ -24,6 +24,7 @@ A mobile app (React Native/Expo) featuring a scrollable feed of quick, interacti
 - `guess_the_x` - Progressive hint-based guessing
 - `chess_mate_in_2` - Chess puzzles (Lichess format)
 - `this_or_that` - Binary choice questions
+- `wordle` - 5-letter word guessing game (6 attempts, 10k word dictionary)
 
 ### Category System (COMPLETED - March 2026)
 - **Onboarding**: New users must select minimum 3 categories

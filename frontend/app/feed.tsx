@@ -21,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import PlayableCard from '../components/PlayableCard';
 import FeedbackOverlay from '../components/FeedbackOverlay';
 import ChessPuzzleCard from '../components/ChessPuzzleCard';
+import WordleCard from '../components/WordleCard';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const APP_VERSION = '1.3.8';  // Must match the version shown in login screen
@@ -38,6 +39,7 @@ const getRandomAvgTime = (playableType: string): number => {
     'guess_the_x': [10, 25],     // Progressive hints: 10-25 seconds
     'chess_mate_in_2': [15, 45], // Chess puzzles: 15-45 seconds (thinking required)
     'this_or_that': [2, 5],      // Binary choice: 2-5 seconds (quick decision)
+    'wordle': [45, 120],         // Wordle: 45-120 seconds (multiple guesses)
   };
   
   const [min, max] = ranges[playableType] || [4, 12]; // Default range
@@ -630,6 +632,73 @@ export default function FeedScreen() {
       console.error('Error submitting chess puzzle result:', error);
     }
   }, [playables, currentIndex, sessionToken, refreshUser]);
+
+  // Handle Wordle completion (win or lose)
+  const handleWordleComplete = useCallback(async (won: boolean, attempts: number) => {
+    if (gameState !== 'PLAYING') return;
+    
+    const playable = playables[currentIndex];
+    if (!playable) return;
+    
+    setGameState('SUBMITTING');
+    
+    try {
+      // Submit result to backend
+      const response = await axios.post(
+        `${BACKEND_URL}/api/playables/${playable.playable_id}/answer`,
+        {
+          answer: won ? playable.correct_answer : `FAILED_${attempts}`,
+          time_taken: 0, // Wordle doesn't track time per guess
+        },
+        { headers: { Authorization: `Bearer ${sessionToken}` } }
+      );
+      
+      const result = response.data;
+      const prevStreak = currentStreak;
+      
+      // Update local streak tracking
+      if (won) {
+        setCurrentStreak(result.current_streak);
+        if (result.current_streak > bestStreak) {
+          setBestStreak(result.current_streak);
+        }
+        setSessionStats(prev => ({
+          correct: prev.correct + 1,
+          total: prev.total + 1,
+          categoryStats: {
+            ...prev.categoryStats,
+            [playable.category]: (prev.categoryStats[playable.category] || 0) + 1,
+          },
+        }));
+      } else {
+        setCurrentStreak(0);
+        setSessionStats(prev => ({
+          ...prev,
+          total: prev.total + 1,
+        }));
+      }
+      
+      // Show feedback
+      setFeedbackData({
+        correct: won,
+        current_streak: won ? result.current_streak : 0,
+        attempts_used: attempts,
+        category: playable.category,
+        correct_answer: playable.correct_answer,
+        avg_time: getRandomAvgTime('wordle'),
+      });
+      setTotalPlayed(prev => prev + 1);
+      setGameState('SHOWING_FEEDBACK');
+      
+      // Track last played for variety optimization
+      setLastPlayedCategory(playable.category);
+      setLastPlayedFormat(playable.type);
+      
+      refreshUser().catch(console.error);
+    } catch (error) {
+      console.error('Error submitting wordle result:', error);
+    }
+  }, [playables, currentIndex, sessionToken, gameState, currentStreak, bestStreak, refreshUser]);
 
   // Ref for the transition function so PanResponder can access it
   const doSwipeRef = useRef(doSwipeTransition);
@@ -1355,6 +1424,13 @@ export default function FeedScreen() {
               currentIndex={(currentIndex - setStartIndex)}
               totalCount={SET_SIZE}
             />
+          ) : currentPlayable.type === 'wordle' ? (
+            <WordleCard
+              targetWord={currentPlayable.correct_answer}
+              hint={currentPlayable.question?.text || currentPlayable.question?.hint}
+              onComplete={handleWordleComplete}
+              disabled={gameState !== 'PLAYING'}
+            />
           ) : (
             <PlayableCard
               playable={currentPlayable}
@@ -1388,13 +1464,14 @@ export default function FeedScreen() {
         />
       </Animated.View>
       
-      {/* Swipe hint - Only show for text questions (immersive layouts, guess_the_x, and chess have their own) */}
+      {/* Swipe hint - Only show for text questions (immersive layouts, guess_the_x, chess, and wordle have their own) */}
       {(() => {
         const isMediaQuestion = currentPlayable && 
           (currentPlayable.type === 'video' || currentPlayable.type === 'video_text' || 
            currentPlayable.type === 'image' || currentPlayable.type === 'image_text' ||
-           currentPlayable.type === 'guess_the_x' || currentPlayable.type === 'chess_mate_in_2') &&
-          (currentPlayable.question?.video_url || currentPlayable.question?.image_base64 || currentPlayable.question?.image_url || currentPlayable.hints || currentPlayable.fen);
+           currentPlayable.type === 'guess_the_x' || currentPlayable.type === 'chess_mate_in_2' ||
+           currentPlayable.type === 'wordle') &&
+          (currentPlayable.question?.video_url || currentPlayable.question?.image_base64 || currentPlayable.question?.image_url || currentPlayable.hints || currentPlayable.fen || currentPlayable.type === 'wordle');
         
         // Don't show external hints for immersive media questions
         if (isMediaQuestion) return null;
