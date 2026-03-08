@@ -16,9 +16,11 @@ const BOARD_SIZE = Math.min(SCREEN_WIDTH - 40, 360);
 const SQUARE_SIZE = BOARD_SIZE / 8;
 
 // Chess piece Unicode symbols
-// Using FILLED symbols for both colors - color is applied via styling
+// Most pieces use filled symbols with CSS color applied
+// EXCEPTION: Pawn symbol (♟) renders as emoji on iOS ignoring CSS color
+// So we use outline symbol (♙) for white pawns, filled (♟) for black pawns
 const PIECES: { [key: string]: string } = {
-  'wk': '♚', 'wq': '♛', 'wr': '♜', 'wb': '♝', 'wn': '♞', 'wp': '♟',
+  'wk': '♚', 'wq': '♛', 'wr': '♜', 'wb': '♝', 'wn': '♞', 'wp': '♙',
   'bk': '♚', 'bq': '♛', 'br': '♜', 'bb': '♝', 'bn': '♞', 'bp': '♟',
 };
 
