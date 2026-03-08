@@ -28,6 +28,23 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SWIPE_THRESHOLD = 80;
 const SWIPE_VELOCITY = 0.5;
 
+// Generate random average time based on playable type
+// Returns a realistic average completion time in seconds
+const getRandomAvgTime = (playableType: string): number => {
+  const ranges: { [key: string]: [number, number] } = {
+    'text': [3, 8],              // Simple text questions: 3-8 seconds
+    'image_text': [4, 10],       // Image-based: 4-10 seconds (need to look at image)
+    'video_text': [8, 20],       // Video-based: 8-20 seconds (depends on video length)
+    'guess_the_x': [10, 25],     // Progressive hints: 10-25 seconds
+    'chess_mate_in_2': [15, 45], // Chess puzzles: 15-45 seconds (thinking required)
+    'this_or_that': [2, 5],      // Binary choice: 2-5 seconds (quick decision)
+  };
+  
+  const [min, max] = ranges[playableType] || [4, 12]; // Default range
+  // Generate random value with 1 decimal place
+  return Math.round((min + Math.random() * (max - min)) * 10) / 10;
+};
+
 interface Playable {
   playable_id: string;
   type: string;
@@ -420,7 +437,7 @@ export default function FeedScreen() {
         categoryCorrectCount: (sessionStats.categoryStats[playable.category] || 0) + (result.correct ? 1 : 0),
         previousStreak: prevStreak,
         time_taken: timeTaken,
-        avg_time: 5.2, // Placeholder for now - will come from playable data later
+        avg_time: getRandomAvgTime(playable.type),
       });
       setTotalPlayed(prev => prev + 1);
       setGameState('SHOWING_FEEDBACK');
@@ -480,6 +497,7 @@ export default function FeedScreen() {
           hints_used: result.hints_used,
           current_streak: result.current_streak,
           category: playables[currentIndex]?.category,
+          avg_time: getRandomAvgTime('guess_the_x'),
         });
         setTotalPlayed(prev => prev + 1);
         setGameState('SHOWING_FEEDBACK');
@@ -553,6 +571,7 @@ export default function FeedScreen() {
         current_streak: result.current_streak,
         moves_used: movesUsed,
         category: playable.category,
+        avg_time: getRandomAvgTime('chess_mate_in_2'),
       });
       setTotalPlayed(prev => prev + 1);
       setGameState('SHOWING_FEEDBACK');
@@ -597,6 +616,7 @@ export default function FeedScreen() {
         correct: false,
         current_streak: result.current_streak,
         category: playable.category,
+        avg_time: getRandomAvgTime('chess_mate_in_2'),
       });
       setTotalPlayed(prev => prev + 1);
       setGameState('SHOWING_FEEDBACK');
