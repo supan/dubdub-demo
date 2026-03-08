@@ -892,8 +892,9 @@ async def get_playables_feed(
         # Get user's selected categories
         selected_categories = current_user.selected_categories
         
-        # DEBUG: Log what we're filtering
-        logging.info(f"Feed for user {current_user.user_id}: excluding {len(played_ids)} playables, app_version={app_version}, categories={selected_categories}")
+        # DEBUG: Log detailed info about user and categories
+        logging.info(f"Feed for user {current_user.user_id}: excluding {len(played_ids)} playables, app_version={app_version}")
+        logging.info(f"User selected_categories: {selected_categories}, onboarding_complete: {current_user.onboarding_complete}")
         
         # Build base match criteria
         match_criteria: Dict[str, Any] = {"playable_id": {"$nin": played_ids}}
@@ -901,7 +902,9 @@ async def get_playables_feed(
         # Filter by selected categories (if user has selections)
         if selected_categories and len(selected_categories) > 0:
             match_criteria["category"] = {"$in": selected_categories}
-            logging.info(f"Filtering to categories: {selected_categories}")
+            logging.info(f"Filtering to categories: {selected_categories}, match_criteria: {match_criteria}")
+        else:
+            logging.warning(f"User {current_user.user_id} has no selected categories - showing all playables!")
         
         # If app_version provided, exclude incompatible types
         if app_version:
