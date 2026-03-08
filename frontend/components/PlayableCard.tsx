@@ -430,9 +430,11 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
 
   // ============ THIS OR THAT LAYOUT ============
   if (playable.type === 'this_or_that') {
-    const handleThisOrThatAnswer = (selectedLabel: string, isCorrect: boolean) => {
+    const handleThisOrThatAnswer = (selectedLabel: string, _isCorrect: boolean) => {
+      // Note: We don't pass isCorrect - the backend determines correctness
+      // The second param of onAnswer is timeTaken, not isCorrect
       if (onAnswer) {
-        onAnswer(selectedLabel, isCorrect);
+        onAnswer(selectedLabel);
       }
     };
     
