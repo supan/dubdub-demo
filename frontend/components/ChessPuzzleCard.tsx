@@ -16,11 +16,9 @@ const BOARD_SIZE = Math.min(SCREEN_WIDTH - 40, 360);
 const SQUARE_SIZE = BOARD_SIZE / 8;
 
 // Chess piece Unicode symbols
-// WHITE pieces use OUTLINE symbols (♔♕♖♗♘♙) - these render as outlined/white
-// BLACK pieces use FILLED symbols (♚♛♜♝♞♟) - these render as solid/black
-// This ensures pieces are visually distinct regardless of platform font rendering
+// Using FILLED symbols for both colors - color is applied via styling
 const PIECES: { [key: string]: string } = {
-  'wk': '♔', 'wq': '♕', 'wr': '♖', 'wb': '♗', 'wn': '♘', 'wp': '♙',
+  'wk': '♚', 'wq': '♛', 'wr': '♜', 'wb': '♝', 'wn': '♞', 'wp': '♟',
   'bk': '♚', 'bq': '♛', 'br': '♜', 'bb': '♝', 'bn': '♞', 'bp': '♟',
 };
 
