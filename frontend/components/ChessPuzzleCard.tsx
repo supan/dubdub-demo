@@ -16,12 +16,13 @@ const BOARD_SIZE = Math.min(SCREEN_WIDTH - 40, 360);
 const SQUARE_SIZE = BOARD_SIZE / 8;
 
 // Chess piece Unicode symbols
-// Most pieces use filled symbols with CSS color applied
-// EXCEPTION: Pawn symbol (♟) renders as emoji on iOS ignoring CSS color
-// So we use outline symbol (♙) for white pawns, filled (♟) for black pawns
+// Using filled symbols (♚♛♜♝♞♟) for all pieces with CSS color applied
+// IMPORTANT: Pawn symbol needs \uFE0E (text variation selector) to prevent 
+// iOS from rendering it as an emoji with fixed black color
+const TEXT_VS = '\uFE0E'; // Text variation selector - forces text rendering
 const PIECES: { [key: string]: string } = {
-  'wk': '♚', 'wq': '♛', 'wr': '♜', 'wb': '♝', 'wn': '♞', 'wp': '♙',
-  'bk': '♚', 'bq': '♛', 'br': '♜', 'bb': '♝', 'bn': '♞', 'bp': '♟',
+  'wk': '♚', 'wq': '♛', 'wr': '♜', 'wb': '♝', 'wn': '♞', 'wp': `♟${TEXT_VS}`,
+  'bk': '♚', 'bq': '♛', 'br': '♜', 'bb': '♝', 'bn': '♞', 'bp': `♟${TEXT_VS}`,
 };
 
 // Helper to get piece character
