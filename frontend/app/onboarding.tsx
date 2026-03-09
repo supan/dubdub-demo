@@ -147,7 +147,9 @@ export default function OnboardingScreen() {
   }
 
   const canContinue = selectedCategories.length >= 3;
-  const isEditMode = user?.onboarding_complete && user?.selected_categories && user.selected_categories.length >= 3;
+  const isEditMode = user?.onboarding_complete && 
+                     Array.isArray(user?.selected_categories) && 
+                     user.selected_categories.length >= 3;
 
   return (
     <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>

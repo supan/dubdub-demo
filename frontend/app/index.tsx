@@ -15,7 +15,12 @@ export default function LoginScreen() {
     if (!loggedInUser) return; // Guard against undefined user
     
     // Check if user needs onboarding (no categories selected or onboarding not complete)
-    if (!loggedInUser.onboarding_complete || !loggedInUser.selected_categories || loggedInUser.selected_categories.length < 3) {
+    // Use optional chaining to safely access selected_categories.length for legacy users
+    const hasValidCategories = loggedInUser.selected_categories && 
+                               Array.isArray(loggedInUser.selected_categories) && 
+                               loggedInUser.selected_categories.length >= 3;
+    
+    if (!loggedInUser.onboarding_complete || !hasValidCategories) {
       router.replace('/onboarding');
     } else {
       router.replace('/feed');
