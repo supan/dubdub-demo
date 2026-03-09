@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import * as WebBrowser from 'expo-web-browser';
-import * as AppleAuthentication from 'expo-apple-authentication';
 import axios from 'axios';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -15,6 +14,17 @@ const getExpoLinking = () => {
     return require('expo-linking');
   } catch (e) {
     console.log('expo-linking not available');
+    return null;
+  }
+};
+
+// Helper to safely get Apple Authentication (iOS only)
+const getAppleAuth = () => {
+  if (Platform.OS !== 'ios') return null;
+  try {
+    return require('expo-apple-authentication');
+  } catch (e) {
+    console.log('expo-apple-authentication not available:', e);
     return null;
   }
 };
@@ -62,8 +72,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const checkAppleAuth = async () => {
       if (Platform.OS === 'ios') {
-        const available = await AppleAuthentication.isAvailableAsync();
-        setIsAppleAuthAvailable(available);
+        try {
+          const AppleAuth = getAppleAuth();
+          if (AppleAuth) {
+            const available = await AppleAuth.isAvailableAsync();
+            setIsAppleAuthAvailable(available);
+          }
+        } catch (e) {
+          console.log('Error checking Apple Auth availability:', e);
+          setIsAppleAuthAvailable(false);
+        }
       }
     };
     checkAppleAuth();
@@ -292,14 +310,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    const AppleAuth = getAppleAuth();
+    if (!AppleAuth) {
+      console.log('Apple Authentication module not available');
+      return;
+    }
+
     try {
       setLoading(true);
       
       // Request Apple credentials
-      const credential = await AppleAuthentication.signInAsync({
+      const credential = await AppleAuth.signInAsync({
         requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+          AppleAuth.AppleAuthenticationScope.FULL_NAME,
+          AppleAuth.AppleAuthenticationScope.EMAIL,
         ],
       });
 
