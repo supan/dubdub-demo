@@ -1,18 +1,33 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import * as AppleAuthentication from 'expo-apple-authentication';
+
+// Conditionally import Apple Authentication only on iOS
+let AppleAuthentication: any = null;
+if (Platform.OS === 'ios') {
+  try {
+    AppleAuthentication = require('expo-apple-authentication');
+  } catch (e) {
+    console.log('Apple Authentication not available:', e);
+  }
+}
 
 export default function LoginScreen() {
   const { user, login, loginWithApple, isAppleAuthAvailable, loading } = useAuth();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure component is mounted before navigating
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Navigate to appropriate screen after login
   const navigateAfterLogin = (loggedInUser: any) => {
-    if (!loggedInUser) return; // Guard against undefined user
+    if (!loggedInUser || !mounted) return; // Guard against undefined user and unmounted state
     
     // Check if user needs onboarding (no categories selected or onboarding not complete)
     // Use optional chaining to safely access selected_categories.length for legacy users
@@ -28,11 +43,15 @@ export default function LoginScreen() {
   };
 
   useEffect(() => {
-    // Only navigate once user is loaded and not in loading state
-    if (user && !loading) {
-      navigateAfterLogin(user);
+    // Only navigate once user is loaded, not in loading state, and component is mounted
+    if (user && !loading && mounted) {
+      // Small delay to ensure navigation system is ready
+      const timer = setTimeout(() => {
+        navigateAfterLogin(user);
+      }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [user, loading]);
+  }, [user, loading, mounted]);
 
   if (loading) {
     return (
@@ -62,7 +81,7 @@ export default function LoginScreen() {
 
         <View style={styles.bottomContent}>
           {/* Apple Sign In - iOS only */}
-          {Platform.OS === 'ios' && isAppleAuthAvailable && (
+          {Platform.OS === 'ios' && isAppleAuthAvailable && AppleAuthentication && (
             <AppleAuthentication.AppleAuthenticationButton
               buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
               buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
