@@ -16,7 +16,7 @@ const getValidWords = (): Set<string> => {
     const { VALID_WORDS: words } = require('../data/wordleWords');
     VALID_WORDS = words;
   }
-  return VALID_WORDS;
+  return VALID_WORDS as Set<string>;
 };
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');

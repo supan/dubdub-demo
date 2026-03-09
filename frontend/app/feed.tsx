@@ -54,11 +54,15 @@ interface Playable {
   type: string;
   answer_type: string;
   category: string;
-  title: string;
+  title?: string;
   question: any;
   options?: string[];
   correct_answer: string;
   difficulty: string;
+  // Chess puzzle specific fields
+  fen?: string;
+  solution?: string[];
+  hints?: string[];
 }
 
 type GameState = 'LOADING' | 'PLAYING' | 'SUBMITTING' | 'SHOWING_FEEDBACK' | 'TRANSITIONING';
@@ -1416,9 +1420,15 @@ export default function FeedScreen() {
       >
         {/* Question View - Always visible */}
         {currentPlayable ? (
-          currentPlayable.type === 'chess_mate_in_2' ? (
+          currentPlayable.type === 'chess_mate_in_2' && currentPlayable.fen && currentPlayable.solution ? (
             <ChessPuzzleCard
-              playable={currentPlayable}
+              playable={{
+                playable_id: currentPlayable.playable_id,
+                category: currentPlayable.category,
+                fen: currentPlayable.fen,
+                solution: currentPlayable.solution,
+                difficulty: currentPlayable.difficulty,
+              }}
               onPuzzleSolved={handleChessPuzzleSolved}
               onPuzzleFailed={handleChessPuzzleFailed}
               currentIndex={(currentIndex - setStartIndex)}

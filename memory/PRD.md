@@ -77,6 +77,13 @@ Playable: {
 ## What's Been Implemented
 
 ### March 2026
+- **Deployment Fix** (COMPLETE - March 9, 2026)
+  - Fixed TypeScript version mismatch (5.9.2 → 5.8.3) to satisfy eslint-config-expo peer dependency
+  - Removed conflicting package-lock.json (conflicts with yarn.lock)
+  - Added missing babel-preset-expo and react-refresh dev dependencies
+  - Fixed TypeScript errors in feed.tsx (Playable interface) and WordleCard.tsx
+  - Removed errant file artifact '=4.8.4'
+
 - **Category Selection & Editing Feature** (COMPLETE)
   - New user onboarding flow with min 3 category selection
   - Category descriptions support (optional)
@@ -112,9 +119,10 @@ Playable: {
 - Users:
   - admin / @dm!n!spl@ying
   - meenal / M3en@ladmin
+  - parul / P@rul0ps
 
 ## Environment
 - Backend: FastAPI on port 8001
 - Frontend: Expo on port 3000
 - Database: MongoDB (local via MONGO_URL env var)
-- Preview URL: https://onboard-cats.preview.emergentagent.com
+- Preview URL: https://playable-deploy.preview.emergentagent.com
