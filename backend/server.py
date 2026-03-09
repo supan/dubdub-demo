@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, Response, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, Response, Request, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -2532,7 +2532,7 @@ async def admin_get_stats(date: str = None, _: bool = Depends(verify_admin_token
 
 # ==================== BULK UPLOAD ENDPOINTS ====================
 
-from fastapi import UploadFile, File
+# Note: UploadFile, File, Form imported at top of file
 from fastapi.responses import StreamingResponse
 import io
 import csv
@@ -2681,7 +2681,7 @@ async def download_template(format_type: str, file_format: str = "xlsx", _: bool
 @api_router.post("/admin/bulk-upload")
 async def bulk_upload_playables(
     file: UploadFile = File(...),
-    format_type: str = "text_mcq",
+    format_type: str = Form("text_mcq"),
     _: bool = Depends(verify_admin_token)
 ):
     """Bulk upload playables from Excel or CSV file"""
