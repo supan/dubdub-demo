@@ -21,7 +21,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import PlayableCard from '../components/PlayableCard';
 import FeedbackOverlay from '../components/FeedbackOverlay';
 import ChessPuzzleCard from '../components/ChessPuzzleCard';
-import WordleCard from '../components/WordleCard';
+
+// Lazy load WordleCard to avoid loading 10k word dictionary at startup
+const WordleCard = React.lazy(() => import('../components/WordleCard'));
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const APP_VERSION = '1.3.8';  // Must match the version shown in login screen
@@ -1425,12 +1427,19 @@ export default function FeedScreen() {
               totalCount={SET_SIZE}
             />
           ) : currentPlayable.type === 'wordle' ? (
-            <WordleCard
-              targetWord={currentPlayable.correct_answer}
-              hint={currentPlayable.question?.text || currentPlayable.question?.hint}
-              onComplete={handleWordleComplete}
-              disabled={gameState !== 'PLAYING'}
-            />
+            <React.Suspense fallback={
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#00FF87" />
+                <Text style={{ color: '#666', marginTop: 10 }}>Loading Wordle...</Text>
+              </View>
+            }>
+              <WordleCard
+                targetWord={currentPlayable.correct_answer}
+                hint={currentPlayable.question?.text || currentPlayable.question?.hint}
+                onComplete={handleWordleComplete}
+                disabled={gameState !== 'PLAYING'}
+              />
+            </React.Suspense>
           ) : (
             <PlayableCard
               playable={currentPlayable}

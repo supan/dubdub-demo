@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,16 @@ import {
   Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { VALID_WORDS } from '../data/wordleWords';
+
+// Lazy load the word dictionary to avoid memory issues on app startup
+let VALID_WORDS: Set<string> | null = null;
+const getValidWords = (): Set<string> => {
+  if (!VALID_WORDS) {
+    const { VALID_WORDS: words } = require('../data/wordleWords');
+    VALID_WORDS = words;
+  }
+  return VALID_WORDS;
+};
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const WORD_LENGTH = 5;
@@ -63,7 +72,8 @@ export default function WordleCard({
 
   // Validate word against dictionary
   const isValidWord = useCallback((word: string): boolean => {
-    return VALID_WORDS.has(word.toUpperCase());
+    const validWords = getValidWords();
+    return validWords.has(word.toUpperCase());
   }, []);
 
   // Get tile state for a letter
