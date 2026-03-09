@@ -2729,11 +2729,18 @@ async def bulk_upload_playables(
         
         for idx, row in enumerate(rows, 1):
             try:
+                # Helper function to safely get and strip values (handles None from Excel)
+                def safe_get(key: str, default: str = '') -> str:
+                    value = row.get(key)
+                    if value is None:
+                        return default
+                    return str(value).strip()
+                
                 # Validate required fields (title removed - no longer required)
-                category = row.get('category', '').strip()
-                question_text = row.get('question_text', '').strip()
-                correct_answer = row.get('correct_answer', '').strip()
-                difficulty = row.get('difficulty', 'medium').strip().lower()
+                category = safe_get('category')
+                question_text = safe_get('question_text')
+                correct_answer = safe_get('correct_answer')
+                difficulty = safe_get('difficulty', 'medium').lower()
                 
                 if not category or not correct_answer:
                     errors.append(f"Row {idx}: Missing required fields (category or correct_answer)")
@@ -2755,7 +2762,7 @@ async def bulk_upload_playables(
                 
                 # Handle image/video URLs
                 if "image" in format_type:
-                    image_url = row.get('image_url', '').strip()
+                    image_url = safe_get('image_url')
                     if image_url:
                         question["image_base64"] = image_url  # Using same field for compatibility
                     else:
@@ -2763,7 +2770,7 @@ async def bulk_upload_playables(
                         continue
                 
                 if "video" in format_type:
-                    video_url = row.get('video_url', '').strip()
+                    video_url = safe_get('video_url')
                     if video_url:
                         question["video_url"] = video_url
                     else:
@@ -2798,10 +2805,10 @@ async def bulk_upload_playables(
                 options = None
                 if "mcq" in format_type:
                     options = [
-                        row.get('option_1', '').strip(),
-                        row.get('option_2', '').strip(),
-                        row.get('option_3', '').strip(),
-                        row.get('option_4', '').strip(),
+                        safe_get('option_1'),
+                        safe_get('option_2'),
+                        safe_get('option_3'),
+                        safe_get('option_4'),
                     ]
                     options = [o for o in options if o]  # Remove empty options
                     
@@ -2815,10 +2822,10 @@ async def bulk_upload_playables(
                 
                 # Create playable document
                 playable_id = f"play_{uuid.uuid4().hex[:12]}"
-                answer_explanation = row.get('answer_explanation', '').strip() or None
+                answer_explanation = safe_get('answer_explanation') or None
                 
                 # Parse alternate answers (comma-separated string to list)
-                alternate_answers_str = row.get('alternate_answers', '').strip()
+                alternate_answers_str = safe_get('alternate_answers')
                 alternate_answers = None
                 if alternate_answers_str and answer_type == "text_input":
                     alternate_answers = [a.strip() for a in alternate_answers_str.split(',') if a.strip()]
