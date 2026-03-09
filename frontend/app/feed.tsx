@@ -656,29 +656,26 @@ export default function FeedScreen() {
       );
       
       const result = response.data;
-      const prevStreak = currentStreak;
       
-      // Update local streak tracking
-      if (won) {
-        setCurrentStreak(result.current_streak);
-        if (result.current_streak > bestStreak) {
-          setBestStreak(result.current_streak);
+      // Update set stats
+      setSetStats(prev => ({
+        played: prev.played + 1,
+        correct: won ? prev.correct + 1 : prev.correct,
+      }));
+      
+      // Update cumulative session stats
+      setSessionStats(prev => {
+        const newStats = {
+          played: prev.played + 1,
+          correct: won ? prev.correct + 1 : prev.correct,
+          bestStreak: Math.max(prev.bestStreak, result.current_streak || 0),
+          categoryStats: { ...prev.categoryStats },
+        };
+        if (won) {
+          newStats.categoryStats[playable.category] = (prev.categoryStats[playable.category] || 0) + 1;
         }
-        setSessionStats(prev => ({
-          correct: prev.correct + 1,
-          total: prev.total + 1,
-          categoryStats: {
-            ...prev.categoryStats,
-            [playable.category]: (prev.categoryStats[playable.category] || 0) + 1,
-          },
-        }));
-      } else {
-        setCurrentStreak(0);
-        setSessionStats(prev => ({
-          ...prev,
-          total: prev.total + 1,
-        }));
-      }
+        return newStats;
+      });
       
       // Show feedback
       setFeedbackData({
@@ -699,8 +696,9 @@ export default function FeedScreen() {
       refreshUser().catch(console.error);
     } catch (error) {
       console.error('Error submitting wordle result:', error);
+      setGameState('PLAYING');
     }
-  }, [playables, currentIndex, sessionToken, gameState, currentStreak, bestStreak, refreshUser]);
+  }, [playables, currentIndex, sessionToken, gameState, refreshUser]);
 
   // Ref for the transition function so PanResponder can access it
   const doSwipeRef = useRef(doSwipeTransition);
