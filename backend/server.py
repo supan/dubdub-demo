@@ -2686,6 +2686,8 @@ async def bulk_upload_playables(
 ):
     """Bulk upload playables from Excel or CSV file"""
     
+    logging.info(f"Bulk upload called with format_type: {format_type}, filename: {file.filename}")
+    
     valid_formats = ["text_mcq", "text_input", "image_mcq", "image_text_input", "video_mcq", "video_text_input"]
     if format_type not in valid_formats:
         raise HTTPException(status_code=400, detail=f"Invalid format type. Valid types: {valid_formats}")
