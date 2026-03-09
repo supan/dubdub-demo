@@ -192,7 +192,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const checkExistingSession = async () => {
     try {
       // Restore token from persistent storage
-      const storedToken = await AsyncStorage.getItem(SESSION_TOKEN_KEY);
+      let storedToken: string | null = null;
+      try {
+        storedToken = await AsyncStorage.getItem(SESSION_TOKEN_KEY);
+      } catch (storageError) {
+        console.log('Error reading from AsyncStorage:', storageError);
+        // Clear potentially corrupted storage
+        try {
+          await AsyncStorage.removeItem(SESSION_TOKEN_KEY);
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+        setLoading(false);
+        return;
+      }
       
       if (storedToken) {
         // Verify the token is still valid by calling /api/auth/me
@@ -201,6 +214,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             headers: {
               Authorization: `Bearer ${storedToken}`,
             },
+            timeout: 10000, // 10 second timeout
           });
           
           // Token is valid, restore the session
@@ -210,7 +224,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (error: any) {
           // Token is invalid or expired, clear it
           console.log('Stored token invalid, clearing...');
-          await AsyncStorage.removeItem(SESSION_TOKEN_KEY);
+          try {
+            await AsyncStorage.removeItem(SESSION_TOKEN_KEY);
+          } catch (e) {
+            // Ignore cleanup errors
+          }
         }
       }
     } catch (error) {
