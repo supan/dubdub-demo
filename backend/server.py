@@ -1607,7 +1607,8 @@ async def dev_reset_progress(email: str = "supanshah51191@gmail.com"):
 # Admin credentials - multiple admins supported
 ADMIN_USERS = {
     "admin": "@dm!n!spl@ying",
-    "meenal": "M3en@ladmin"
+    "meenal": "M3en@ladmin",
+    "parul": "P@rul0ps"
 }
 
 class AdminLoginRequest(BaseModel):
