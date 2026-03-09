@@ -12,6 +12,8 @@ export default function LoginScreen() {
 
   // Navigate to appropriate screen after login
   const navigateAfterLogin = (loggedInUser: any) => {
+    if (!loggedInUser) return; // Guard against undefined user
+    
     // Check if user needs onboarding (no categories selected or onboarding not complete)
     if (!loggedInUser.onboarding_complete || !loggedInUser.selected_categories || loggedInUser.selected_categories.length < 3) {
       router.replace('/onboarding');
@@ -21,6 +23,7 @@ export default function LoginScreen() {
   };
 
   useEffect(() => {
+    // Only navigate once user is loaded and not in loading state
     if (user && !loading) {
       navigateAfterLogin(user);
     }

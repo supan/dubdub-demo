@@ -50,21 +50,30 @@ export default function OnboardingScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Track if we've already initialized to prevent re-runs
+  const [initialized, setInitialized] = useState(false);
+
   useEffect(() => {
     const init = async () => {
       if (!sessionToken) {
         setTimeout(() => router.replace('/'), 100);
         return;
       }
+      
+      // Only run initialization once
+      if (initialized) return;
+      
       await fetchCategories();
       
       // Pre-populate with user's existing selections (for edit mode)
       if (user?.selected_categories && user.selected_categories.length > 0) {
         setSelectedCategories(user.selected_categories);
       }
+      
+      setInitialized(true);
     };
     init();
-  }, [sessionToken, user]);
+  }, [sessionToken]); // Remove 'user' from dependencies to prevent re-initialization
 
   const fetchCategories = async () => {
     try {
@@ -99,18 +108,25 @@ export default function OnboardingScreen() {
 
     try {
       setSubmitting(true);
-      await axios.post(
+      setError(null);
+      
+      const response = await axios.post(
         `${BACKEND_URL}/api/categories/select`,
         { categories: selectedCategories },
         { headers: { Authorization: `Bearer ${sessionToken}` } }
       );
       
-      await refreshUser();
-      router.replace('/feed');
+      if (response.data.success) {
+        // Refresh user data first, then navigate
+        await refreshUser();
+        // Small delay to ensure state is updated before navigation
+        setTimeout(() => {
+          router.replace('/feed');
+        }, 100);
+      }
     } catch (err: any) {
       console.error('Error saving categories:', err);
       setError(err.response?.data?.detail || 'Failed to save categories');
-    } finally {
       setSubmitting(false);
     }
   };
