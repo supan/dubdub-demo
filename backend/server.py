@@ -505,6 +505,7 @@ async def apple_auth(request: AppleAuthRequest):
     """
     Handle Apple Sign In authentication.
     Verifies the identity token and creates/retrieves user account.
+    Note: Apple only provides email on FIRST sign-in. Users can also hide their email.
     """
     try:
         import jwt
@@ -530,7 +531,15 @@ async def apple_auth(request: AppleAuthRequest):
             
             # Extract user info from token
             apple_user_id = decoded.get("sub")
+            # Apple may not provide email on subsequent sign-ins or if user chose "Hide My Email"
             email = decoded.get("email") or request.email
+            
+            # If no email provided, generate a placeholder based on apple_user_id
+            # This ensures we can still create a valid user record
+            if not email:
+                # Use a recognizable pattern that won't conflict with real emails
+                email = f"apple_{apple_user_id[:12]}@privaterelay.apple.local"
+                logging.info(f"Apple auth: No email provided, using generated email: {email}")
             
         except jwt.ExpiredSignatureError:
             raise HTTPException(status_code=401, detail="Apple token has expired")
@@ -538,11 +547,11 @@ async def apple_auth(request: AppleAuthRequest):
             logging.error(f"Apple token validation error: {e}")
             raise HTTPException(status_code=401, detail="Invalid Apple token")
         
-        # Check if user exists by apple_user_id or email
+        # Check if user exists by apple_user_id first (most reliable), then by email
         existing_user = await db.users.find_one(
             {"$or": [
                 {"apple_user_id": apple_user_id},
-                {"email": email} if email else {"_id": None}
+                {"email": email}
             ]},
             {"_id": 0}
         )
@@ -573,12 +582,32 @@ async def apple_auth(request: AppleAuthRequest):
             user_email = existing_user.get("email") or email
             user_name = existing_user.get("name") or request.name or "Apple User"
             
+            # Build update fields
+            update_fields = {}
+            
             # Update apple_user_id if not set (user previously logged in with Google)
             if not existing_user.get("apple_user_id"):
+                update_fields["apple_user_id"] = apple_user_id
+            
+            # Update email if existing email is null/empty or is a generated placeholder
+            existing_email = existing_user.get("email")
+            if not existing_email or existing_email.endswith("@privaterelay.apple.local"):
+                if email and not email.endswith("@privaterelay.apple.local"):
+                    update_fields["email"] = email
+                    user_email = email
+            
+            # Update name if provided and existing is default
+            if request.name and existing_user.get("name") == "Apple User":
+                update_fields["name"] = request.name
+                user_name = request.name
+            
+            # Apply updates if any
+            if update_fields:
                 await db.users.update_one(
                     {"user_id": user_id_to_use},
-                    {"$set": {"apple_user_id": apple_user_id}}
+                    {"$set": update_fields}
                 )
+                logging.info(f"Apple auth: Updated user {user_id_to_use} with fields: {list(update_fields.keys())}")
         
         # Create session token
         session_token = f"apple_{uuid.uuid4().hex}"
