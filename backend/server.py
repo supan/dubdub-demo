@@ -2988,11 +2988,27 @@ async def get_api_schema():
     4. Increment version number
     """
     return {
-        "version": "1.0",
+        "version": "1.1",
         "base_endpoints": {
             "admin_login": "POST /api/admin/login",
             "playables": {
-                "list": "GET /api/admin/playables",
+                "list": {
+                    "endpoint": "GET /api/admin/playables",
+                    "query_params": {
+                        "page": {"type": "integer", "default": 1, "description": "Page number (1-indexed)"},
+                        "limit": {"type": "integer", "default": 100, "min": 1, "max": 500, "description": "Items per page"},
+                        "category": {"type": "string", "optional": True, "description": "Filter by category name"},
+                        "type": {"type": "string", "optional": True, "description": "Filter by playable type"}
+                    },
+                    "response": {
+                        "playables": "array of playable objects",
+                        "count": "number of items in current page",
+                        "total": "total number of matching playables",
+                        "page": "current page number",
+                        "limit": "items per page",
+                        "total_pages": "total number of pages"
+                    }
+                },
                 "create": "POST /api/admin/add-playable",
                 "update": "PUT /api/admin/playables/{playable_id}",
                 "delete": "DELETE /api/admin/playables/{playable_id}"
@@ -3002,7 +3018,26 @@ async def get_api_schema():
                 "create": "POST /api/admin/categories",
                 "update": "PATCH /api/admin/categories/{category_id}",
                 "delete": "DELETE /api/admin/categories/{category_id}",
+                "init": "POST /api/admin/categories/init",
                 "valid_icons": "GET /api/admin/valid-icons"
+            },
+            "bulk_upload": {
+                "endpoint": "POST /api/admin/bulk-upload",
+                "description": "Upload Excel file with multiple playables",
+                "form_data": {
+                    "file": "Excel file (.xlsx)",
+                    "format_type": "text_mcq | text_input | image_mcq | image_input | video_mcq | video_input"
+                }
+            },
+            "stats": {
+                "endpoint": "GET /api/admin/stats",
+                "query_params": {
+                    "date": {"type": "string", "format": "YYYY-MM-DD", "description": "Date for stats"}
+                }
+            },
+            "reset_user": {
+                "endpoint": "POST /api/admin/reset-user-progress",
+                "body": {"email": "string"}
             }
         },
         "playable_schema": {
