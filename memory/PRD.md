@@ -26,6 +26,21 @@ A mobile app (React Native/Expo) featuring a scrollable feed of quick, interacti
 - `this_or_that` - Binary choice questions
 - `wordle` - 5-letter word guessing game (6 attempts, 10k word dictionary)
 
+### Admin Dashboard (UPDATED - March 2026)
+- `/admin` route - Admin dashboard
+- Features:
+  - **View Content**: Paginated playables list with dropdown filters
+  - **Categories**: Manage categories, icons, descriptions
+- Admin users: admin, meenal, parul
+
+### Admin API (v1.2)
+- Full documentation at `/api/docs/schema`
+- **Playables List** (`GET /api/admin/playables`):
+  - Pagination: `page`, `limit` (max 500)
+  - Filters: `category`, `type`
+  - Response: `{playables, count, total, page, limit, total_pages}`
+- **Database Indexes**: `playable_id (unique)`, `category`, `type`, `created_at`, `(category, type) compound`
+
 ### Category System (COMPLETED - March 2026)
 - **Onboarding**: New users must select minimum 3 categories
 - **Descriptions**: Optional descriptions per category (e.g., "Chess: Mate in 2 Puzzles")

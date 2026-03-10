@@ -208,7 +208,10 @@ async def startup_event():
         await db.users.create_index("email", unique=True)
         await db.playables.create_index("playable_id", unique=True)
         await db.playables.create_index("category")
+        await db.playables.create_index("type")  # Index for type filtering
         await db.playables.create_index("weight")
+        await db.playables.create_index("created_at")  # Index for sorting by date
+        await db.playables.create_index([("category", 1), ("type", 1)])  # Compound index for filtered queries
         await db.user_progress.create_index([("user_id", 1), ("playable_id", 1)], unique=True)
         await db.sessions.create_index("session_token", unique=True)
         await db.sessions.create_index("expires_at", expireAfterSeconds=0)
@@ -2988,7 +2991,7 @@ async def get_api_schema():
     4. Increment version number
     """
     return {
-        "version": "1.1",
+        "version": "1.2",
         "base_endpoints": {
             "admin_login": "POST /api/admin/login",
             "playables": {
@@ -3039,6 +3042,25 @@ async def get_api_schema():
                 "endpoint": "POST /api/admin/reset-user-progress",
                 "body": {"email": "string"}
             }
+        },
+        "filter_options": {
+            "playable_types": [
+                {"value": "text", "label": "Text"},
+                {"value": "image", "label": "Image"},
+                {"value": "video", "label": "Video"},
+                {"value": "image_text", "label": "Image + Text"},
+                {"value": "video_text", "label": "Video + Text"},
+                {"value": "guess_the_x", "label": "Guess the X"},
+                {"value": "chess_mate_in_2", "label": "Chess Puzzle"},
+                {"value": "this_or_that", "label": "This or That"},
+                {"value": "wordle", "label": "Wordle"}
+            ],
+            "categories_endpoint": "GET /api/admin/categories (returns list with name, icon, color, playable_count)"
+        },
+        "database_indexes": {
+            "playables": ["playable_id (unique)", "category", "type", "weight", "created_at", "(category, type) compound"],
+            "users": ["user_id (unique)", "email (unique)"],
+            "user_progress": ["(user_id, playable_id) compound unique"]
         },
         "playable_schema": {
             "required_fields": {

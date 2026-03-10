@@ -51,6 +51,22 @@ export default function AdminDashboard() {
   const [totalPlayables, setTotalPlayables] = useState(0);
   const [filterCategory, setFilterCategory] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+
+  // Available filter options
+  const PLAYABLE_TYPES = [
+    { value: '', label: 'All Types' },
+    { value: 'text', label: 'Text' },
+    { value: 'image', label: 'Image' },
+    { value: 'video', label: 'Video' },
+    { value: 'image_text', label: 'Image + Text' },
+    { value: 'video_text', label: 'Video + Text' },
+    { value: 'guess_the_x', label: 'Guess the X' },
+    { value: 'chess_mate_in_2', label: 'Chess Puzzle' },
+    { value: 'this_or_that', label: 'This or That' },
+    { value: 'wordle', label: 'Wordle' },
+  ];
 
   // Categories State
   const [categories, setCategories] = useState<Category[]>([]);
@@ -280,23 +296,115 @@ export default function AdminDashboard() {
 
             {/* Filters */}
             <View style={styles.filterRow}>
-              <TextInput
-                style={[styles.input, styles.filterInput]}
-                placeholder="Filter by category"
-                placeholderTextColor="#666"
-                value={filterCategory}
-                onChangeText={setFilterCategory}
-              />
-              <TextInput
-                style={[styles.input, styles.filterInput]}
-                placeholder="Filter by type"
-                placeholderTextColor="#666"
-                value={filterType}
-                onChangeText={setFilterType}
-              />
+              {/* Category Dropdown */}
+              <View style={styles.dropdownContainer}>
+                <TouchableOpacity 
+                  style={styles.dropdown}
+                  onPress={() => {
+                    setShowCategoryDropdown(!showCategoryDropdown);
+                    setShowTypeDropdown(false);
+                  }}
+                >
+                  <Text style={styles.dropdownText}>
+                    {filterCategory || 'All Categories'}
+                  </Text>
+                  <Ionicons 
+                    name={showCategoryDropdown ? "chevron-up" : "chevron-down"} 
+                    size={16} 
+                    color="#888" 
+                  />
+                </TouchableOpacity>
+                {showCategoryDropdown && (
+                  <View style={styles.dropdownMenu}>
+                    <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled>
+                      <TouchableOpacity
+                        style={styles.dropdownItem}
+                        onPress={() => {
+                          setFilterCategory('');
+                          setShowCategoryDropdown(false);
+                        }}
+                      >
+                        <Text style={[styles.dropdownItemText, !filterCategory && styles.dropdownItemSelected]}>
+                          All Categories
+                        </Text>
+                      </TouchableOpacity>
+                      {categories.map((cat) => (
+                        <TouchableOpacity
+                          key={cat.category_id}
+                          style={styles.dropdownItem}
+                          onPress={() => {
+                            setFilterCategory(cat.name);
+                            setShowCategoryDropdown(false);
+                          }}
+                        >
+                          <Ionicons name={cat.icon as any} size={16} color={cat.color} style={{ marginRight: 8 }} />
+                          <Text style={[styles.dropdownItemText, filterCategory === cat.name && styles.dropdownItemSelected]}>
+                            {cat.name} ({cat.playable_count})
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+              </View>
+
+              {/* Type Dropdown */}
+              <View style={styles.dropdownContainer}>
+                <TouchableOpacity 
+                  style={styles.dropdown}
+                  onPress={() => {
+                    setShowTypeDropdown(!showTypeDropdown);
+                    setShowCategoryDropdown(false);
+                  }}
+                >
+                  <Text style={styles.dropdownText}>
+                    {PLAYABLE_TYPES.find(t => t.value === filterType)?.label || 'All Types'}
+                  </Text>
+                  <Ionicons 
+                    name={showTypeDropdown ? "chevron-up" : "chevron-down"} 
+                    size={16} 
+                    color="#888" 
+                  />
+                </TouchableOpacity>
+                {showTypeDropdown && (
+                  <View style={styles.dropdownMenu}>
+                    {PLAYABLE_TYPES.map((type) => (
+                      <TouchableOpacity
+                        key={type.value}
+                        style={styles.dropdownItem}
+                        onPress={() => {
+                          setFilterType(type.value);
+                          setShowTypeDropdown(false);
+                        }}
+                      >
+                        <Text style={[styles.dropdownItemText, filterType === type.value && styles.dropdownItemSelected]}>
+                          {type.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {/* Apply Filter Button */}
               <TouchableOpacity style={styles.filterButton} onPress={handleFilter}>
-                <Text style={styles.filterButtonText}>Filter</Text>
+                <Ionicons name="search" size={18} color="#0F0F1E" />
+                <Text style={styles.filterButtonText}>Apply</Text>
               </TouchableOpacity>
+
+              {/* Clear Filter Button */}
+              {(filterCategory || filterType) && (
+                <TouchableOpacity 
+                  style={styles.clearButton} 
+                  onPress={() => {
+                    setFilterCategory('');
+                    setFilterType('');
+                    if (adminToken) fetchPlayables(adminToken, 1, '', '');
+                  }}
+                >
+                  <Ionicons name="close-circle" size={18} color="#FF6B6B" />
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Pagination Controls */}
@@ -537,13 +645,69 @@ const styles = StyleSheet.create({
   },
   filterButton: {
     backgroundColor: '#00FF87',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderRadius: 10,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   filterButtonText: {
     color: '#0F0F1E',
+    fontWeight: 'bold',
+  },
+  clearButton: {
+    backgroundColor: 'rgba(255,107,107,0.2)',
+    padding: 12,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dropdownContainer: {
+    flex: 1,
+    minWidth: 150,
+    position: 'relative',
+    zIndex: 10,
+  },
+  dropdown: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 10,
+    padding: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dropdownText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: '#1a1a2e',
+    borderRadius: 10,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    zIndex: 100,
+    maxHeight: 250,
+    overflow: 'hidden',
+  },
+  dropdownItem: {
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  dropdownItemText: {
+    color: '#ccc',
+    fontSize: 14,
+  },
+  dropdownItemSelected: {
+    color: '#00FF87',
     fontWeight: 'bold',
   },
   paginationContainer: {
