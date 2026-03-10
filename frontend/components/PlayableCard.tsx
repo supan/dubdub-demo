@@ -69,6 +69,13 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
       }
     };
     setupAudio();
+    
+    // Cleanup: Unload video when component unmounts to free memory
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.unloadAsync().catch(() => {});
+      }
+    };
   }, []);
 
   // Reset state when playable changes

@@ -118,12 +118,14 @@ export default function FeedScreen() {
   const showSetFeedbackRef = useRef(showSetFeedback);
   const noMorePlayablesRef = useRef(noMorePlayables);
   
-  // Keep refs in sync with state
-  useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
-  useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
-  useEffect(() => { playablesRef.current = playables; }, [playables]);
-  useEffect(() => { showSetFeedbackRef.current = showSetFeedback; }, [showSetFeedback]);
-  useEffect(() => { noMorePlayablesRef.current = noMorePlayables; }, [noMorePlayables]);
+  // Keep refs in sync with state (combined into single effect to reduce overhead)
+  useEffect(() => { 
+    gameStateRef.current = gameState; 
+    currentIndexRef.current = currentIndex;
+    playablesRef.current = playables;
+    showSetFeedbackRef.current = showSetFeedback;
+    noMorePlayablesRef.current = noMorePlayables;
+  }, [gameState, currentIndex, playables, showSetFeedback, noMorePlayables]);
 
   // STATE 1: Auto-skip feedback screen if nothing was attempted (all skipped)
   useEffect(() => {
@@ -194,13 +196,29 @@ export default function FeedScreen() {
         setNoMorePlayables(newPlayables.length < 10);
       } else {
         // Append new playables, but DEDUPLICATE to prevent showing same playable twice
+        // Also cleanup old playables to prevent memory growth on Android
         setPlayables(prev => {
           const existingIds = new Set(prev.map(p => p.playable_id));
           const uniqueNewPlayables = newPlayables.filter(
             (p: Playable) => !existingIds.has(p.playable_id)
           );
           console.log(`[Feed] Appending ${uniqueNewPlayables.length} new playables (${newPlayables.length - uniqueNewPlayables.length} duplicates filtered)`);
-          return [...prev, ...uniqueNewPlayables];
+          
+          // Memory optimization: Keep only last 20 played + current set + new playables
+          // This prevents the array from growing indefinitely on long sessions
+          const MAX_HISTORY = 20;
+          const currentSetStart = setStartIndex;
+          const combined = [...prev, ...uniqueNewPlayables];
+          
+          if (combined.length > MAX_HISTORY + SET_SIZE + uniqueNewPlayables.length) {
+            // Remove old playables but keep enough for back navigation within the session
+            const keepFrom = Math.max(0, currentSetStart - MAX_HISTORY);
+            const trimmed = combined.slice(keepFrom);
+            console.log(`[Feed] Memory cleanup: trimmed ${combined.length - trimmed.length} old playables`);
+            return trimmed;
+          }
+          
+          return combined;
         });
         if (newPlayables.length < 5) {
           setNoMorePlayables(true);
