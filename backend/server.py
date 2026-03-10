@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, Response, Request, UploadFile, File, Form
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, Response, Request, UploadFile, File, Form, Query
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -1892,11 +1892,39 @@ async def admin_add_playable(
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/admin/playables")
-async def admin_get_playables(_: bool = Depends(verify_admin_token)):
-    """Get all playables (admin only)"""
+async def admin_get_playables(
+    _: bool = Depends(verify_admin_token),
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(100, ge=1, le=500, description="Items per page"),
+    category: Optional[str] = Query(None, description="Filter by category"),
+    type: Optional[str] = Query(None, description="Filter by playable type")
+):
+    """Get all playables with pagination (admin only)"""
     try:
-        playables = await db.playables.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
-        return {"playables": playables, "count": len(playables)}
+        # Build filter
+        filter_query = {}
+        if category:
+            filter_query["category"] = category
+        if type:
+            filter_query["type"] = type
+        
+        # Get total count
+        total_count = await db.playables.count_documents(filter_query)
+        
+        # Calculate skip
+        skip = (page - 1) * limit
+        
+        # Get paginated playables
+        playables = await db.playables.find(filter_query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+        
+        return {
+            "playables": playables,
+            "count": len(playables),
+            "total": total_count,
+            "page": page,
+            "limit": limit,
+            "total_pages": (total_count + limit - 1) // limit
+        }
     except Exception as e:
         logging.error(f"Error getting playables: {e}")
         raise HTTPException(status_code=500, detail=str(e))
