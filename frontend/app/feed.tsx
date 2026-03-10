@@ -976,10 +976,12 @@ export default function FeedScreen() {
     
     // Get appropriate icon and color based on performance
     const getIconConfig = () => {
-      if (isGoodPerformance) return { name: "trophy" as const, color: "#FFD700", bgColor: "rgba(255, 215, 0, 0.15)" };
-      if (isLowPerformance) return { name: "thumbs-up" as const, color: "#00D9FF", bgColor: "rgba(0, 217, 255, 0.15)" };
-      // Zero correct - encouraging but subdued
-      return { name: "rocket" as const, color: "#9B59B6", bgColor: "rgba(155, 89, 182, 0.15)" };
+      if (setAccuracy === 100) return { name: "trophy" as const, color: "#FFD700", bgColor: "rgba(255, 215, 0, 0.15)" };
+      if (setAccuracy >= 80) return { name: "star" as const, color: "#00FF87", bgColor: "rgba(0, 255, 135, 0.15)" };
+      if (isGoodPerformance) return { name: "rocket" as const, color: "#00FF87", bgColor: "rgba(0, 255, 135, 0.15)" }; // 50-79%
+      if (isLowPerformance) return { name: "thumbs-up" as const, color: "#00D9FF", bgColor: "rgba(0, 217, 255, 0.15)" }; // 1-49%
+      // Zero correct - muscle icon to appreciate the effort
+      return { name: "barbell" as const, color: "#9B59B6", bgColor: "rgba(155, 89, 182, 0.15)" };
     };
     
     // Get appropriate title based on performance
@@ -1019,15 +1021,6 @@ export default function FeedScreen() {
         achievements.push({ icon: "🔥", title: "Streak Master", description: `${sessionStats.bestStreak} in a row!` });
       }
     }
-    
-    // Motivational messages for zero-correct sets
-    const zeroCorrectMotivations = [
-      "Learning happens through challenges!",
-      "The next set is your comeback!",
-      "Great things take practice!",
-      "You're building knowledge with each try!",
-    ];
-    const randomMotivation = zeroCorrectMotivations[Math.floor(Math.random() * zeroCorrectMotivations.length)];
     
     // Generate share message - only for decent performance (don't share poor performance)
     const generateShareMessage = () => {
@@ -1090,7 +1083,7 @@ export default function FeedScreen() {
             {/* Performance Message */}
             <View style={[styles.percentileBadge, { backgroundColor: `${performanceMessage.color}20` }]}>
               <Ionicons 
-                name={isGoodPerformance ? "trending-up" : isLowPerformance ? "remove" : "bulb-outline"} 
+                name={isGoodPerformance ? "trending-up" : isLowPerformance ? "remove" : "fitness"} 
                 size={16} 
                 color={performanceMessage.color} 
               />
@@ -1098,11 +1091,6 @@ export default function FeedScreen() {
                 {performanceMessage.text}
               </Text>
             </View>
-            
-            {/* Extra motivation for zero-correct sets */}
-            {isZeroCorrect && (
-              <Text style={styles.motivationText}>{randomMotivation}</Text>
-            )}
             
             {/* Stats Row - Set Score + Cumulative Streak */}
             <View style={styles.feedbackStatsRow}>
