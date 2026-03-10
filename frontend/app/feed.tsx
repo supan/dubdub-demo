@@ -1148,33 +1148,6 @@ export default function FeedScreen() {
               </View>
             )}
             
-            {/* Try Again Button - for zero-correct or low performance */}
-            {(isZeroCorrect || isLowPerformance) && !isLastSet && (
-              <TouchableOpacity style={styles.tryAgainBtn} onPress={() => {
-                animateToNext(async () => {
-                  setCurrentSetNumber(prev => prev + 1);
-                  setSetStats({ played: 0, correct: 0 });
-                  setSetStartIndex(currentIndex + 1);
-                  setCurrentIndex(currentIndex + 1);
-                  setShowSetFeedback(false);
-                  setGameState('PLAYING');
-                  await fetchMoreIfNeeded();
-                });
-              }}>
-                <LinearGradient
-                  colors={isZeroCorrect ? ['#9B59B6', '#8E44AD'] : ['#00D9FF', '#0099CC']}
-                  style={styles.shareGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                  <Ionicons name="arrow-forward" size={22} color="#FFF" />
-                  <Text style={[styles.shareText, { color: '#FFF' }]}>
-                    {isZeroCorrect ? "Let's Try Again!" : "Next Set"}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            )}
-            
             {/* Share Button - only for good performance */}
             {isGoodPerformance && (
               <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
