@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,13 @@ import {
   Animated,
   Dimensions,
   Platform,
+  Pressable,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const AUTO_ADVANCE_DURATION = 5000; // 5 seconds
 
 interface FeedbackOverlayProps {
   visible: boolean;
@@ -24,6 +26,7 @@ interface FeedbackOverlayProps {
   categoryCorrectCount?: number;
   timeTaken?: number;  // Time taken in seconds
   avgTime?: number;    // Average time in seconds (placeholder for now)
+  onAutoAdvance?: () => void; // Callback when timer completes
 }
 
 // Single psychological message based on context
@@ -53,9 +56,14 @@ export default function FeedbackOverlay({
   hintsUsed,
   timeTaken,
   avgTime,
+  onAutoAdvance,
 }: FeedbackOverlayProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const [isPaused, setIsPaused] = useState(false);
+  const timerRef = useRef<Animated.CompositeAnimation | null>(null);
+  const progressValueRef = useRef(0);
 
   // Determine the single psychological message to show
   const psychMessage = useMemo(() => {
@@ -72,8 +80,25 @@ export default function FeedbackOverlay({
     }
   }, [correct, currentStreak, previousStreak, hintsUsed]);
 
+  // Track progress value for pause/resume
+  useEffect(() => {
+    const listenerId = progressAnim.addListener(({ value }) => {
+      progressValueRef.current = value;
+    });
+    return () => {
+      progressAnim.removeListener(listenerId);
+    };
+  }, [progressAnim]);
+
+  // Start/reset timer when overlay becomes visible
   useEffect(() => {
     if (visible) {
+      // Reset progress
+      progressAnim.setValue(0);
+      progressValueRef.current = 0;
+      setIsPaused(false);
+
+      // Start entrance animations
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -87,13 +112,53 @@ export default function FeedbackOverlay({
           useNativeDriver: true,
         }),
       ]).start();
+
+      // Start progress bar animation
+      startProgressTimer(0);
     } else {
+      // Reset all animations when hidden
       fadeAnim.setValue(0);
       scaleAnim.setValue(0.8);
+      progressAnim.setValue(0);
+      if (timerRef.current) {
+        timerRef.current.stop();
+        timerRef.current = null;
+      }
     }
   }, [visible]);
 
+  const startProgressTimer = (fromValue: number) => {
+    const remainingDuration = AUTO_ADVANCE_DURATION * (1 - fromValue);
+    
+    timerRef.current = Animated.timing(progressAnim, {
+      toValue: 1,
+      duration: remainingDuration,
+      useNativeDriver: false, // Can't use native driver for width
+    });
+
+    timerRef.current.start(({ finished }) => {
+      if (finished && onAutoAdvance) {
+        onAutoAdvance();
+      }
+    });
+  };
+
+  const handlePressIn = () => {
+    setIsPaused(true);
+    if (timerRef.current) {
+      timerRef.current.stop();
+    }
+  };
+
+  const handlePressOut = () => {
+    setIsPaused(false);
+    startProgressTimer(progressValueRef.current);
+  };
+
   if (!visible) return null;
+
+  // Progress bar color: green for correct, white for incorrect
+  const progressBarColor = correct ? '#00FF87' : '#FFFFFF';
 
   return (
     <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
@@ -102,99 +167,130 @@ export default function FeedbackOverlay({
         <View style={styles.dimOverlay} />
       </BlurView>
 
-      {/* Modal Card */}
-      <Animated.View 
-        style={[
-          styles.modalContainer,
-          { transform: [{ scale: scaleAnim }] }
-        ]}
+      {/* Pressable wrapper for tap to pause */}
+      <Pressable 
+        style={styles.pressableArea}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
       >
-        <View style={[
-          styles.modalCard,
-          correct ? styles.modalCorrect : styles.modalIncorrect
-        ]}>
-          {/* Result Icon */}
-          <View style={[
-            styles.iconContainer,
-            correct ? styles.iconCorrect : styles.iconIncorrect
-          ]}>
-            <Ionicons 
-              name={correct ? "checkmark" : "close"} 
-              size={48} 
-              color={correct ? "#00FF87" : "#FF6B6B"} 
+        {/* Progress Bar at Top */}
+        <View style={styles.progressBarContainer}>
+          <View style={styles.progressBarBackground}>
+            <Animated.View 
+              style={[
+                styles.progressBarFill,
+                { 
+                  backgroundColor: progressBarColor,
+                  width: progressAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0%', '100%'],
+                  }),
+                  opacity: isPaused ? 0.5 : 1,
+                }
+              ]} 
             />
           </View>
-
-          {/* Result Text */}
-          <Text style={[
-            styles.resultText,
-            { color: correct ? "#00FF87" : "#FF6B6B" }
-          ]}>
-            {correct ? "Correct!" : "Wrong"}
-          </Text>
-
-          {/* Single Psychological Message */}
-          {psychMessage && (
-            <Text style={styles.psychMessage}>{psychMessage}</Text>
-          )}
-
-          {/* Time Display - Only for correct answers */}
-          {correct && timeTaken !== undefined && (
-            <View style={styles.timeContainer}>
-              <View style={styles.timeRow}>
-                <Ionicons name="timer-outline" size={16} color="#00D9FF" />
-                <Text style={styles.timeText}>{timeTaken.toFixed(1)}s</Text>
-              </View>
-              {avgTime !== undefined && (
-                <Text style={styles.avgTimeText}>Avg: {avgTime.toFixed(1)}s</Text>
-              )}
+          {isPaused && (
+            <View style={styles.pausedIndicator}>
+              <Ionicons name="pause" size={12} color="rgba(255,255,255,0.6)" />
+              <Text style={styles.pausedText}>Paused</Text>
             </View>
           )}
-
-          {/* Correct Answer (for wrong answers only) */}
-          {!correct && correctAnswer && (
-            <View style={styles.answerBox}>
-              <Text style={styles.answerLabel}>Answer</Text>
-              <Text style={styles.answerValue}>{correctAnswer}</Text>
-            </View>
-          )}
-
-          {/* Explanation (for wrong answers only) */}
-          {!correct && answerExplanation && (
-            <View style={styles.explanationBox}>
-              <View style={styles.explanationHeader}>
-                <Ionicons name="bulb" size={14} color="#FFB800" />
-                <Text style={styles.explanationLabel}>Did you know?</Text>
-              </View>
-              <Text style={styles.explanationText}>{answerExplanation}</Text>
-            </View>
-          )}
-
-          {/* Streak Container */}
-          <View style={[
-            styles.streakContainer,
-            currentStreak >= 5 && styles.streakContainerHot
-          ]}>
-            <Ionicons 
-              name="flame" 
-              size={18} 
-              color={currentStreak >= 5 ? "#FFD700" : "#FF6B00"} 
-            />
-            <Text style={[
-              styles.streakText,
-              currentStreak >= 5 && styles.streakTextHot
-            ]}>
-              {currentStreak} streak
-            </Text>
-          </View>
-
-          {/* Swipe Hint */}
-          <View style={styles.swipeHint}>
-            <Ionicons name="chevron-up" size={20} color="rgba(255,255,255,0.4)" />
-            <Text style={styles.swipeHintText}>Swipe up for next</Text>
-          </View>
         </View>
-      </Animated.View>
+
+        {/* Modal Card */}
+        <Animated.View 
+          style={[
+            styles.modalContainer,
+            { transform: [{ scale: scaleAnim }] }
+          ]}
+        >
+          <View style={[
+            styles.modalCard,
+            correct ? styles.modalCorrect : styles.modalIncorrect
+          ]}>
+            {/* Result Icon */}
+            <View style={[
+              styles.iconContainer,
+              correct ? styles.iconCorrect : styles.iconIncorrect
+            ]}>
+              <Ionicons 
+                name={correct ? "checkmark" : "close"} 
+                size={48} 
+                color={correct ? "#00FF87" : "#FF6B6B"} 
+              />
+            </View>
+
+            {/* Result Text */}
+            <Text style={[
+              styles.resultText,
+              { color: correct ? "#00FF87" : "#FF6B6B" }
+            ]}>
+              {correct ? "Correct!" : "Wrong"}
+            </Text>
+
+            {/* Single Psychological Message */}
+            {psychMessage && (
+              <Text style={styles.psychMessage}>{psychMessage}</Text>
+            )}
+
+            {/* Time Display - Only for correct answers */}
+            {correct && timeTaken !== undefined && (
+              <View style={styles.timeContainer}>
+                <View style={styles.timeRow}>
+                  <Ionicons name="timer-outline" size={16} color="#00D9FF" />
+                  <Text style={styles.timeText}>{timeTaken.toFixed(1)}s</Text>
+                </View>
+                {avgTime !== undefined && (
+                  <Text style={styles.avgTimeText}>Avg: {avgTime.toFixed(1)}s</Text>
+                )}
+              </View>
+            )}
+
+            {/* Correct Answer (for wrong answers only) */}
+            {!correct && correctAnswer && (
+              <View style={styles.answerBox}>
+                <Text style={styles.answerLabel}>Answer</Text>
+                <Text style={styles.answerValue}>{correctAnswer}</Text>
+              </View>
+            )}
+
+            {/* Explanation (for wrong answers only) */}
+            {!correct && answerExplanation && (
+              <View style={styles.explanationBox}>
+                <View style={styles.explanationHeader}>
+                  <Ionicons name="bulb" size={14} color="#FFB800" />
+                  <Text style={styles.explanationLabel}>Did you know?</Text>
+                </View>
+                <Text style={styles.explanationText}>{answerExplanation}</Text>
+              </View>
+            )}
+
+            {/* Streak Container */}
+            <View style={[
+              styles.streakContainer,
+              currentStreak >= 5 && styles.streakContainerHot
+            ]}>
+              <Ionicons 
+                name="flame" 
+                size={18} 
+                color={currentStreak >= 5 ? "#FFD700" : "#FF6B00"} 
+              />
+              <Text style={[
+                styles.streakText,
+                currentStreak >= 5 && styles.streakTextHot
+              ]}>
+                {currentStreak} streak
+              </Text>
+            </View>
+
+            {/* Tap hint instead of swipe hint */}
+            <View style={styles.swipeHint}>
+              <Text style={styles.swipeHintText}>Hold to pause • Swipe to skip</Text>
+            </View>
+          </View>
+        </Animated.View>
+      </Pressable>
     </Animated.View>
   );
 }
@@ -212,6 +308,42 @@ const styles = StyleSheet.create({
   dimOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
+  pressableArea: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressBarContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 60 : 40,
+    left: 20,
+    right: 20,
+    zIndex: 101,
+    alignItems: 'center',
+  },
+  progressBarBackground: {
+    width: '100%',
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  pausedIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 4,
+  },
+  pausedText: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontWeight: '500',
   },
   modalContainer: {
     width: SCREEN_WIDTH - 48,

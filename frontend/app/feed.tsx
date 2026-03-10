@@ -1494,6 +1494,30 @@ export default function FeedScreen() {
           categoryCorrectCount={feedbackData?.categoryCorrectCount || 0}
           timeTaken={feedbackData?.time_taken}
           avgTime={feedbackData?.avg_time}
+          onAutoAdvance={() => {
+            // Auto-advance: same logic as swipe up
+            const idx = currentIndex;
+            const positionInSet = (idx - setStartIndex) + 1;
+            
+            animateToNext(() => {
+              // Check if completing a set
+              if (positionInSet >= SET_SIZE) {
+                setShowSetFeedback(true);
+                setFeedbackData(null);
+                setGameState('PLAYING');
+              } else if (idx < playables.length - 1) {
+                setCurrentIndex(idx + 1);
+                setFeedbackData(null);
+                setGameState('PLAYING');
+              } else {
+                // No more questions - show final set feedback
+                setShowSetFeedback(true);
+                setNoMorePlayables(true);
+                setFeedbackData(null);
+                setGameState('PLAYING');
+              }
+            });
+          }}
         />
       </Animated.View>
       
