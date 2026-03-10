@@ -795,6 +795,92 @@ export default function FeedScreen() {
     );
   };
 
+  // Settings Modal Component - defined early so it's available in all return statements
+  const renderSettingsModal = () => (
+    <Modal
+      visible={showSettingsModal}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => setShowSettingsModal(false)}
+    >
+      <TouchableOpacity 
+        style={styles.modalOverlay} 
+        activeOpacity={1} 
+        onPress={() => setShowSettingsModal(false)}
+      >
+        <View style={styles.settingsModal}>
+          {/* User Info */}
+          <View style={styles.settingsUserInfo}>
+            <View style={styles.settingsAvatar}>
+              <Ionicons name="person" size={32} color="#00FF87" />
+            </View>
+            <View style={styles.settingsUserDetails}>
+              <Text style={styles.settingsUserName}>{user?.name || 'Player'}</Text>
+              <Text style={styles.settingsUserEmail}>{user?.email || ''}</Text>
+            </View>
+          </View>
+
+          <View style={styles.settingsDivider} />
+
+          {/* Stats Summary */}
+          <View style={styles.settingsStatsRow}>
+            <View style={styles.settingsStatItem}>
+              <Text style={styles.settingsStatValue}>{user?.total_played || 0}</Text>
+              <Text style={styles.settingsStatLabel}>Played</Text>
+            </View>
+            <View style={styles.settingsStatItem}>
+              <Text style={styles.settingsStatValue}>{user?.correct_answers || 0}</Text>
+              <Text style={styles.settingsStatLabel}>Correct</Text>
+            </View>
+            <View style={styles.settingsStatItem}>
+              <Text style={styles.settingsStatValue}>{user?.best_streak || 0}</Text>
+              <Text style={styles.settingsStatLabel}>Best Streak</Text>
+            </View>
+          </View>
+
+          <View style={styles.settingsDivider} />
+
+          {/* Edit Categories Option */}
+          <TouchableOpacity 
+            style={styles.settingsOption} 
+            onPress={() => {
+              setShowSettingsModal(false);
+              router.push('/onboarding');
+            }}
+          >
+            <Ionicons name="grid-outline" size={22} color="#00FF87" />
+            <Text style={[styles.settingsOptionText, { color: '#00FF87' }]}>Edit Categories</Text>
+          </TouchableOpacity>
+
+          {/* Logout Option */}
+          <TouchableOpacity 
+            style={styles.settingsOption} 
+            onPress={handleLogout}
+          >
+            <Ionicons name="log-out-outline" size={22} color="#B0B0C8" />
+            <Text style={styles.settingsOptionText}>Log Out</Text>
+          </TouchableOpacity>
+
+          {/* Delete Account Option */}
+          <TouchableOpacity 
+            style={styles.settingsOptionDanger} 
+            onPress={handleDeleteAccount}
+            disabled={deletingAccount}
+          >
+            {deletingAccount ? (
+              <ActivityIndicator size="small" color="#FF4444" />
+            ) : (
+              <Ionicons name="trash-outline" size={22} color="#FF4444" />
+            )}
+            <Text style={styles.settingsOptionTextDanger}>
+              {deletingAccount ? 'Deleting...' : 'Delete Account'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+
   const isLoading = gameState === 'LOADING';
   const isSubmitting = gameState === 'SUBMITTING';
   const showFeedback = gameState === 'SHOWING_FEEDBACK';
@@ -966,8 +1052,8 @@ export default function FeedScreen() {
               <Text style={styles.streakText}>{user?.current_streak || sessionStats.bestStreak}</Text>
             </View>
             <Text style={styles.headerTitle}>dubdub</Text>
-            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-              <Ionicons name="log-out-outline" size={24} color="#B0B0C8" />
+            <TouchableOpacity onPress={() => setShowSettingsModal(true)} style={styles.settingsButton}>
+              <Ionicons name="settings-outline" size={24} color="#B0B0C8" />
             </TouchableOpacity>
           </View>
         </View>
@@ -1114,6 +1200,7 @@ export default function FeedScreen() {
             </View>
           )}
         </View>
+        {renderSettingsModal()}
       </LinearGradient>
     );
   }
@@ -1204,8 +1291,8 @@ export default function FeedScreen() {
               <Text style={styles.streakText}>{user?.current_streak || sessionStats.bestStreak}</Text>
             </View>
             <Text style={styles.headerTitle}>dubdub</Text>
-            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-              <Ionicons name="log-out-outline" size={24} color="#B0B0C8" />
+            <TouchableOpacity onPress={() => setShowSettingsModal(true)} style={styles.settingsButton}>
+              <Ionicons name="settings-outline" size={24} color="#B0B0C8" />
             </TouchableOpacity>
           </View>
         </View>
@@ -1296,97 +1383,12 @@ export default function FeedScreen() {
             </TouchableOpacity>
           </View>
         </View>
+        {renderSettingsModal()}
       </LinearGradient>
     );
   }
 
   const currentPlayable = playables[currentIndex];
-
-  // Settings Modal Component
-  const renderSettingsModal = () => (
-    <Modal
-      visible={showSettingsModal}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={() => setShowSettingsModal(false)}
-    >
-      <TouchableOpacity 
-        style={styles.modalOverlay} 
-        activeOpacity={1} 
-        onPress={() => setShowSettingsModal(false)}
-      >
-        <View style={styles.settingsModal}>
-          {/* User Info */}
-          <View style={styles.settingsUserInfo}>
-            <View style={styles.settingsAvatar}>
-              <Ionicons name="person" size={32} color="#00FF87" />
-            </View>
-            <View style={styles.settingsUserDetails}>
-              <Text style={styles.settingsUserName}>{user?.name || 'Player'}</Text>
-              <Text style={styles.settingsUserEmail}>{user?.email || ''}</Text>
-            </View>
-          </View>
-
-          <View style={styles.settingsDivider} />
-
-          {/* Stats Summary */}
-          <View style={styles.settingsStatsRow}>
-            <View style={styles.settingsStatItem}>
-              <Text style={styles.settingsStatValue}>{user?.total_played || 0}</Text>
-              <Text style={styles.settingsStatLabel}>Played</Text>
-            </View>
-            <View style={styles.settingsStatItem}>
-              <Text style={styles.settingsStatValue}>{user?.correct_answers || 0}</Text>
-              <Text style={styles.settingsStatLabel}>Correct</Text>
-            </View>
-            <View style={styles.settingsStatItem}>
-              <Text style={styles.settingsStatValue}>{user?.best_streak || 0}</Text>
-              <Text style={styles.settingsStatLabel}>Best Streak</Text>
-            </View>
-          </View>
-
-          <View style={styles.settingsDivider} />
-
-          {/* Edit Categories Option */}
-          <TouchableOpacity 
-            style={styles.settingsOption} 
-            onPress={() => {
-              setShowSettingsModal(false);
-              router.push('/onboarding');
-            }}
-          >
-            <Ionicons name="grid-outline" size={22} color="#00FF87" />
-            <Text style={[styles.settingsOptionText, { color: '#00FF87' }]}>Edit Categories</Text>
-          </TouchableOpacity>
-
-          {/* Logout Option */}
-          <TouchableOpacity 
-            style={styles.settingsOption} 
-            onPress={handleLogout}
-          >
-            <Ionicons name="log-out-outline" size={22} color="#B0B0C8" />
-            <Text style={styles.settingsOptionText}>Log Out</Text>
-          </TouchableOpacity>
-
-          {/* Delete Account Option */}
-          <TouchableOpacity 
-            style={styles.settingsOptionDanger} 
-            onPress={handleDeleteAccount}
-            disabled={deletingAccount}
-          >
-            {deletingAccount ? (
-              <ActivityIndicator size="small" color="#FF4444" />
-            ) : (
-              <Ionicons name="trash-outline" size={22} color="#FF4444" />
-            )}
-            <Text style={styles.settingsOptionTextDanger}>
-              {deletingAccount ? 'Deleting...' : 'Delete Account'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-    </Modal>
-  );
 
   return (
     <LinearGradient colors={['#0F0F1E', '#1A1A2E']} style={styles.container}>
