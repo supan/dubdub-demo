@@ -232,7 +232,7 @@ async def shutdown_event():
 
 class User(BaseModel):
     user_id: str
-    email: str
+    email: Optional[str] = None  # Can be None for Apple users who hide their email
     name: str
     picture: Optional[str] = None
     total_played: int = 0
@@ -241,7 +241,7 @@ class User(BaseModel):
     best_streak: int = 0
     selected_categories: Optional[List[str]] = None  # User's selected categories
     onboarding_complete: bool = False  # Whether user has completed category selection
-    created_at: datetime
+    created_at: Optional[datetime] = None  # Made optional for backwards compatibility
 
 class SessionDataResponse(BaseModel):
     id: str
