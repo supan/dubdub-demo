@@ -94,6 +94,15 @@ export default function FeedScreen() {
     correct: 0,
   });
   
+  // Per-question tracking for badges (reset each set)
+  interface SetQuestionData {
+    timeTaken: number;
+    category: string;
+    wasCorrect: boolean;
+    questionIndex: number;
+  }
+  const [setQuestionHistory, setSetQuestionHistory] = useState<SetQuestionData[]>([]);
+  
   // Cumulative session stats
   const [sessionStats, setSessionStats] = useState({
     played: 0,
@@ -133,6 +142,7 @@ export default function FeedScreen() {
       const skipToNextSet = async () => {
         setCurrentSetNumber(prev => prev + 1);
         setSetStats({ played: 0, correct: 0 });
+      setSetQuestionHistory([]); // Reset question history for new set
         setSetStartIndex(currentIndex + 1);
         setCurrentIndex(currentIndex + 1);
         setShowSetFeedback(false);
@@ -261,6 +271,7 @@ export default function FeedScreen() {
       // Reset all local state
       setSessionStats({ played: 0, correct: 0, bestStreak: 0, categoryStats: {} });
       setSetStats({ played: 0, correct: 0 });
+      setSetQuestionHistory([]); // Reset question history for new set
       setCurrentSetNumber(1);
       setSetStartIndex(0);
       setShowSetFeedback(false);
@@ -376,6 +387,7 @@ export default function FeedScreen() {
         setCurrentSetNumber(prev => prev + 1);
         // Reset set stats
         setSetStats({ played: 0, correct: 0 });
+      setSetQuestionHistory([]); // Reset question history for new set
         // Update set start index
         setSetStartIndex(idx + 1);
         // Move to next question
@@ -435,6 +447,14 @@ export default function FeedScreen() {
       );
 
       const result = response.data;
+      
+      // Track question data for badges
+      setSetQuestionHistory(prev => [...prev, {
+        timeTaken: timeTaken || 0,
+        category: playable.category,
+        wasCorrect: result.correct,
+        questionIndex: prev.length,
+      }]);
       
       // Update set stats
       setSetStats(prev => ({
@@ -498,6 +518,14 @@ export default function FeedScreen() {
       if (result.correct) {
         const playable = playables[currentIndex];
         
+        // Track question data for badges (Guess the X doesn't track time per attempt)
+        setSetQuestionHistory(prev => [...prev, {
+          timeTaken: 0, // Guess games don't have single time
+          category: playable.category,
+          wasCorrect: true,
+          questionIndex: prev.length,
+        }]);
+        
         // Update set stats
         setSetStats(prev => ({
           played: prev.played + 1,
@@ -535,6 +563,14 @@ export default function FeedScreen() {
         refreshUser().catch(console.error);
       } else if (result.all_hints_exhausted) {
         // All hints used - count as played but not correct
+        // Track question data for badges
+        setSetQuestionHistory(prev => [...prev, {
+          timeTaken: 0,
+          category: playables[currentIndex]?.category || '',
+          wasCorrect: false,
+          questionIndex: prev.length,
+        }]);
+        
         setSetStats(prev => ({
           played: prev.played + 1,
           correct: prev.correct,
@@ -573,6 +609,14 @@ export default function FeedScreen() {
       );
 
       const result = response.data;
+      
+      // Track question data for badges (Chess puzzles don't track time)
+      setSetQuestionHistory(prev => [...prev, {
+        timeTaken: 0,
+        category: playable.category,
+        wasCorrect: true,
+        questionIndex: prev.length,
+      }]);
       
       // Update set stats
       setSetStats(prev => ({
@@ -626,6 +670,14 @@ export default function FeedScreen() {
 
       const result = response.data;
       
+      // Track question data for badges
+      setSetQuestionHistory(prev => [...prev, {
+        timeTaken: 0,
+        category: playable.category,
+        wasCorrect: false,
+        questionIndex: prev.length,
+      }]);
+      
       // Update set stats
       setSetStats(prev => ({
         played: prev.played + 1,
@@ -678,6 +730,14 @@ export default function FeedScreen() {
       );
       
       const result = response.data;
+      
+      // Track question data for badges
+      setSetQuestionHistory(prev => [...prev, {
+        timeTaken: 0, // Wordle doesn't track time
+        category: playable.category,
+        wasCorrect: won,
+        questionIndex: prev.length,
+      }]);
       
       // Update set stats
       setSetStats(prev => ({
@@ -1057,6 +1117,52 @@ export default function FeedScreen() {
       }
     }
     
+    // Calculate "Your Strength" badge based on setQuestionHistory
+    const calculateStrengthBadge = (): { icon: string; text: string; color: string } | null => {
+      if (setQuestionHistory.length === 0) return null;
+      
+      const correctQuestions = setQuestionHistory.filter(q => q.wasCorrect);
+      const questionsWithTime = setQuestionHistory.filter(q => q.timeTaken > 0);
+      
+      // Priority 1: Speed Demon - Average time < 5 seconds (only for questions that track time)
+      if (questionsWithTime.length >= 3) {
+        const avgTime = questionsWithTime.reduce((sum, q) => sum + q.timeTaken, 0) / questionsWithTime.length;
+        if (avgTime < 5 && correctQuestions.length >= 3) {
+          return { icon: "🚀", text: "Speed Demon", color: "#00D9FF" };
+        }
+      }
+      
+      // Priority 2: Category Master - 3+ correct in same category
+      const categoryCount: Record<string, number> = {};
+      correctQuestions.forEach(q => {
+        categoryCount[q.category] = (categoryCount[q.category] || 0) + 1;
+      });
+      const topCategory = Object.entries(categoryCount).find(([_, count]) => count >= 3);
+      if (topCategory) {
+        return { icon: "🎯", text: `${topCategory[0]} Master`, color: "#FFD700" };
+      }
+      
+      // Priority 3: Comeback King - Started wrong, last 3 correct
+      if (setQuestionHistory.length >= 4) {
+        const hasWrongStart = !setQuestionHistory[0].wasCorrect || !setQuestionHistory[1].wasCorrect;
+        const lastThree = setQuestionHistory.slice(-3);
+        const lastThreeAllCorrect = lastThree.every(q => q.wasCorrect);
+        if (hasWrongStart && lastThreeAllCorrect) {
+          return { icon: "👑", text: "Comeback King", color: "#9B59B6" };
+        }
+      }
+      
+      // Priority 4: Quick Thinker - Any answer < 2 seconds
+      const quickAnswer = questionsWithTime.find(q => q.timeTaken < 2 && q.wasCorrect);
+      if (quickAnswer) {
+        return { icon: "⚡", text: "Quick Thinker", color: "#FF6B00" };
+      }
+      
+      return null;
+    };
+    
+    const strengthBadge = calculateStrengthBadge();
+    
     // Generate share message - only for decent performance (don't share poor performance)
     const generateShareMessage = () => {
       const streakEmoji = sessionStats.bestStreak >= 5 ? '🔥🔥🔥' : sessionStats.bestStreak >= 3 ? '🔥🔥' : '🔥';
@@ -1163,11 +1269,13 @@ export default function FeedScreen() {
               </View>
             )}
             
-            {/* Your Strength - only show for good performance */}
-            {isGoodPerformance && (
-              <View style={styles.bestCategoryBadge}>
+            {/* Your Strength - show dynamic badge based on performance */}
+            {strengthBadge && (
+              <View style={[styles.bestCategoryBadge, { borderColor: strengthBadge.color }]}>
                 <Text style={styles.bestCategoryLabel}>Your Strength</Text>
-                <Text style={styles.bestCategoryValue}>Logical Thinking ⭐</Text>
+                <Text style={[styles.bestCategoryValue, { color: strengthBadge.color }]}>
+                  {strengthBadge.icon} {strengthBadge.text}
+                </Text>
               </View>
             )}
             
