@@ -996,7 +996,17 @@ export default function FeedScreen() {
       return `Set ${currentSetNumber} Done`;
     };
     
-    // Get performance message
+    // Motivational messages for zero-correct sets - pick one randomly
+    const zeroCorrectMotivations = [
+      "Every expert was once a beginner!",
+      "Learning happens through challenges!",
+      "The next set is your comeback!",
+      "Great things take practice!",
+      "You're building knowledge with each try!",
+    ];
+    const randomMotivation = zeroCorrectMotivations[Math.floor(Math.random() * zeroCorrectMotivations.length)];
+    
+    // Get performance message - for 0% use randomMotivation
     const getPerformanceMessage = () => {
       if (isGoodPerformance) {
         if (setAccuracy === 100) return { text: "Perfect! You nailed it!", color: "#00FF87" };
@@ -1004,8 +1014,8 @@ export default function FeedScreen() {
         return { text: "Well done! You're on track!", color: "#00FF87" };
       }
       if (isLowPerformance) return { text: "Good effort! Keep practicing!", color: "#00D9FF" };
-      // Zero correct - supportive message
-      return { text: "Every expert was once a beginner!", color: "#9B59B6" };
+      // Zero correct - use random motivational message
+      return { text: randomMotivation, color: "#9B59B6" };
     };
     
     const iconConfig = getIconConfig();
