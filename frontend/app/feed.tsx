@@ -977,8 +977,7 @@ export default function FeedScreen() {
     // Get appropriate icon and color based on performance
     const getIconConfig = () => {
       if (setAccuracy === 100) return { name: "trophy" as const, color: "#FFD700", bgColor: "rgba(255, 215, 0, 0.15)" };
-      if (setAccuracy >= 80) return { name: "star" as const, color: "#00FF87", bgColor: "rgba(0, 255, 135, 0.15)" };
-      if (isGoodPerformance) return { name: "rocket" as const, color: "#00FF87", bgColor: "rgba(0, 255, 135, 0.15)" }; // 50-79%
+      if (isGoodPerformance) return { name: "rocket" as const, color: "#00FF87", bgColor: "rgba(0, 255, 135, 0.15)" }; // 50-99%
       if (isLowPerformance) return { name: "thumbs-up" as const, color: "#00D9FF", bgColor: "rgba(0, 217, 255, 0.15)" }; // 1-49%
       // Zero correct - muscle icon to appreciate the effort
       return { name: "barbell" as const, color: "#9B59B6", bgColor: "rgba(155, 89, 182, 0.15)" };
@@ -986,12 +985,9 @@ export default function FeedScreen() {
     
     // Get appropriate title based on performance
     const getTitle = () => {
-      if (isGoodPerformance) {
-        if (setAccuracy === 100) return `Perfect Set! 🎉`;
-        if (setAccuracy >= 80) return `Set ${currentSetNumber} Done! 🎉`;
-        return `Set ${currentSetNumber} Complete! 👏`;
-      }
-      if (isLowPerformance) return `Set ${currentSetNumber} Complete`;
+      if (setAccuracy === 100) return `Perfect Set! 🎉`;
+      if (isGoodPerformance) return `Set ${currentSetNumber} Complete! 🚀`; // 50-99%
+      if (isLowPerformance) return `Set ${currentSetNumber} Complete`; // 1-49%
       // Zero correct - no celebration emoji
       return `Set ${currentSetNumber} Done`;
     };
@@ -1004,16 +1000,45 @@ export default function FeedScreen() {
       "Great things take practice!",
       "You're building knowledge with each try!",
     ];
-    const randomMotivation = zeroCorrectMotivations[Math.floor(Math.random() * zeroCorrectMotivations.length)];
     
-    // Get performance message - for 0% use randomMotivation
+    // Messages for low performance (1-49%)
+    const lowPerformanceMessages = [
+      "Good effort! Keep practicing!",
+      "You're warming up! Next set's yours!",
+      "Keep going! Progress takes time!",
+      "Nice try! You'll get there!",
+      "Stay curious! Learning is the goal!",
+    ];
+    
+    // Messages for good performance (50-99%)
+    const goodPerformanceMessages = [
+      "Well done! You're on track!",
+      "Great job! Keep the momentum!",
+      "Solid performance! Keep going!",
+      "Nice work! You're getting better!",
+      "Good stuff! Keep it up!",
+    ];
+    
+    // Messages for perfect score (100%)
+    const perfectMessages = [
+      "Perfect! You nailed it!",
+      "Flawless! You're unstoppable!",
+      "100%! That was incredible!",
+      "Perfect score! You crushed it!",
+      "Nailed every single one!",
+    ];
+    
+    // Pick random messages
+    const randomMotivation = zeroCorrectMotivations[Math.floor(Math.random() * zeroCorrectMotivations.length)];
+    const randomLowMessage = lowPerformanceMessages[Math.floor(Math.random() * lowPerformanceMessages.length)];
+    const randomGoodMessage = goodPerformanceMessages[Math.floor(Math.random() * goodPerformanceMessages.length)];
+    const randomPerfectMessage = perfectMessages[Math.floor(Math.random() * perfectMessages.length)];
+    
+    // Get performance message - all random now
     const getPerformanceMessage = () => {
-      if (isGoodPerformance) {
-        if (setAccuracy === 100) return { text: "Perfect! You nailed it!", color: "#00FF87" };
-        if (setAccuracy >= 80) return { text: "Great job! Keep it up!", color: "#00FF87" };
-        return { text: "Well done! You're on track!", color: "#00FF87" };
-      }
-      if (isLowPerformance) return { text: "Good effort! Keep practicing!", color: "#00D9FF" };
+      if (setAccuracy === 100) return { text: randomPerfectMessage, color: "#00FF87" };
+      if (isGoodPerformance) return { text: randomGoodMessage, color: "#00FF87" }; // 50-99%
+      if (isLowPerformance) return { text: randomLowMessage, color: "#00D9FF" }; // 1-49%
       // Zero correct - use random motivational message
       return { text: randomMotivation, color: "#9B59B6" };
     };
