@@ -1055,7 +1055,7 @@ export default function FeedScreen() {
             <Text style={styles.loadingTip}>
               {[
                 "Answer quickly to build your streak!",
-                "Swipe up to skip to the next question",
+                "Test your knowledge across categories",
                 "Challenge yourself with harder categories",
                 "Come back daily for new questions!",
               ][Math.floor(Math.random() * 4)]}

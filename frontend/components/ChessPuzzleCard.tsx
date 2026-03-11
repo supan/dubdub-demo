@@ -402,12 +402,6 @@ function ChessPuzzleCard({
           Tap a piece to select, then tap destination
         </Text>
       </View>
-
-      {/* Swipe hint */}
-      <View style={styles.swipeHint}>
-        <Ionicons name="chevron-up" size={20} color="#444" />
-        <Text style={styles.swipeHintText}>Swipe up to skip</Text>
-      </View>
     </View>
   );
 }

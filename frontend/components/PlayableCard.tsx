@@ -371,14 +371,6 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
               </TouchableOpacity>
             </>
           )}
-
-          {/* Swipe hint */}
-          <View style={styles.guessSwipeHint}>
-            <Ionicons name="chevron-up" size={20} color={hasImage ? "rgba(255,255,255,0.5)" : "#444"} />
-            <Text style={[styles.guessSwipeText, hasImage && styles.guessSwipeTextImmersive]}>
-              Swipe up to skip
-            </Text>
-          </View>
         </View>
       </View>
     );
@@ -669,12 +661,6 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
           <View style={styles.immersiveSubmitSection}>
             {renderSubmitButton()}
           </View>
-
-          {/* Swipe hint - Bottom center */}
-          <View style={styles.swipeHintOverlay}>
-            <Ionicons name="chevron-up" size={20} color="rgba(255,255,255,0.5)" />
-            <Text style={styles.swipeHintOverlayText}>Swipe up to skip</Text>
-          </View>
         </View>
       </View>
     );
@@ -702,13 +688,8 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
             </View>
           </View>
 
-          {/* Bottom - Just swipe hint, no watching indicator */}
-          <View style={styles.videoWatchingContainer}>
-            <View style={styles.swipeHintOverlay}>
-              <Ionicons name="chevron-up" size={20} color="rgba(255,255,255,0.5)" />
-              <Text style={styles.swipeHintOverlayText}>Swipe up to skip</Text>
-            </View>
-          </View>
+          {/* Bottom spacer to maintain layout */}
+          <View style={styles.videoWatchingContainer} />
         </View>
       );
     }
@@ -802,12 +783,6 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
           {/* Submit Button */}
           <View style={styles.immersiveSubmitSection}>
             {renderSubmitButton()}
-          </View>
-
-          {/* Swipe hint */}
-          <View style={styles.swipeHintOverlay}>
-            <Ionicons name="chevron-up" size={20} color="rgba(255,255,255,0.5)" />
-            <Text style={styles.swipeHintOverlayText}>Swipe up to skip</Text>
           </View>
         </View>
       </View>
