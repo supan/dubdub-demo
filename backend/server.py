@@ -241,6 +241,7 @@ class User(BaseModel):
     best_streak: int = 0
     selected_categories: Optional[List[str]] = None  # User's selected categories
     onboarding_complete: bool = False  # Whether user has completed category selection
+    has_skipped: bool = False  # Whether user has ever skipped a question (for UI hint)
     created_at: Optional[datetime] = None  # Made optional for backwards compatibility
 
 class SessionDataResponse(BaseModel):
@@ -1471,13 +1472,18 @@ async def skip_playable(
         user_doc = await db.users.find_one({"user_id": current_user.user_id}, {"_id": 0})
         current_streak = user_doc.get("current_streak", 0)
         current_skipped = user_doc.get("skipped", 0)
+        has_skipped_before = user_doc.get("has_skipped", False)
         
-        # ASYNC: Update skip count (non-critical)
+        # ASYNC: Update skip count and set has_skipped flag (non-critical)
         async def update_skip_count():
             try:
+                update_ops = {"$inc": {"skipped": 1}}
+                # Set has_skipped to true on first skip (for UI hint)
+                if not has_skipped_before:
+                    update_ops["$set"] = {"has_skipped": True}
                 await db.users.update_one(
                     {"user_id": current_user.user_id},
-                    {"$inc": {"skipped": 1}}
+                    update_ops
                 )
             except Exception as e:
                 logging.error(f"Failed to update skip count: {e}")

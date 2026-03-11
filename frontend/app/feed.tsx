@@ -116,6 +116,11 @@ export default function FeedScreen() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
 
+  // Swipe hint visibility (only show until first skip)
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
+  const swipeHintOpacity = useRef(new Animated.Value(1)).current;
+  const swipeHintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Animated values
   const translateY = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(1)).current;
@@ -135,6 +140,42 @@ export default function FeedScreen() {
     showSetFeedbackRef.current = showSetFeedback;
     noMorePlayablesRef.current = noMorePlayables;
   }, [gameState, currentIndex, playables, showSetFeedback, noMorePlayables]);
+
+  // Swipe hint: hide if user has already skipped before (from profile)
+  useEffect(() => {
+    if (user?.has_skipped) {
+      setShowSwipeHint(false);
+    }
+  }, [user?.has_skipped]);
+
+  // Swipe hint: fade out after 2 seconds, reset on each new question
+  useEffect(() => {
+    // Clear any existing timeout
+    if (swipeHintTimeoutRef.current) {
+      clearTimeout(swipeHintTimeoutRef.current);
+    }
+
+    // Only show and animate if user hasn't skipped before
+    if (!user?.has_skipped && showSwipeHint && gameState === 'PLAYING' && !showSetFeedback) {
+      // Reset opacity to 1 for new question
+      swipeHintOpacity.setValue(1);
+      
+      // Start fade out after 2 seconds
+      swipeHintTimeoutRef.current = setTimeout(() => {
+        Animated.timing(swipeHintOpacity, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }).start();
+      }, 2000);
+    }
+
+    return () => {
+      if (swipeHintTimeoutRef.current) {
+        clearTimeout(swipeHintTimeoutRef.current);
+      }
+    };
+  }, [currentIndex, gameState, showSetFeedback, user?.has_skipped, showSwipeHint]);
 
   // STATE 1: Auto-skip feedback screen if nothing was attempted (all skipped)
   useEffect(() => {
@@ -366,6 +407,11 @@ export default function FeedScreen() {
     
     if (state !== 'PLAYING' || !items[idx]) return;
 
+    // Hide swipe hint after first skip (it will be persisted via backend)
+    if (showSwipeHint) {
+      setShowSwipeHint(false);
+    }
+
     try {
       const playable = items[idx];
       await axios.post(
@@ -377,7 +423,7 @@ export default function FeedScreen() {
     } catch (error) {
       console.error('Error skipping:', error);
     }
-  }, [sessionToken, refreshUser]);
+  }, [sessionToken, refreshUser, showSwipeHint]);
 
   const doSwipeTransition = useCallback(() => {
     const state = gameStateRef.current;
@@ -1642,27 +1688,13 @@ export default function FeedScreen() {
         />
       </Animated.View>
       
-      {/* Swipe hint - Only show for text questions (immersive layouts, guess_the_x, chess, and wordle have their own) */}
-      {(() => {
-        const isMediaQuestion = currentPlayable && 
-          (currentPlayable.type === 'video' || currentPlayable.type === 'video_text' || 
-           currentPlayable.type === 'image' || currentPlayable.type === 'image_text' ||
-           currentPlayable.type === 'guess_the_x' || currentPlayable.type === 'chess_mate_in_2' ||
-           currentPlayable.type === 'wordle') &&
-          (currentPlayable.question?.video_url || currentPlayable.question?.image_base64 || currentPlayable.question?.image_url || currentPlayable.hints || currentPlayable.fen || currentPlayable.type === 'wordle');
-        
-        // Don't show external hints for immersive media questions
-        if (isMediaQuestion) return null;
-        
-        return (
-          <View style={styles.swipeHintBottom}>
-            <Ionicons name="chevron-up" size={24} color="#444" />
-            <Text style={styles.swipeHintText}>
-              {showFeedback ? "Swipe up for next" : "Swipe up to skip"}
-            </Text>
-          </View>
-        );
-      })()}
+      {/* Right-side swipe hint chevron - only shown until first skip, fades after 2 seconds */}
+      {showSwipeHint && !user?.has_skipped && !showSetFeedback && gameState === 'PLAYING' && (
+        <Animated.View style={[styles.swipeHintRight, { opacity: swipeHintOpacity }]}>
+          <Ionicons name="chevron-up" size={20} color="rgba(255,255,255,0.5)" />
+          <Ionicons name="chevron-up" size={20} color="rgba(255,255,255,0.7)" style={{ marginTop: -10 }} />
+        </Animated.View>
+      )}
     </LinearGradient>
   );
 }
@@ -1732,6 +1764,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#555',
     marginTop: 2,
+  },
+  swipeHintRight: {
+    position: 'absolute',
+    right: 16,
+    top: '50%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   // Empty state
   emptyContainer: {

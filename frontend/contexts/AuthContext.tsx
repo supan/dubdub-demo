@@ -40,6 +40,7 @@ interface User {
   best_streak: number;
   selected_categories?: string[];
   onboarding_complete?: boolean;
+  has_skipped?: boolean;
 }
 
 interface AuthContextType {
