@@ -256,6 +256,76 @@ class PlayableStatus(str, Enum):
     ACTIVE = "active"
     INACTIVE = "inactive"
 
+# Define valid answer_types for each question type
+# None means the answer_type is auto-determined and not user-selectable
+PLAYABLE_TYPE_CONFIG = {
+    "text": {
+        "valid_answer_types": ["mcq", "text_input"],
+        "default_answer_type": "mcq",
+        "description": "Text-only question"
+    },
+    "image": {
+        "valid_answer_types": ["mcq", "text_input"],
+        "default_answer_type": "mcq",
+        "description": "Image-only question"
+    },
+    "image_text": {
+        "valid_answer_types": ["mcq", "text_input"],
+        "default_answer_type": "mcq",
+        "description": "Image with text question"
+    },
+    "video": {
+        "valid_answer_types": ["mcq", "text_input"],
+        "default_answer_type": "mcq",
+        "description": "Video-only question"
+    },
+    "video_text": {
+        "valid_answer_types": ["mcq", "text_input"],
+        "default_answer_type": "mcq",
+        "description": "Video with text question"
+    },
+    "guess_the_x": {
+        "valid_answer_types": ["progressive_reveal"],
+        "default_answer_type": "progressive_reveal",
+        "description": "Progressive hint reveal game - user guesses after each hint"
+    },
+    "chess_mate_in_2": {
+        "valid_answer_types": ["chess_moves"],
+        "default_answer_type": "chess_moves",
+        "description": "Chess puzzle - user makes moves on board"
+    },
+    "this_or_that": {
+        "valid_answer_types": ["tap_select"],
+        "default_answer_type": "tap_select",
+        "description": "Choose between two options by tapping"
+    },
+    "wordle": {
+        "valid_answer_types": ["wordle_grid"],
+        "default_answer_type": "wordle_grid",
+        "description": "Wordle-style word guessing game"
+    }
+}
+
+def get_valid_answer_type(playable_type: str, requested_answer_type: Optional[str] = None) -> str:
+    """Get valid answer_type for a playable type, validating or defaulting as needed."""
+    config = PLAYABLE_TYPE_CONFIG.get(playable_type)
+    if not config:
+        raise ValueError(f"Unknown playable type: {playable_type}")
+    
+    valid_types = config["valid_answer_types"]
+    default_type = config["default_answer_type"]
+    
+    # If only one valid type, always use it (auto-determined types)
+    if len(valid_types) == 1:
+        return valid_types[0]
+    
+    # If requested type is valid, use it
+    if requested_answer_type and requested_answer_type in valid_types:
+        return requested_answer_type
+    
+    # Otherwise use default
+    return default_type
+
 class Playable(BaseModel):
     playable_id: str
     type: str  # "text", "image_text", "video_text", "guess_the_x", "chess_mate_in_2", "this_or_that"
@@ -1822,11 +1892,26 @@ async def admin_add_playable(
             question["video_url"] = request.video_url
         
         # Validate type is one of the supported formats
-        SUPPORTED_TYPES = ["text", "image_text", "video_text", "guess_the_x", "chess_mate_in_2", "this_or_that", "wordle"]
-        if request.type not in SUPPORTED_TYPES:
+        if request.type not in PLAYABLE_TYPE_CONFIG:
+            supported = list(PLAYABLE_TYPE_CONFIG.keys())
             raise HTTPException(
                 status_code=400, 
-                detail=f"Unsupported type '{request.type}'. Supported types: {', '.join(SUPPORTED_TYPES)}"
+                detail=f"Unsupported type '{request.type}'. Supported types: {', '.join(supported)}"
+            )
+        
+        # Get valid answer_type based on playable type (auto-determine or validate)
+        try:
+            answer_type = get_valid_answer_type(request.type, request.answer_type)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        
+        # Validate answer_type if user provided one that doesn't match
+        type_config = PLAYABLE_TYPE_CONFIG[request.type]
+        if request.answer_type and request.answer_type not in type_config["valid_answer_types"]:
+            valid = type_config["valid_answer_types"]
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid answer_type '{request.answer_type}' for type '{request.type}'. Valid options: {', '.join(valid)}"
             )
         
         # Validate required fields based on type
@@ -1908,15 +1993,8 @@ async def admin_add_playable(
             "created_at": datetime.now(timezone.utc)
         }
         
-        # Auto-set answer_type based on type
-        if request.type == "wordle":
-            playable_doc["answer_type"] = "wordle_grid"
-        elif request.type == "this_or_that":
-            playable_doc["answer_type"] = "tap_select"
-        elif request.type in ["guess_the_x", "chess_mate_in_2"]:
-            playable_doc["answer_type"] = "text_input"
-        else:
-            playable_doc["answer_type"] = request.answer_type
+        # Use the validated answer_type (auto-determined for special types)
+        playable_doc["answer_type"] = answer_type
         
         # Use the validated category name
         playable_doc["category"] = category_name
@@ -2029,6 +2107,46 @@ async def migrate_set_status_by_answer_type(
         }
     except HTTPException:
         raise
+    except Exception as e:
+        logging.error(f"Migration error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/admin/migrate/fix-answer-types")
+async def migrate_fix_answer_types(_: bool = Depends(verify_admin_token)):
+    """
+    Fix answer_type for playables that have incorrect values.
+    Updates answer_type based on PLAYABLE_TYPE_CONFIG.
+    """
+    try:
+        results = {}
+        
+        # Fix each type that has auto-determined answer_type
+        for playable_type, config in PLAYABLE_TYPE_CONFIG.items():
+            if len(config["valid_answer_types"]) == 1:
+                correct_answer_type = config["valid_answer_types"][0]
+                
+                # Find playables with wrong answer_type
+                wrong_count = await db.playables.count_documents({
+                    "type": playable_type,
+                    "answer_type": {"$ne": correct_answer_type}
+                })
+                
+                if wrong_count > 0:
+                    result = await db.playables.update_many(
+                        {"type": playable_type, "answer_type": {"$ne": correct_answer_type}},
+                        {"$set": {"answer_type": correct_answer_type}}
+                    )
+                    results[playable_type] = {
+                        "fixed": result.modified_count,
+                        "correct_answer_type": correct_answer_type
+                    }
+        
+        return {
+            "success": True,
+            "message": "Answer types fixed",
+            "results": results
+        }
     except Exception as e:
         logging.error(f"Migration error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -3088,13 +3206,16 @@ async def get_playable_types():
                 "id": "video_text",
                 "name": "Video + Text",
                 "description": "Video with text question",
-                "supported_answer_types": ["mcq", "text_input"]
+                "valid_answer_types": ["mcq", "text_input"],
+                "default_answer_type": "mcq"
             },
             {
                 "id": "guess_the_x",
                 "name": "Guess the X",
                 "description": "5 hints • Next hint revealed on wrong answer",
-                "supported_answer_types": ["text_input"],
+                "valid_answer_types": ["progressive_reveal"],
+                "default_answer_type": "progressive_reveal",
+                "answer_type_auto": True,
                 "required_fields": ["hints"],
                 "hints_count": "3-5"
             },
@@ -3102,17 +3223,34 @@ async def get_playable_types():
                 "id": "chess_mate_in_2",
                 "name": "Chess Mate in 2",
                 "description": "Chess puzzle - find mate in 2 moves",
-                "supported_answer_types": ["text_input"],
+                "valid_answer_types": ["chess_moves"],
+                "default_answer_type": "chess_moves",
+                "answer_type_auto": True,
                 "required_fields": ["fen", "solution"]
             },
             {
                 "id": "this_or_that",
                 "name": "This or That",
                 "description": "Two images • Tap to select the correct one",
-                "supported_answer_types": ["tap_select"],
+                "valid_answer_types": ["tap_select"],
+                "default_answer_type": "tap_select",
+                "answer_type_auto": True,
                 "required_fields": ["image_left_url", "image_right_url", "label_left", "label_right"]
+            },
+            {
+                "id": "wordle",
+                "name": "Wordle",
+                "description": "5-letter word guessing game",
+                "valid_answer_types": ["wordle_grid"],
+                "default_answer_type": "wordle_grid",
+                "answer_type_auto": True,
+                "required_fields": ["correct_answer (5 letters)"]
             }
-        ]
+        ],
+        "type_config": {
+            "description": "Defines valid answer_types for each playable type. Types with answer_type_auto=True have fixed answer_type.",
+            "mapping": {k: {"valid_answer_types": v["valid_answer_types"], "default": v["default_answer_type"]} for k, v in PLAYABLE_TYPE_CONFIG.items()}
+        }
     }
 
 # ==================== API DOCUMENTATION ENDPOINT ====================
