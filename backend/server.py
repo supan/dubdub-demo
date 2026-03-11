@@ -3078,29 +3078,25 @@ async def bulk_upload_playables(
                         errors.append(f"Row {idx}: Video URL required for video format")
                         continue
                 
-                # Determine type and answer_type
-                # Note: "image" and "video" types are deprecated, use "image_text" and "video_text"
-                if format_type == "text_mcq":
-                    playable_type = "text"
-                    answer_type = "mcq"
-                elif format_type == "text_input":
-                    playable_type = "text"
-                    answer_type = "text_input"
-                elif format_type == "image_mcq":
-                    playable_type = "image_text"  # Changed from "image" (deprecated)
-                    answer_type = "mcq"
-                elif format_type == "image_text_input":
-                    playable_type = "image_text"
-                    answer_type = "text_input"
-                elif format_type == "video_mcq":
-                    playable_type = "video_text"  # Changed from "video" (deprecated)
-                    answer_type = "mcq"
-                elif format_type == "video_text_input":
-                    playable_type = "video_text"
-                    answer_type = "text_input"
-                else:
-                    playable_type = "text"
-                    answer_type = "text_input"
+                # Determine type and answer_type using the config
+                # Map bulk format_type to playable type
+                format_to_type = {
+                    "text_mcq": ("text", "mcq"),
+                    "text_input": ("text", "text_input"),
+                    "image_mcq": ("image_text", "mcq"),
+                    "image_text_input": ("image_text", "text_input"),
+                    "video_mcq": ("video_text", "mcq"),
+                    "video_text_input": ("video_text", "text_input"),
+                }
+                
+                playable_type, requested_answer_type = format_to_type.get(format_type, ("text", "mcq"))
+                
+                # Validate answer_type using config
+                try:
+                    answer_type = get_valid_answer_type(playable_type, requested_answer_type)
+                except ValueError as e:
+                    errors.append(f"Row {idx}: {str(e)}")
+                    continue
                 
                 # Handle MCQ options
                 options = None
@@ -3143,6 +3139,7 @@ async def bulk_upload_playables(
                     "answer_explanation": answer_explanation,
                     "difficulty": difficulty if difficulty in ["easy", "medium", "hard"] else "medium",
                     "weight": 0,  # Default weight for bulk uploads
+                    "status": "active",  # Default status for new playables
                     "created_at": datetime.now(timezone.utc)
                 }
                 
