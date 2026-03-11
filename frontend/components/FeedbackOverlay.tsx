@@ -63,7 +63,10 @@ export default function FeedbackOverlay({
   const progressAnim = useRef(new Animated.Value(0)).current;
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef<Animated.CompositeAnimation | null>(null);
-  const progressValueRef = useRef(0);
+  
+  // Track elapsed time for accurate pause/resume
+  const startTimeRef = useRef<number>(0);
+  const elapsedBeforePauseRef = useRef<number>(0);
 
   // Determine the single psychological message to show
   const psychMessage = useMemo(() => {
@@ -80,22 +83,12 @@ export default function FeedbackOverlay({
     }
   }, [correct, currentStreak, previousStreak, hintsUsed]);
 
-  // Track progress value for pause/resume
-  useEffect(() => {
-    const listenerId = progressAnim.addListener(({ value }) => {
-      progressValueRef.current = value;
-    });
-    return () => {
-      progressAnim.removeListener(listenerId);
-    };
-  }, [progressAnim]);
-
   // Start/reset timer when overlay becomes visible
   useEffect(() => {
     if (visible) {
       // Reset progress
       progressAnim.setValue(0);
-      progressValueRef.current = 0;
+      elapsedBeforePauseRef.current = 0;
       setIsPaused(false);
 
       // Start entrance animations
@@ -127,8 +120,15 @@ export default function FeedbackOverlay({
     }
   }, [visible]);
 
-  const startProgressTimer = (fromValue: number) => {
-    const remainingDuration = AUTO_ADVANCE_DURATION * (1 - fromValue);
+  const startProgressTimer = (elapsedMs: number) => {
+    const remainingDuration = AUTO_ADVANCE_DURATION - elapsedMs;
+    const startValue = elapsedMs / AUTO_ADVANCE_DURATION;
+    
+    // Set the progress bar to current position
+    progressAnim.setValue(startValue);
+    
+    // Record start time for pause tracking
+    startTimeRef.current = Date.now();
     
     timerRef.current = Animated.timing(progressAnim, {
       toValue: 1,
@@ -148,11 +148,15 @@ export default function FeedbackOverlay({
     if (timerRef.current) {
       timerRef.current.stop();
     }
+    // Calculate total elapsed time including previous pauses
+    const currentSessionElapsed = Date.now() - startTimeRef.current;
+    elapsedBeforePauseRef.current += currentSessionElapsed;
   };
 
   const handlePressOut = () => {
     setIsPaused(false);
-    startProgressTimer(progressValueRef.current);
+    // Resume from where we left off
+    startProgressTimer(elapsedBeforePauseRef.current);
   };
 
   if (!visible) return null;
