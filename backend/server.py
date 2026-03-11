@@ -1982,6 +1982,58 @@ async def migrate_add_status_field(_: bool = Depends(verify_admin_token)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.post("/admin/migrate/set-status-by-answer-type")
+async def migrate_set_status_by_answer_type(
+    answer_type: str = Query(..., description="Answer type to filter (e.g., text_input, mcq)"),
+    new_status: str = Query(..., description="New status to set (active or inactive)"),
+    _: bool = Depends(verify_admin_token)
+):
+    """
+    Set status for all playables matching a specific answer_type.
+    Example: Set all text_input (typing) questions to inactive.
+    """
+    try:
+        # Validate new_status
+        if new_status not in ["active", "inactive"]:
+            raise HTTPException(status_code=400, detail="status must be 'active' or 'inactive'")
+        
+        # Count matching documents
+        match_count = await db.playables.count_documents({"answer_type": answer_type})
+        
+        if match_count == 0:
+            return {
+                "success": True,
+                "message": f"No playables found with answer_type='{answer_type}'",
+                "updated": 0
+            }
+        
+        # Update all matching playables
+        result = await db.playables.update_many(
+            {"answer_type": answer_type},
+            {"$set": {"status": new_status}}
+        )
+        
+        # Get counts for verification
+        total = await db.playables.count_documents({})
+        active = await db.playables.count_documents({"status": "active"})
+        inactive = await db.playables.count_documents({"status": "inactive"})
+        
+        return {
+            "success": True,
+            "message": f"Updated {result.modified_count} playables with answer_type='{answer_type}' to status='{new_status}'",
+            "updated": result.modified_count,
+            "matched": match_count,
+            "total": total,
+            "active": active,
+            "inactive": inactive
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Migration error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/admin/playables")
 async def admin_get_playables(
     _: bool = Depends(verify_admin_token),
