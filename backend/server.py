@@ -1935,6 +1935,53 @@ async def admin_add_playable(
         logging.error(f"Error adding playable: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/admin/migrate/add-status-field")
+async def migrate_add_status_field(_: bool = Depends(verify_admin_token)):
+    """
+    One-time migration: Add status='active' to all playables that don't have a status field.
+    Safe to run multiple times - only updates documents without status field.
+    """
+    try:
+        # Count documents without status
+        without_status = await db.playables.count_documents({"status": {"$exists": False}})
+        
+        if without_status == 0:
+            return {
+                "success": True,
+                "message": "No migration needed - all playables already have status field",
+                "updated": 0
+            }
+        
+        # Update all playables without status to have status="active"
+        result = await db.playables.update_many(
+            {"status": {"$exists": False}},
+            {"$set": {"status": "active"}}
+        )
+        
+        # Create index on status field
+        try:
+            await db.playables.create_index("status")
+        except Exception:
+            pass  # Index may already exist
+        
+        # Get counts for verification
+        total = await db.playables.count_documents({})
+        active = await db.playables.count_documents({"status": "active"})
+        inactive = await db.playables.count_documents({"status": "inactive"})
+        
+        return {
+            "success": True,
+            "message": f"Migration complete! Updated {result.modified_count} playables",
+            "updated": result.modified_count,
+            "total": total,
+            "active": active,
+            "inactive": inactive
+        }
+    except Exception as e:
+        logging.error(f"Migration error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/admin/playables")
 async def admin_get_playables(
     _: bool = Depends(verify_admin_token),
