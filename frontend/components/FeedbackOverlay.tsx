@@ -12,7 +12,7 @@ import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const AUTO_ADVANCE_DURATION = 5000; // 5 seconds
+const AUTO_ADVANCE_DURATION = 4000; // 4 seconds
 
 interface FeedbackOverlayProps {
   visible: boolean;
@@ -173,29 +173,21 @@ export default function FeedbackOverlay({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
       >
-        {/* Progress Bar at Top */}
+        {/* Progress Bar at Top - Full width, no spacing */}
         <View style={styles.progressBarContainer}>
-          <View style={styles.progressBarBackground}>
-            <Animated.View 
-              style={[
-                styles.progressBarFill,
-                { 
-                  backgroundColor: progressBarColor,
-                  width: progressAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0%', '100%'],
-                  }),
-                  opacity: isPaused ? 0.5 : 1,
-                }
-              ]} 
-            />
-          </View>
-          {isPaused && (
-            <View style={styles.pausedIndicator}>
-              <Ionicons name="pause" size={12} color="rgba(255,255,255,0.6)" />
-              <Text style={styles.pausedText}>Paused</Text>
-            </View>
-          )}
+          <Animated.View 
+            style={[
+              styles.progressBarFill,
+              { 
+                backgroundColor: progressBarColor,
+                width: progressAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['0%', '100%'],
+                }),
+                opacity: isPaused ? 0.5 : 1,
+              }
+            ]} 
+          />
         </View>
 
         {/* Modal Card */}
@@ -283,11 +275,6 @@ export default function FeedbackOverlay({
                 {currentStreak} streak
               </Text>
             </View>
-
-            {/* Tap hint instead of swipe hint */}
-            <View style={styles.swipeHint}>
-              <Text style={styles.swipeHintText}>Hold to pause • Swipe to skip</Text>
-            </View>
           </View>
         </Animated.View>
       </Pressable>
@@ -317,33 +304,15 @@ const styles = StyleSheet.create({
   },
   progressBarContainer: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 60 : 40,
-    left: 20,
-    right: 20,
-    zIndex: 101,
-    alignItems: 'center',
-  },
-  progressBarBackground: {
-    width: '100%',
-    height: 4,
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 6,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 2,
-    overflow: 'hidden',
+    zIndex: 101,
   },
   progressBarFill: {
     height: '100%',
-    borderRadius: 2,
-  },
-  pausedIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-    gap: 4,
-  },
-  pausedText: {
-    fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.6)',
-    fontWeight: '500',
   },
   modalContainer: {
     width: SCREEN_WIDTH - 48,
@@ -472,7 +441,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 20,
     gap: 6,
-    marginBottom: 16,
   },
   streakContainerHot: {
     backgroundColor: 'rgba(255, 215, 0, 0.2)',
@@ -486,15 +454,5 @@ const styles = StyleSheet.create({
   },
   streakTextHot: {
     color: '#FFD700',
-  },
-  swipeHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  swipeHintText: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.4)',
-    fontWeight: '500',
   },
 });
