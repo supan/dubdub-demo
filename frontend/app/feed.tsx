@@ -232,6 +232,9 @@ export default function FeedScreen() {
         });
         if (newPlayables.length < 5) {
           setNoMorePlayables(true);
+        } else {
+          // Reset noMorePlayables if we got enough playables
+          setNoMorePlayables(false);
         }
       }
       
