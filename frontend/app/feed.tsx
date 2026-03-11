@@ -203,15 +203,20 @@ export default function FeedScreen() {
         setPlayables(newPlayables);
         setCurrentIndex(0);
         setSetStartIndex(0);
-        setNoMorePlayables(newPlayables.length < 10);
+        // Only set noMorePlayables if we got ZERO playables on initial load
+        // A returning user might get < 10 but still have more available
+        setNoMorePlayables(newPlayables.length === 0);
+        console.log(`[Feed] Initial load: ${newPlayables.length} playables, noMorePlayables=${newPlayables.length === 0}`);
       } else {
         // Append new playables, but DEDUPLICATE to prevent showing same playable twice
         // Also cleanup old playables to prevent memory growth on Android
+        let addedCount = 0;
         setPlayables(prev => {
           const existingIds = new Set(prev.map(p => p.playable_id));
           const uniqueNewPlayables = newPlayables.filter(
             (p: Playable) => !existingIds.has(p.playable_id)
           );
+          addedCount = uniqueNewPlayables.length;
           console.log(`[Feed] Appending ${uniqueNewPlayables.length} new playables (${newPlayables.length - uniqueNewPlayables.length} duplicates filtered)`);
           
           // Memory optimization: Keep only last 20 played + current set + new playables
@@ -230,10 +235,15 @@ export default function FeedScreen() {
           
           return combined;
         });
-        if (newPlayables.length < 5) {
+        
+        // Only set noMorePlayables=true when API returns zero playables
+        // If we got ANY playables (even if all duplicates), there might still be more
+        if (newPlayables.length === 0) {
+          console.log(`[Feed] No more playables from API, setting noMorePlayables=true`);
           setNoMorePlayables(true);
         } else {
-          // Reset noMorePlayables if we got enough playables
+          // Got playables from API, ensure noMorePlayables is false
+          console.log(`[Feed] Got ${newPlayables.length} from API (${addedCount} unique), ensuring noMorePlayables=false`);
           setNoMorePlayables(false);
         }
       }
@@ -341,9 +351,9 @@ export default function FeedScreen() {
       setFeedbackData(null);
       setGameState('PLAYING');
     } else {
-      // No more questions available - show final feedback
+      // No more questions in local array - show set feedback
+      // Don't set noMorePlayables here; let the fetch determine if there's more
       setShowSetFeedback(true);
-      setNoMorePlayables(true);
       setFeedbackData(null);
       setGameState('PLAYING');
     }
@@ -423,9 +433,9 @@ export default function FeedScreen() {
         setFeedbackData(null);
         setGameState('PLAYING');
       } else {
-        // No more questions - show final set feedback
+        // No more questions in local array - show set feedback
+        // Don't set noMorePlayables here; let fetchMoreIfNeeded determine if there's more
         setShowSetFeedback(true);
-        setNoMorePlayables(true);
         setFeedbackData(null);
         setGameState('PLAYING');
       }
@@ -1621,9 +1631,9 @@ export default function FeedScreen() {
                 setFeedbackData(null);
                 setGameState('PLAYING');
               } else {
-                // No more questions - show final set feedback
+                // No more questions in local array - show set feedback
+                // Don't set noMorePlayables here; let fetchMoreIfNeeded determine if there's more
                 setShowSetFeedback(true);
-                setNoMorePlayables(true);
                 setFeedbackData(null);
                 setGameState('PLAYING');
               }

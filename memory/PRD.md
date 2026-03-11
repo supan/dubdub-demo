@@ -140,4 +140,4 @@ Playable: {
 - Backend: FastAPI on port 8001
 - Frontend: Expo on port 3000
 - Database: MongoDB (local via MONGO_URL env var)
-- Preview URL: https://playable-deploy.preview.emergentagent.com
+- Preview URL: https://admin-dashboard-fix-70.preview.emergentagent.com

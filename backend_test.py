@@ -13,7 +13,7 @@ import subprocess
 import sys
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://playable-deploy.preview.emergentagent.com/api"
+BACKEND_URL = "https://admin-dashboard-fix-70.preview.emergentagent.com/api"
 
 class BackendTester:
     def __init__(self):
