@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Animated,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -358,7 +359,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    paddingTop: 10,
+    // Extra padding to account for floating header overlay
+    paddingTop: Platform.OS === 'ios' ? 70 : 60,
   },
   hintContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',

@@ -414,7 +414,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 8,
+    // Extra padding to account for floating header overlay
+    paddingTop: Platform.OS === 'ios' ? 70 : 60,
   },
   topRow: {
     flexDirection: 'row',
