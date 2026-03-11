@@ -3347,9 +3347,13 @@ async def get_api_schema():
             "categories_endpoint": "GET /api/admin/categories (returns list with name, icon, color, playable_count)"
         },
         "database_indexes": {
-            "playables": ["playable_id (unique)", "category", "type", "weight", "created_at", "(category, type) compound"],
+            "playables": ["playable_id (unique)", "category", "type", "weight", "created_at", "status", "(category, type) compound"],
             "users": ["user_id (unique)", "email (unique)"],
             "user_progress": ["(user_id, playable_id) compound unique"]
+        },
+        "type_answer_type_config": {
+            "description": "Defines valid answer_types for each playable type. Types with single valid_answer_type are auto-determined.",
+            "mapping": {k: {"valid_answer_types": v["valid_answer_types"], "default": v["default_answer_type"]} for k, v in PLAYABLE_TYPE_CONFIG.items()}
         },
         "playable_schema": {
             "required_fields": {
@@ -3370,8 +3374,14 @@ async def get_api_schema():
                 },
                 "answer_type": {
                     "type": "string",
-                    "enum": ["mcq", "text_input", "tap_select"],
-                    "description": "How user answers the question"
+                    "enum": ["mcq", "text_input", "tap_select", "progressive_reveal", "chess_moves", "wordle_grid"],
+                    "description": "How user answers the question. Note: Some types have auto-determined answer_type",
+                    "auto_determined_types": {
+                        "guess_the_x": "progressive_reveal",
+                        "chess_mate_in_2": "chess_moves", 
+                        "this_or_that": "tap_select",
+                        "wordle": "wordle_grid"
+                    }
                 },
                 "category": {
                     "type": "string",
