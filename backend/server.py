@@ -250,6 +250,12 @@ class SessionDataResponse(BaseModel):
     picture: str
     session_token: str
 
+from enum import Enum
+
+class PlayableStatus(str, Enum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+
 class Playable(BaseModel):
     playable_id: str
     type: str  # "text", "image_text", "video_text", "guess_the_x", "chess_mate_in_2", "this_or_that"
@@ -264,6 +270,7 @@ class Playable(BaseModel):
     hints: Optional[List[str]] = None  # For guess_the_x: 3-5 hints revealed progressively
     difficulty: str = "medium"
     weight: int = 0  # Ranking weight: higher = shown first (0 = default/lowest priority)
+    status: PlayableStatus = PlayableStatus.ACTIVE  # Status: active or inactive
     created_at: datetime
 
 class AnswerSubmission(BaseModel):
@@ -928,8 +935,11 @@ async def get_playables_feed(
         logging.info(f"Feed for user {current_user.user_id}: excluding {len(played_ids)} playables, app_version={app_version}")
         logging.info(f"User selected_categories: {selected_categories}, onboarding_complete: {current_user.onboarding_complete}")
         
-        # Build base match criteria
-        match_criteria: Dict[str, Any] = {"playable_id": {"$nin": played_ids}}
+        # Build base match criteria - only show ACTIVE playables
+        match_criteria: Dict[str, Any] = {
+            "playable_id": {"$nin": played_ids},
+            "status": {"$ne": "inactive"}  # Exclude inactive, include active and legacy (no status field)
+        }
         
         # Filter by selected categories (if user has selections)
         if selected_categories and len(selected_categories) > 0:
@@ -1674,6 +1684,7 @@ class AddPlayableRequest(BaseModel):
     label_right: Optional[str] = None  # Label for right image (used for answer matching)
     difficulty: str = "medium"
     weight: int = 0  # Ranking weight: 0 or positive integer. Higher = shown first
+    status: str = "active"  # Status: "active" or "inactive"
 
 @api_router.post("/admin/login")
 async def admin_login(request: AdminLoginRequest):
@@ -1893,6 +1904,7 @@ async def admin_add_playable(
             "video_end": request.video_end if request.type in ["video", "video_text"] else None,
             "difficulty": request.difficulty,
             "weight": max(0, request.weight),  # Ensure weight is 0 or positive
+            "status": request.status,  # active or inactive
             "created_at": datetime.now(timezone.utc)
         }
         
@@ -1929,7 +1941,8 @@ async def admin_get_playables(
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(100, ge=1, le=500, description="Items per page"),
     category: Optional[str] = Query(None, description="Filter by category"),
-    type: Optional[str] = Query(None, description="Filter by playable type")
+    type: Optional[str] = Query(None, description="Filter by playable type"),
+    status: Optional[str] = Query("active", description="Filter by status: active, inactive, or all")
 ):
     """Get all playables with pagination (admin only)"""
     try:
@@ -1939,6 +1952,16 @@ async def admin_get_playables(
             filter_query["category"] = category
         if type:
             filter_query["type"] = type
+        
+        # Status filter - default shows active only
+        if status == "active":
+            filter_query["$or"] = [
+                {"status": "active"},
+                {"status": {"$exists": False}}  # Legacy playables without status field
+            ]
+        elif status == "inactive":
+            filter_query["status"] = "inactive"
+        # If status == "all", don't add any status filter
         
         # Get total count
         total_count = await db.playables.count_documents(filter_query)
@@ -1955,7 +1978,8 @@ async def admin_get_playables(
             "total": total_count,
             "page": page,
             "limit": limit,
-            "total_pages": (total_count + limit - 1) // limit
+            "total_pages": (total_count + limit - 1) // limit,
+            "status_filter": status
         }
     except Exception as e:
         logging.error(f"Error getting playables: {e}")
@@ -3020,7 +3044,7 @@ async def get_api_schema():
     4. Increment version number
     """
     return {
-        "version": "1.2",
+        "version": "1.3",
         "base_endpoints": {
             "admin_login": "POST /api/admin/login",
             "playables": {
@@ -3030,7 +3054,8 @@ async def get_api_schema():
                         "page": {"type": "integer", "default": 1, "description": "Page number (1-indexed)"},
                         "limit": {"type": "integer", "default": 100, "min": 1, "max": 500, "description": "Items per page"},
                         "category": {"type": "string", "optional": True, "description": "Filter by category name"},
-                        "type": {"type": "string", "optional": True, "description": "Filter by playable type"}
+                        "type": {"type": "string", "optional": True, "description": "Filter by playable type"},
+                        "status": {"type": "string", "default": "active", "enum": ["active", "inactive", "all"], "description": "Filter by status"}
                     },
                     "response": {
                         "playables": "array of playable objects",
@@ -3038,7 +3063,8 @@ async def get_api_schema():
                         "total": "total number of matching playables",
                         "page": "current page number",
                         "limit": "items per page",
-                        "total_pages": "total number of pages"
+                        "total_pages": "total number of pages",
+                        "status_filter": "current status filter applied"
                     }
                 },
                 "create": "POST /api/admin/add-playable",
