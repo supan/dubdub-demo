@@ -62,6 +62,20 @@ function ChessPuzzleCard({
   const [puzzleState, setPuzzleState] = useState<PuzzleState>('OPPONENT_MOVING'); // Start with opponent moving
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [message, setMessage] = useState<string>('Watch the opponent\'s move...');
+  
+  // Determine if board should be flipped (player plays as black)
+  // In puzzles, the player makes moves at odd indices (1, 3, 5...)
+  // The color that moves first (from FEN) is the opponent
+  // So the player's color is the opposite of the FEN's active color
+  const getPlayerColor = () => {
+    const fenParts = playable.fen.split(' ');
+    const activeColor = fenParts[1]; // 'w' or 'b'
+    // Player is the opposite color (they respond to opponent's first move)
+    return activeColor === 'w' ? 'b' : 'w';
+  };
+  
+  const playerColor = getPlayerColor();
+  const isFlipped = playerColor === 'b'; // Flip board when player is black
 
   // Reset when playable changes and auto-play opponent's first move
   useEffect(() => {
@@ -112,9 +126,34 @@ function ChessPuzzleCard({
   };
 
   const getSquareName = (row: number, col: number): Square => {
-    const file = String.fromCharCode(97 + col); // a-h
-    const rank = 8 - row; // 8-1
-    return `${file}${rank}` as Square;
+    // When flipped, we need to convert visual coordinates to actual board coordinates
+    if (isFlipped) {
+      const file = String.fromCharCode(97 + (7 - col)); // h-a (reversed)
+      const rank = row + 1; // 1-8 (reversed)
+      return `${file}${rank}` as Square;
+    } else {
+      const file = String.fromCharCode(97 + col); // a-h
+      const rank = 8 - row; // 8-1
+      return `${file}${rank}` as Square;
+    }
+  };
+
+  // Get visual row/col for a square (for rendering)
+  const getVisualPosition = (square: Square): { row: number; col: number } => {
+    const file = square.charCodeAt(0) - 97; // 0-7 (a-h)
+    const rank = parseInt(square[1]); // 1-8
+    
+    if (isFlipped) {
+      return {
+        row: rank - 1, // 1->0, 8->7
+        col: 7 - file, // a->7, h->0
+      };
+    } else {
+      return {
+        row: 8 - rank, // 8->0, 1->7
+        col: file, // a->0, h->7
+      };
+    }
   };
 
   const handleSquareTap = (row: number, col: number) => {
@@ -232,24 +271,34 @@ function ChessPuzzleCard({
     }
   };
 
-  const renderSquare = (row: number, col: number) => {
-    const isLight = (row + col) % 2 === 0;
-    const square = getSquareName(row, col);
-    const piece = board[row][col];
+  const renderSquare = (visualRow: number, visualCol: number) => {
+    // Calculate actual board array indices based on visual position
+    // When flipped, visual row 0 = board row 0 (rank 1), visual col 0 = board col 7 (file h)
+    // When not flipped, visual row 0 = board row 0 (rank 8), visual col 0 = board col 0 (file a)
+    const boardRow = isFlipped ? visualRow : visualRow;
+    const boardCol = isFlipped ? 7 - visualCol : visualCol;
+    
+    // Calculate if square is light/dark based on actual board position
+    const actualFile = isFlipped ? 7 - visualCol : visualCol; // 0-7
+    const actualRank = isFlipped ? visualRow : 7 - visualRow; // 0-7
+    const isLight = (actualFile + actualRank) % 2 === 1; // Chess: a1 is dark
+    
+    const square = getSquareName(visualRow, visualCol);
+    const piece = board[boardRow][boardCol];
     const isSelected = selectedSquare === square;
     const isLegalMove = legalMoves.includes(square);
     const isLastMoveSquare = lastMove && (lastMove.from === square || lastMove.to === square);
 
     return (
       <TouchableOpacity
-        key={`${row}-${col}`}
+        key={`${visualRow}-${visualCol}`}
         style={[
           styles.square,
           { backgroundColor: isLight ? '#F0D9B5' : '#B58863' },
           isSelected && styles.selectedSquare,
           isLastMoveSquare && styles.lastMoveSquare,
         ]}
-        onPress={() => handleSquareTap(row, col)}
+        onPress={() => handleSquareTap(visualRow, visualCol)}
         activeOpacity={0.8}
       >
         {/* Legal move indicator */}
@@ -325,9 +374,9 @@ function ChessPuzzleCard({
 
       {/* Chess Board with labels */}
       <View style={styles.boardWrapper}>
-        {/* Rank labels (8-1) on the left */}
+        {/* Rank labels - reversed when flipped */}
         <View style={styles.rankLabels}>
-          {[8, 7, 6, 5, 4, 3, 2, 1].map(rank => (
+          {(isFlipped ? [1, 2, 3, 4, 5, 6, 7, 8] : [8, 7, 6, 5, 4, 3, 2, 1]).map(rank => (
             <Text key={rank} style={styles.rankLabel}>{rank}</Text>
           ))}
         </View>
@@ -337,9 +386,9 @@ function ChessPuzzleCard({
             {renderBoard()}
           </View>
           
-          {/* File labels (a-h) at bottom */}
+          {/* File labels - reversed when flipped */}
           <View style={styles.fileLabels}>
-            {['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map(file => (
+            {(isFlipped ? ['h', 'g', 'f', 'e', 'd', 'c', 'b', 'a'] : ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']).map(file => (
               <Text key={file} style={styles.fileLabel}>{file}</Text>
             ))}
           </View>
