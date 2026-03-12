@@ -1003,7 +1003,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   topSection: {
-    paddingTop: Platform.OS === 'ios' ? 20 : 16,
+    paddingTop: Platform.OS === 'ios' ? 8 : 6,
     paddingHorizontal: 16,
   },
   topRow: {
