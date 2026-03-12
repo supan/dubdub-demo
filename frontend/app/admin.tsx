@@ -58,10 +58,8 @@ export default function AdminDashboard() {
   const PLAYABLE_TYPES = [
     { value: '', label: 'All Types' },
     { value: 'text', label: 'Text' },
-    { value: 'image', label: 'Image' },
-    { value: 'video', label: 'Video' },
-    { value: 'image_text', label: 'Image + Text' },
-    { value: 'video_text', label: 'Video + Text' },
+    { value: 'image_text', label: 'Image' },
+    { value: 'video_text', label: 'Video' },
     { value: 'guess_the_x', label: 'Guess the X' },
     { value: 'chess_mate_in_2', label: 'Chess Puzzle' },
     { value: 'this_or_that', label: 'This or That' },
