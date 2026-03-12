@@ -359,8 +359,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    // Extra padding to account for floating header overlay
-    paddingTop: Platform.OS === 'ios' ? 70 : 60,
+    paddingTop: 10,
   },
   hintContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',

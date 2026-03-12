@@ -1576,7 +1576,21 @@ export default function FeedScreen() {
       {/* Settings Modal */}
       {renderSettingsModal()}
 
-      {/* Main Content - Swipeable, fills entire screen */}
+      {/* Header - Normal flow */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <View style={styles.streakContainer}>
+            <Ionicons name="flame" size={24} color="#FF6B00" />
+            <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
+          </View>
+          <Text style={styles.headerTitle}>dubdub</Text>
+          <TouchableOpacity onPress={() => setShowSettingsModal(true)} style={styles.settingsButton}>
+            <Ionicons name="settings-outline" size={24} color="#B0B0C8" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Main Content - Swipeable */}
       <Animated.View 
         style={[
           styles.cardWrapper, 
@@ -1673,20 +1687,6 @@ export default function FeedScreen() {
           }}
         />
       </Animated.View>
-
-      {/* Floating Header - On top of content */}
-      <View style={styles.floatingHeader}>
-        <View style={styles.headerContent}>
-          <View style={styles.streakContainer}>
-            <Ionicons name="flame" size={24} color="#FF6B00" />
-            <Text style={styles.streakText}>{user?.current_streak || 0}</Text>
-          </View>
-          <Text style={styles.headerTitle}>dubdub</Text>
-          <TouchableOpacity onPress={() => setShowSettingsModal(true)} style={styles.settingsButton}>
-            <Ionicons name="settings-outline" size={24} color="#B0B0C8" />
-          </TouchableOpacity>
-        </View>
-      </View>
       
       {/* Right-side swipe hint chevron - only shown until first skip, fades after 2 seconds */}
       {showSwipeHint && !user?.has_skipped && !showSetFeedback && gameState === 'PLAYING' && (
@@ -1703,21 +1703,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  floatingHeader: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingTop: Platform.OS === 'ios' ? 50 : 40,
-    paddingBottom: 12,
-    paddingHorizontal: 20,
-    zIndex: 100,
-    // Semi-transparent gradient effect for readability
-    backgroundColor: 'transparent',
-  },
   header: {
     paddingTop: Platform.OS === 'ios' ? 50 : 40,
-    paddingBottom: 12,
+    paddingBottom: 8,
     paddingHorizontal: 20,
   },
   headerContent: {

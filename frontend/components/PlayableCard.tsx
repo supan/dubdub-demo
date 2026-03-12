@@ -878,8 +878,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    // Extra padding to account for floating header overlay
-    paddingTop: Platform.OS === 'ios' ? 70 : 60,
+    paddingTop: 8,
     paddingBottom: 16,
   },
   standardTopRow: {
@@ -1004,8 +1003,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   topSection: {
-    // Extra padding to account for floating header overlay
-    paddingTop: Platform.OS === 'ios' ? 70 : 60,
+    paddingTop: Platform.OS === 'ios' ? 20 : 16,
     paddingHorizontal: 16,
   },
   topRow: {
