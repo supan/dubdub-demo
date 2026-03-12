@@ -989,21 +989,20 @@ const styles = StyleSheet.create({
   // ============ IMMERSIVE LAYOUT STYLES ============
   immersiveContainer: {
     flex: 1,
+    backgroundColor: '#000', // Ensure no gradient shows through
   },
   fullScreenMedia: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
+    ...StyleSheet.absoluteFillObject, // Fill entire container edge-to-edge
   },
   videoContainer: {
     backgroundColor: '#000',
   },
   immersiveOverlay: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject, // Overlay fills entire container
     zIndex: 10,
   },
   topSection: {
-    paddingTop: Platform.OS === 'ios' ? 8 : 6,
+    paddingTop: Platform.OS === 'ios' ? 16 : 12,
     paddingHorizontal: 16,
   },
   topRow: {
