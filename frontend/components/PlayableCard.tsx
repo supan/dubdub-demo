@@ -629,7 +629,6 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
                         styles.glassOptionText,
                         selectedOption === option && styles.glassOptionTextSelected,
                       ]}
-                      numberOfLines={2}
                     >
                       {option}
                     </Text>
@@ -752,7 +751,6 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
                         styles.glassOptionText,
                         selectedOption === option && styles.glassOptionTextSelected,
                       ]}
-                      numberOfLines={2}
                     >
                       {option}
                     </Text>
@@ -809,7 +807,6 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
                 styles.optionText,
                 selectedOption === option && styles.optionTextSelected,
               ]}
-              numberOfLines={2}
             >
               {option}
             </Text>
@@ -932,10 +929,11 @@ const styles = StyleSheet.create({
     width: '47%',
     backgroundColor: '#1E1E2E',
     borderRadius: 12,
-    padding: 16,
+    padding: 14,
+    paddingVertical: 12,
     borderWidth: 2,
     borderColor: '#2A2A3E',
-    minHeight: 60,
+    minHeight: 56,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -944,10 +942,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(91, 141, 239, 0.15)',
   },
   optionText: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#E0E0E0',
     textAlign: 'center',
     fontWeight: '500',
+    lineHeight: 18,
   },
   optionTextSelected: {
     color: '#FFFFFF',
@@ -1073,16 +1072,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,217,255,0.15)',
   },
   glassOptionInner: {
-    padding: 14,
-    minHeight: 50,
+    padding: 12,
+    minHeight: 48,
     justifyContent: 'center',
     alignItems: 'center',
   },
   glassOptionText: {
-    fontSize: 15,
+    fontSize: 13,
     color: '#FFFFFF',
     textAlign: 'center',
     fontWeight: '700',
+    lineHeight: 17,
     textShadowColor: '#000000',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
