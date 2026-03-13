@@ -550,9 +550,12 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
         {/* Top Row - Category Badge & Progress */}
         <View style={styles.standardTopRow}>
           <CategoryBadge category={playable.category} variant="filled" />
-          {/* Progress Badge */}
+          {/* Progress Badge - Now uses category color */}
           {totalCount > 0 && (
-            <View style={styles.standardProgressBadge}>
+            <View style={[
+              styles.standardProgressBadge,
+              { backgroundColor: categoryColor.primary }
+            ]}>
               <Text style={styles.standardProgressText}>
                 {currentIndex + 1} / {totalCount}
               </Text>
@@ -573,7 +576,7 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
         )}
 
         {/* Spacer */}
-        <View style={styles.spacerLarge} />
+        <View style={styles.spacerMedium} />
 
         {/* Answer Options using new OptionButton component */}
         {renderMCQOptionsNew()}
@@ -803,16 +806,14 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
   }
 
   // New MCQ options using OptionButton component (for standard layout)
+  // Always single column for consistent heights
   function renderMCQOptionsNew() {
     if (playable.answer_type !== 'mcq' || !playable.options) return null;
 
-    // Check if any option is too long for 2-column grid (threshold: 35 chars)
-    const LONG_OPTION_THRESHOLD = 35;
-    const hasLongOptions = playable.options.some((opt: string) => opt.length > LONG_OPTION_THRESHOLD);
     const accentColor = getCategoryColor(playable.category).primary;
 
     return (
-      <View style={hasLongOptions ? styles.optionsListNew : styles.optionsGridNew}>
+      <View style={styles.optionsListNew}>
         {playable.options.map((option: string, index: number) => (
           <OptionButton
             key={index}
@@ -822,7 +823,7 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
             onPress={() => setSelectedOption(option)}
             disabled={submitting || hasSubmitted}
             accentColor={accentColor}
-            fullWidth={hasLongOptions}
+            fullWidth={true}
             variant="standard"
           />
         ))}
@@ -923,7 +924,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 8,
+    paddingTop: 4,
     paddingBottom: 16,
   },
   standardTopRow: {
@@ -941,11 +942,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
     paddingHorizontal: 12,
     paddingVertical: 6,
+    borderRadius: 6,
   },
   standardProgressText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#0F0F1E',
   },
   categoryText: {
     fontSize: 14,
@@ -967,6 +969,9 @@ const styles = StyleSheet.create({
   },
   spacerLarge: {
     height: 28,
+  },
+  spacerMedium: {
+    height: 16,
   },
   // New question card style for standard layout
   questionCard_standard: {
@@ -1055,7 +1060,7 @@ const styles = StyleSheet.create({
   },
   submitSection: {
     paddingHorizontal: 20,
-    paddingBottom: 8,
+    paddingBottom: 32,
     paddingTop: 12,
   },
   submitButton: {
