@@ -3783,7 +3783,7 @@ async def get_api_schema():
     4. Increment version number
     """
     return {
-        "version": "1.3",
+        "version": "1.4",
         "base_endpoints": {
             "admin_login": "POST /api/admin/login",
             "playables": {
@@ -3835,6 +3835,63 @@ async def get_api_schema():
             "reset_user": {
                 "endpoint": "POST /api/admin/reset-user-progress",
                 "body": {"email": "string"}
+            },
+            "export": {
+                "users": {
+                    "endpoint": "GET /api/admin/export/users",
+                    "description": "Export all users data for CSV/Excel",
+                    "query_params": {
+                        "page": {"type": "integer", "default": 1, "description": "Page number (1-indexed)"},
+                        "limit": {"type": "integer", "default": 500, "min": 1, "max": 1000, "description": "Items per page"}
+                    },
+                    "response": {
+                        "data": "array of flattened user objects",
+                        "count": "number of items in current page",
+                        "total": "total number of users",
+                        "page": "current page number",
+                        "limit": "items per page",
+                        "total_pages": "total number of pages",
+                        "fields": ["user_id", "email", "name", "picture", "total_played", "correct_answers", "current_streak", "best_streak", "selected_categories", "onboarding_complete", "has_skipped", "created_at"]
+                    }
+                },
+                "user_progress": {
+                    "endpoint": "GET /api/admin/export/user-progress",
+                    "description": "Export user progress records for CSV/Excel",
+                    "query_params": {
+                        "page": {"type": "integer", "default": 1, "description": "Page number (1-indexed)"},
+                        "limit": {"type": "integer", "default": 500, "min": 1, "max": 1000, "description": "Items per page"},
+                        "user_id": {"type": "string", "optional": True, "description": "Filter by specific user_id"}
+                    },
+                    "response": {
+                        "data": "array of progress records",
+                        "count": "number of items in current page",
+                        "total": "total number of records",
+                        "page": "current page number",
+                        "limit": "items per page",
+                        "total_pages": "total number of pages",
+                        "fields": ["user_id", "playable_id", "answered", "skipped", "correct", "selected_option", "user_answer", "time_taken", "hints_used", "timestamp"],
+                        "filter": "applied filters if any"
+                    }
+                },
+                "user_sessions": {
+                    "endpoint": "GET /api/admin/export/user-sessions",
+                    "description": "Export user session records for CSV/Excel",
+                    "query_params": {
+                        "page": {"type": "integer", "default": 1, "description": "Page number (1-indexed)"},
+                        "limit": {"type": "integer", "default": 500, "min": 1, "max": 1000, "description": "Items per page"},
+                        "user_id": {"type": "string", "optional": True, "description": "Filter by specific user_id"}
+                    },
+                    "response": {
+                        "data": "array of session records",
+                        "count": "number of items in current page",
+                        "total": "total number of sessions",
+                        "page": "current page number",
+                        "limit": "items per page",
+                        "total_pages": "total number of pages",
+                        "fields": ["token", "user_id", "created_at", "expires_at"],
+                        "filter": "applied filters if any"
+                    }
+                }
             }
         },
         "filter_options": {
