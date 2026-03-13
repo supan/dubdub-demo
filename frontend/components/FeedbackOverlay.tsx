@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   },
   progressBarContainer: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 54 : 44,  // Below status bar area, like Instagram
+    top: Platform.OS === 'ios' ? 0 : 0,  // Flush at the top of the content area (header handles safe area)
     left: 16,
     right: 16,
     height: 4,
