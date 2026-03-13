@@ -113,10 +113,18 @@ def calculate_playable_score(playable: dict) -> float:
     freshness_nudge = 0.0
     created_at = playable.get("created_at")
     if created_at:
-        if isinstance(created_at, str):
-            created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
-        days_old = (datetime.now(timezone.utc) - created_at).days
-        freshness_nudge = FRESHNESS_MAX_BOOST / (1 + days_old / FRESHNESS_DECAY_DAYS)
+        try:
+            if isinstance(created_at, str):
+                created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            # Handle timezone-naive datetimes from MongoDB
+            if created_at.tzinfo is None:
+                created_at = created_at.replace(tzinfo=timezone.utc)
+            days_old = (datetime.now(timezone.utc) - created_at).days
+            freshness_nudge = FRESHNESS_MAX_BOOST / (1 + days_old / FRESHNESS_DECAY_DAYS)
+        except Exception as e:
+            # If any error with date parsing, use minimal freshness
+            logging.warning(f"Error calculating freshness for playable: {e}")
+            freshness_nudge = 0.01
     else:
         # No created_at - assume old content, minimal freshness
         freshness_nudge = 0.01
