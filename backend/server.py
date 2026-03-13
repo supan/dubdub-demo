@@ -86,18 +86,34 @@ QUALITY_WEIGHT = 0.5  # Weight for quality adjustment
 FRESHNESS_MAX_BOOST = 0.05  # Maximum freshness boost for new content
 FRESHNESS_DECAY_DAYS = 14  # Days over which freshness decays
 
+# Type diversity bonus - prioritize non-text content
+TYPE_DIVERSITY_BONUS = {
+    "text": 0.0,           # No bonus for text (most common)
+    "video_text": 0.25,    # Strong bonus for video
+    "image_text": 0.25,    # Strong bonus for image
+    "guess_the_x": 0.20,   # Good bonus for interactive
+    "chess_mate_in_2": 0.20,  # Good bonus for puzzles
+    "this_or_that": 0.15,  # Moderate bonus
+    "wordle": 0.15,        # Moderate bonus
+}
+
 def calculate_playable_score(playable: dict) -> float:
     """
     Calculate ranking score for a playable.
     
-    SCORE = 1.0 + QUALITY_ADJUSTMENT + FRESHNESS_NUDGE
+    SCORE = 1.0 + QUALITY_ADJUSTMENT + FRESHNESS_NUDGE + TYPE_BONUS
     
     - New content starts at ~1.05 (tiny visibility nudge)
     - Good content (low skip) rises above 1.0
     - Bad content (high skip) falls below 1.0
+    - Non-text content gets significant bonus for variety
     - Confidence increases with more serves
     """
     base_score = 1.0
+    
+    # Type diversity bonus - prioritize non-text content
+    playable_type = playable.get("type", "text")
+    type_bonus = TYPE_DIVERSITY_BONUS.get(playable_type, 0.0)
     
     # Quality adjustment (only with enough data)
     quality_adj = 0.0
@@ -137,7 +153,7 @@ def calculate_playable_score(playable: dict) -> float:
         # No created_at - assume old content, minimal freshness
         freshness_nudge = 0.01
     
-    return base_score + quality_adj + freshness_nudge
+    return base_score + quality_adj + freshness_nudge + type_bonus
 
 def diversify_playables(playables: List[dict], target_count: int, user_categories: List[str]) -> List[dict]:
     """
