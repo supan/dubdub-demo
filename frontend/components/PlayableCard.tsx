@@ -595,11 +595,9 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
         {/* Top Section - Category & Progress on same line, Title below */}
         <View style={styles.topSection}>
           <View style={styles.topRow}>
-            {/* Category Badge */}
-            <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>{playable.category}</Text>
-            </View>
-            {/* Progress Badge - Black with white text */}
+            {/* Category Badge - Glass variant for immersive */}
+            <CategoryBadge category={playable.category} variant="glass" />
+            {/* Progress Badge */}
             {totalCount > 0 && (
               <View style={styles.progressBadge}>
                 <Text style={styles.progressBadgeText}>
@@ -619,7 +617,7 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
             </View>
           )}
 
-          {/* MCQ Options with reduced opacity */}
+          {/* MCQ Options - Glass variant with category accent */}
           {playable.answer_type === 'mcq' && playable.options && (() => {
             const LONG_OPTION_THRESHOLD = 35;
             const hasLongOptions = playable.options.some((opt: string) => opt.length > LONG_OPTION_THRESHOLD);
@@ -689,9 +687,7 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
           {/* Top Section - Category & Progress */}
           <View style={styles.topSection}>
             <View style={styles.topRow}>
-              <View style={styles.categoryBadge}>
-                <Text style={styles.categoryText}>{playable.category}</Text>
-              </View>
+              <CategoryBadge category={playable.category} variant="glass" />
               {totalCount > 0 && (
                 <View style={styles.progressBadge}>
                   <Text style={styles.progressBadgeText}>
@@ -714,9 +710,7 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
         {/* Top Section */}
         <View style={styles.topSection}>
           <View style={styles.topRow}>
-            <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>{playable.category}</Text>
-            </View>
+            <CategoryBadge category={playable.category} variant="glass" />
             {totalCount > 0 && (
               <View style={styles.progressBadge}>
                 <Text style={styles.progressBadgeText}>

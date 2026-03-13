@@ -92,6 +92,29 @@ Playable: {
 ## What's Been Implemented
 
 ### March 2026
+
+- **Visual Redesign for Playable Cards** (COMPLETE - March 13, 2026)
+  - Created centralized theme system (`/frontend/constants/theme.ts`) with category-specific colors, gradients, and design tokens
+  - New `CategoryBadge` component with three variants: filled (standard), outline, glass (for immersive backgrounds)
+  - New `OptionButton` component with letter badges (A, B, C, D), category accent colors, staggered animations, and press feedback
+  - Text question cards now have subtle category-colored left border accent
+  - Category badges show category-specific colors (e.g., Cricket=green, Bollywood=pink, Pop Culture=purple) with icons
+  - Selection state uses category accent color instead of generic blue
+  - Applied to both standard layout (text-only) and immersive layouts (image/video backgrounds)
+  - Testing agent verified: 100% success rate on visual features
+
+- **Content Ranking & Diversification Algorithm** (COMPLETE - March 12, 2026)
+  - Sophisticated ranking algorithm based on freshness, skip rate (with statistical confidence), and type bonus
+  - Migration endpoint to add `total_served` and `skip_count` fields to all playables
+  - Non-text content bonus to improve feed variety
+
+- **UX Improvements** (COMPLETE - March 12, 2026)
+  - Fixed "swipe up" stuck state for returning users
+  - Replaced persistent "swipe to skip" text with one-time animated chevron
+  - Fixed feedback modal timer pause/resume reliability
+  - Fixed chess puzzle board orientation (now flips based on player turn)
+  - Fixed MCQ text clipping with dynamic single-column layout for long options
+
 - **Deployment Fix** (COMPLETE - March 9, 2026)
   - Fixed TypeScript version mismatch (5.9.2 → 5.8.3) to satisfy eslint-config-expo peer dependency
   - Removed conflicting package-lock.json (conflicts with yarn.lock)
