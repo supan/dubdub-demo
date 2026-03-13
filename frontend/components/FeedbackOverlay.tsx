@@ -308,15 +308,17 @@ const styles = StyleSheet.create({
   },
   progressBarContainer: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 6,
+    top: Platform.OS === 'ios' ? 54 : 44,  // Below status bar area, like Instagram
+    left: 16,
+    right: 16,
+    height: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 2,
     zIndex: 101,
   },
   progressBarFill: {
     height: '100%',
+    borderRadius: 2,
   },
   modalContainer: {
     width: SCREEN_WIDTH - 48,
