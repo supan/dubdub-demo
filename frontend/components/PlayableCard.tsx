@@ -17,6 +17,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import ThisOrThatCard from './ThisOrThatCard';
+import OptionButton from './OptionButton';
+import CategoryBadge from './CategoryBadge';
+import { getCategoryColor, COLORS, INTERACTIVE_COLORS, RADIUS, TYPOGRAPHY, SPACING } from '../constants/theme';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -529,6 +532,9 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
     );
   }
 
+  // Get category color for accent theming
+  const categoryColor = getCategoryColor(playable.category);
+
   // ============ STANDARD LAYOUT (Text only) ============
   return (
     <KeyboardAvoidingView 
@@ -543,10 +549,8 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
       >
         {/* Top Row - Category Badge & Progress */}
         <View style={styles.standardTopRow}>
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{playable.category}</Text>
-          </View>
-          {/* Progress Badge - Black with white text */}
+          <CategoryBadge category={playable.category} variant="filled" />
+          {/* Progress Badge */}
           {totalCount > 0 && (
             <View style={styles.standardProgressBadge}>
               <Text style={styles.standardProgressText}>
@@ -556,18 +560,23 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
           )}
         </View>
 
-        {/* Question Text */}
+        {/* Question Card with subtle accent border */}
         {playable.question.text && (
-          <Text style={styles.questionText}>
-            {playable.question.text}
-          </Text>
+          <View style={[
+            styles.questionCard_standard,
+            { borderLeftColor: categoryColor.primary }
+          ]}>
+            <Text style={styles.questionText_standard}>
+              {playable.question.text}
+            </Text>
+          </View>
         )}
 
         {/* Spacer */}
         <View style={styles.spacerLarge} />
 
-        {/* Answer Options or Text Input */}
-        {renderMCQOptions()}
+        {/* Answer Options using new OptionButton component */}
+        {renderMCQOptionsNew()}
         {renderTextInput()}
       </ScrollView>
 
@@ -799,6 +808,34 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
     );
   }
 
+  // New MCQ options using OptionButton component (for standard layout)
+  function renderMCQOptionsNew() {
+    if (playable.answer_type !== 'mcq' || !playable.options) return null;
+
+    // Check if any option is too long for 2-column grid (threshold: 35 chars)
+    const LONG_OPTION_THRESHOLD = 35;
+    const hasLongOptions = playable.options.some((opt: string) => opt.length > LONG_OPTION_THRESHOLD);
+    const accentColor = getCategoryColor(playable.category).primary;
+
+    return (
+      <View style={hasLongOptions ? styles.optionsListNew : styles.optionsGridNew}>
+        {playable.options.map((option: string, index: number) => (
+          <OptionButton
+            key={index}
+            label={option}
+            index={index}
+            isSelected={selectedOption === option}
+            onPress={() => setSelectedOption(option)}
+            disabled={submitting || hasSubmitted}
+            accentColor={accentColor}
+            fullWidth={hasLongOptions}
+            variant="standard"
+          />
+        ))}
+      </View>
+    );
+  }
+
   function renderMCQOptions() {
     if (playable.answer_type !== 'mcq' || !playable.options) return null;
 
@@ -935,7 +972,34 @@ const styles = StyleSheet.create({
     lineHeight: 26,
   },
   spacerLarge: {
-    height: 32,
+    height: 28,
+  },
+  // New question card style for standard layout
+  questionCard_standard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 16,
+    padding: 20,
+    borderLeftWidth: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  questionText_standard: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    lineHeight: 32,
+    letterSpacing: -0.3,
+  },
+  // New options grid/list styles
+  optionsGridNew: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  optionsListNew: {
+    flexDirection: 'column',
+    gap: 10,
   },
   optionsGrid: {
     flexDirection: 'row',
