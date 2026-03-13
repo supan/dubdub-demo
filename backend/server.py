@@ -77,6 +77,177 @@ def is_version_compatible(app_version: str, min_required_version: str) -> bool:
     """Check if app_version meets the minimum required version"""
     return compare_versions(app_version, min_required_version) >= 0
 
+# ==================== RANKING ALGORITHM ====================
+
+BASELINE_SKIP_RATE = 0.25  # Expected average skip rate
+MIN_SERVES_FOR_CONFIDENCE = 5  # Minimum serves before considering skip data
+MAX_CONFIDENCE_SERVES = 100  # Serves at which confidence reaches 1.0
+QUALITY_WEIGHT = 0.5  # Weight for quality adjustment
+FRESHNESS_MAX_BOOST = 0.05  # Maximum freshness boost for new content
+FRESHNESS_DECAY_DAYS = 14  # Days over which freshness decays
+
+def calculate_playable_score(playable: dict) -> float:
+    """
+    Calculate ranking score for a playable.
+    
+    SCORE = 1.0 + QUALITY_ADJUSTMENT + FRESHNESS_NUDGE
+    
+    - New content starts at ~1.05 (tiny visibility nudge)
+    - Good content (low skip) rises above 1.0
+    - Bad content (high skip) falls below 1.0
+    - Confidence increases with more serves
+    """
+    base_score = 1.0
+    
+    # Quality adjustment (only with enough data)
+    quality_adj = 0.0
+    total_served = playable.get("total_served", 0)
+    skip_count = playable.get("skip_count", 0)
+    
+    if total_served >= MIN_SERVES_FOR_CONFIDENCE:
+        skip_ratio = skip_count / total_served
+        confidence = min(total_served / MAX_CONFIDENCE_SERVES, 1.0)
+        quality_adj = (BASELINE_SKIP_RATE - skip_ratio) * confidence * QUALITY_WEIGHT
+    
+    # Freshness nudge (small visibility boost for new content)
+    freshness_nudge = 0.0
+    created_at = playable.get("created_at")
+    if created_at:
+        if isinstance(created_at, str):
+            created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+        days_old = (datetime.now(timezone.utc) - created_at).days
+        freshness_nudge = FRESHNESS_MAX_BOOST / (1 + days_old / FRESHNESS_DECAY_DAYS)
+    else:
+        # No created_at - assume old content, minimal freshness
+        freshness_nudge = 0.01
+    
+    return base_score + quality_adj + freshness_nudge
+
+def diversify_playables(playables: List[dict], target_count: int, user_categories: List[str]) -> List[dict]:
+    """
+    Diversify playables by category (primary) and format (secondary).
+    
+    Algorithm:
+    1. Group by category
+    2. Round-robin selection from each category, weighted by score
+    3. Apply format spacing to avoid consecutive same types
+    """
+    import random
+    
+    if not playables:
+        return []
+    
+    # Calculate scores for all playables
+    for p in playables:
+        p["_rank_score"] = calculate_playable_score(p)
+    
+    # Group by category
+    by_category: Dict[str, List[dict]] = {}
+    for p in playables:
+        cat = p.get("category", "Other")
+        if cat not in by_category:
+            by_category[cat] = []
+        by_category[cat].append(p)
+    
+    # Sort each category pool by score (descending)
+    for cat in by_category:
+        by_category[cat].sort(key=lambda x: x["_rank_score"], reverse=True)
+    
+    # Shuffle category order for variety
+    categories = list(by_category.keys())
+    random.shuffle(categories)
+    
+    # Round-robin selection
+    result = []
+    used_ids = set()
+    
+    while len(result) < target_count:
+        added_this_round = False
+        
+        for category in categories:
+            if len(result) >= target_count:
+                break
+            
+            # Get unselected playables from this category
+            pool = [p for p in by_category[category] if p["playable_id"] not in used_ids]
+            
+            if pool:
+                # Weighted random selection by score
+                selected = weighted_random_by_score(pool)
+                result.append(selected)
+                used_ids.add(selected["playable_id"])
+                added_this_round = True
+        
+        # If we couldn't add any this round, we're done
+        if not added_this_round:
+            break
+    
+    # Apply format spacing
+    result = apply_format_spacing(result)
+    
+    # Clean up temporary score field
+    for p in result:
+        if "_rank_score" in p:
+            del p["_rank_score"]
+    
+    return result
+
+def weighted_random_by_score(candidates: List[dict]) -> dict:
+    """Select a playable using weighted random based on score."""
+    import random
+    
+    if len(candidates) == 1:
+        return candidates[0]
+    
+    # Get scores (ensure positive)
+    scores = [max(p.get("_rank_score", 1.0), 0.1) for p in candidates]
+    total = sum(scores)
+    
+    # Weighted random selection
+    r = random.random() * total
+    cumulative = 0
+    for i, score in enumerate(scores):
+        cumulative += score
+        if r <= cumulative:
+            return candidates[i]
+    
+    return candidates[-1]  # Fallback
+
+def apply_format_spacing(playables: List[dict], max_consecutive: int = 2) -> List[dict]:
+    """
+    Reorder playables to avoid more than max_consecutive of the same type in a row.
+    """
+    if len(playables) <= max_consecutive:
+        return playables
+    
+    result = []
+    remaining = playables.copy()
+    
+    while remaining:
+        # Count recent types
+        recent_types = [p.get("type") for p in result[-max_consecutive:]] if result else []
+        
+        # Find candidates that don't violate spacing
+        if len(recent_types) >= max_consecutive and len(set(recent_types)) == 1:
+            # Last N were same type, try to pick different
+            same_type = recent_types[0]
+            different = [p for p in remaining if p.get("type") != same_type]
+            if different:
+                # Pick the highest scored different type
+                different.sort(key=lambda x: x.get("_rank_score", 1.0), reverse=True)
+                selected = different[0]
+            else:
+                # No different types available, just pick next
+                selected = remaining[0]
+        else:
+            # No spacing issue, pick next (already sorted by score within categories)
+            selected = remaining[0]
+        
+        result.append(selected)
+        remaining.remove(selected)
+    
+    return result
+
 # Minimum app version required for each playable TYPE
 # When introducing breaking changes to a format, update this mapping
 TYPE_MIN_VERSION = {
@@ -966,30 +1137,25 @@ async def get_playables_feed(
     app_version: Optional[str] = None,
     current_user: User = Depends(require_auth)
 ):
-    """Get playables feed - weight-based ranking with version and category filtering
+    """Get playables feed with smart ranking and diversification.
     
-    Ranking Logic:
-    1. Playables are sorted by 'weight' field (descending - higher weight = shown first)
-    2. Playables with same weight are shown in random order
-    3. Already played/skipped playables are excluded
-    4. Playables whose TYPE requires a newer app version are excluded
-    5. Only playables from user's selected categories are shown
+    Ranking Algorithm:
+    - SCORE = 1.0 + QUALITY_ADJUSTMENT + FRESHNESS_NUDGE
+    - New content starts at ~1.05 (tiny visibility nudge)
+    - Good content (low skip rate) rises above 1.0
+    - Bad content (high skip rate) falls below 1.0
+    - Confidence in skip signal increases with more serves
     
-    Weight Guidelines:
-    - weight=0 (default): Normal playables, shown randomly after weighted ones
-    - weight=1-10: Low priority featured content
-    - weight=11-50: Medium priority featured content  
-    - weight=51-100: High priority featured content
-    - weight=100+: Top priority (pinned content, always shown first)
+    Diversification:
+    - Primary: Balance across user's selected categories (round-robin)
+    - Secondary: Avoid consecutive same format types
+    - Weighted random selection by score within each category
     
-    Version Filtering:
-    - If app_version is provided, playables are filtered by their TYPE's min version requirement
-    - Version requirements are defined per TYPE in TYPE_MIN_VERSION mapping
-    - Example: chess_mate_in_2 requires 1.3.8+, text requires 1.0.0+
-    
-    Category Filtering:
-    - If user has selected categories, only show playables from those categories
-    - If no categories selected (legacy users), show all playables
+    Filters Applied:
+    - Exclude already played/skipped playables
+    - Exclude inactive playables
+    - Only show playables from user's selected categories
+    - Exclude types incompatible with app version
     """
     try:
         # Get user's played/skipped playable IDs
@@ -1000,22 +1166,20 @@ async def get_playables_feed(
         played_ids = list({r["playable_id"] for r in played_records})
         
         # Get user's selected categories
-        selected_categories = current_user.selected_categories
+        selected_categories = current_user.selected_categories or []
         
-        # DEBUG: Log detailed info about user and categories
         logging.info(f"Feed for user {current_user.user_id}: excluding {len(played_ids)} playables, app_version={app_version}")
-        logging.info(f"User selected_categories: {selected_categories}, onboarding_complete: {current_user.onboarding_complete}")
+        logging.info(f"User selected_categories: {selected_categories}")
         
         # Build base match criteria - only show ACTIVE playables
         match_criteria: Dict[str, Any] = {
             "playable_id": {"$nin": played_ids},
-            "status": {"$ne": "inactive"}  # Exclude inactive, include active and legacy (no status field)
+            "status": {"$ne": "inactive"}
         }
         
         # Filter by selected categories (if user has selections)
         if selected_categories and len(selected_categories) > 0:
             match_criteria["category"] = {"$in": selected_categories}
-            logging.info(f"Filtering to categories: {selected_categories}, match_criteria: {match_criteria}")
         else:
             logging.warning(f"User {current_user.user_id} has no selected categories - showing all playables!")
         
@@ -1029,43 +1193,40 @@ async def get_playables_feed(
                 match_criteria["type"] = {"$nin": incompatible_types}
                 logging.info(f"Excluding incompatible types for v{app_version}: {incompatible_types}")
         
-        # Aggregation pipeline: exclude played, sort by weight desc, then randomize within same weight
-        pipeline = [
-            # Stage 1: Exclude already played playables, filter by categories and incompatible types
-            {"$match": match_criteria},
-            
-            # Stage 2: Add default values for weight
-            {"$addFields": {
-                "weight": {"$ifNull": ["$weight", 0]}
-            }},
-            
-            # Stage 3: Sort by weight descending (higher weight = shown first)
-            {"$sort": {"weight": -1, "_id": 1}},
-            
-            # Stage 4: Group by weight to randomize within same weight tier
-            {"$group": {
-                "_id": "$weight",
-                "playables": {"$push": "$$ROOT"}
-            }},
-            
-            # Stage 5: Sort groups by weight descending
-            {"$sort": {"_id": -1}},
-            
-            # Stage 6: Unwind back to individual playables
-            {"$unwind": "$playables"},
-            
-            # Stage 7: Replace root with the playable document
-            {"$replaceRoot": {"newRoot": "$playables"}},
-            
-            # Stage 8: Limit results
-            {"$limit": limit}
-        ]
+        # Fetch buffer of candidates (4x limit for diversification)
+        buffer_size = limit * 4
         
-        result_playables = await db.playables.aggregate(pipeline).to_list(limit)
+        # Simple query - fetch candidates with ranking fields
+        candidates = await db.playables.find(
+            match_criteria,
+            {"_id": 0}  # Exclude MongoDB _id
+        ).sort("created_at", -1).limit(buffer_size).to_list(buffer_size)
         
-        # Convert ObjectId to string
-        for p in result_playables:
-            p["_id"] = str(p["_id"])
+        logging.info(f"Fetched {len(candidates)} candidates for diversification")
+        
+        if not candidates:
+            return []
+        
+        # Apply diversification algorithm
+        result_playables = diversify_playables(candidates, limit, selected_categories)
+        
+        # Track total_served for returned playables (async, non-blocking)
+        playable_ids_served = [p["playable_id"] for p in result_playables]
+        if playable_ids_served:
+            async def update_served_counts():
+                try:
+                    await db.playables.update_many(
+                        {"playable_id": {"$in": playable_ids_served}},
+                        {"$inc": {"total_served": 1}}
+                    )
+                    logging.info(f"Updated total_served for {len(playable_ids_served)} playables")
+                except Exception as e:
+                    logging.error(f"Failed to update served counts: {e}")
+            
+            await task_manager.create_task(
+                update_served_counts(),
+                task_name=f"update_served_counts:{current_user.user_id}"
+            )
         
         return result_playables
     except Exception as e:
@@ -1488,9 +1649,25 @@ async def skip_playable(
             except Exception as e:
                 logging.error(f"Failed to update skip count: {e}")
         
+        # ASYNC: Increment skip_count on playable for ranking algorithm
+        async def update_playable_skip_count():
+            try:
+                await db.playables.update_one(
+                    {"playable_id": playable_id},
+                    {"$inc": {"skip_count": 1}}
+                )
+                logging.info(f"Updated skip_count for playable {playable_id}")
+            except Exception as e:
+                logging.error(f"Failed to update playable skip_count: {e}")
+        
         await task_manager.create_task(
             update_skip_count(),
             task_name=f"update_skip_count:{current_user.user_id}"
+        )
+        
+        await task_manager.create_task(
+            update_playable_skip_count(),
+            task_name=f"update_playable_skip_count:{playable_id}"
         )
         
         # Return immediately
@@ -2152,6 +2329,71 @@ async def migrate_fix_answer_types(_: bool = Depends(verify_admin_token)):
             "success": True,
             "message": "Answer types fixed",
             "results": results
+        }
+    except Exception as e:
+        logging.error(f"Migration error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/admin/migrate/add-ranking-fields")
+async def migrate_add_ranking_fields(_: bool = Depends(verify_admin_token)):
+    """
+    Add ranking fields (total_served, skip_count) to all playables.
+    These fields are used by the smart ranking algorithm.
+    
+    - total_served: Number of times playable was shown in feed
+    - skip_count: Number of times playable was skipped
+    
+    This migration is idempotent - running multiple times is safe.
+    """
+    try:
+        # Count playables missing ranking fields
+        missing_total_served = await db.playables.count_documents({
+            "total_served": {"$exists": False}
+        })
+        missing_skip_count = await db.playables.count_documents({
+            "skip_count": {"$exists": False}
+        })
+        
+        # Add total_served field where missing
+        result_served = await db.playables.update_many(
+            {"total_served": {"$exists": False}},
+            {"$set": {"total_served": 0}}
+        )
+        
+        # Add skip_count field where missing
+        result_skip = await db.playables.update_many(
+            {"skip_count": {"$exists": False}},
+            {"$set": {"skip_count": 0}}
+        )
+        
+        # Ensure created_at exists for freshness calculation
+        missing_created_at = await db.playables.count_documents({
+            "created_at": {"$exists": False}
+        })
+        
+        if missing_created_at > 0:
+            # Set created_at to current time for playables missing it
+            result_created = await db.playables.update_many(
+                {"created_at": {"$exists": False}},
+                {"$set": {"created_at": datetime.now(timezone.utc)}}
+            )
+        else:
+            result_created = None
+        
+        return {
+            "success": True,
+            "message": "Ranking fields added to all playables",
+            "results": {
+                "total_served_added": result_served.modified_count,
+                "skip_count_added": result_skip.modified_count,
+                "created_at_added": result_created.modified_count if result_created else 0,
+                "previously_missing": {
+                    "total_served": missing_total_served,
+                    "skip_count": missing_skip_count,
+                    "created_at": missing_created_at
+                }
+            }
         }
     except Exception as e:
         logging.error(f"Migration error: {e}")
