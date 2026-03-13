@@ -2638,13 +2638,221 @@ async def admin_remove_titles(_: bool = Depends(verify_admin_token)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/admin/users")
-async def admin_get_users(_: bool = Depends(verify_admin_token)):
-    """Get all users (admin only)"""
+async def admin_get_users(
+    _: bool = Depends(verify_admin_token),
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(100, ge=1, le=500, description="Items per page"),
+    search: Optional[str] = Query(None, description="Search by email or name")
+):
+    """Get all users with pagination (admin only)"""
     try:
-        users = await db.users.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
-        return {"users": users, "count": len(users)}
+        # Build filter
+        filter_query = {}
+        if search:
+            filter_query["$or"] = [
+                {"email": {"$regex": search, "$options": "i"}},
+                {"name": {"$regex": search, "$options": "i"}}
+            ]
+        
+        # Get total count
+        total_count = await db.users.count_documents(filter_query)
+        
+        # Calculate skip
+        skip = (page - 1) * limit
+        
+        # Get paginated users
+        users = await db.users.find(filter_query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+        
+        return {
+            "users": users,
+            "count": len(users),
+            "total": total_count,
+            "page": page,
+            "limit": limit,
+            "total_pages": (total_count + limit - 1) // limit
+        }
     except Exception as e:
         logging.error(f"Error getting users: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/export/users")
+async def admin_export_users(
+    _: bool = Depends(verify_admin_token),
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(500, ge=1, le=1000, description="Items per page (max 1000 for export)")
+):
+    """Export users data with pagination (admin only)
+    
+    Returns user data suitable for CSV/Excel export.
+    Use pagination to fetch all data in batches.
+    """
+    try:
+        # Get total count
+        total_count = await db.users.count_documents({})
+        
+        # Calculate skip
+        skip = (page - 1) * limit
+        
+        # Get paginated users - exclude sensitive fields
+        users = await db.users.find(
+            {},
+            {
+                "_id": 0,
+                # Exclude sensitive/internal fields if any
+            }
+        ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+        
+        # Flatten nested data for export
+        export_data = []
+        for user in users:
+            flat_user = {
+                "user_id": user.get("user_id"),
+                "email": user.get("email"),
+                "name": user.get("name"),
+                "picture": user.get("picture"),
+                "total_played": user.get("total_played", 0),
+                "correct_answers": user.get("correct_answers", 0),
+                "current_streak": user.get("current_streak", 0),
+                "best_streak": user.get("best_streak", 0),
+                "selected_categories": ",".join(user.get("selected_categories", [])) if user.get("selected_categories") else "",
+                "onboarding_complete": user.get("onboarding_complete", False),
+                "has_skipped": user.get("has_skipped", False),
+                "created_at": str(user.get("created_at", "")) if user.get("created_at") else "",
+            }
+            export_data.append(flat_user)
+        
+        return {
+            "data": export_data,
+            "count": len(export_data),
+            "total": total_count,
+            "page": page,
+            "limit": limit,
+            "total_pages": (total_count + limit - 1) // limit,
+            "fields": ["user_id", "email", "name", "picture", "total_played", "correct_answers", "current_streak", "best_streak", "selected_categories", "onboarding_complete", "has_skipped", "created_at"]
+        }
+    except Exception as e:
+        logging.error(f"Error exporting users: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/export/user-progress")
+async def admin_export_user_progress(
+    _: bool = Depends(verify_admin_token),
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(500, ge=1, le=1000, description="Items per page (max 1000 for export)"),
+    user_id: Optional[str] = Query(None, description="Filter by specific user_id")
+):
+    """Export user_progress data with pagination (admin only)
+    
+    Returns user progress data suitable for CSV/Excel export.
+    Use pagination to fetch all data in batches.
+    Optionally filter by user_id.
+    """
+    try:
+        # Build filter
+        filter_query = {}
+        if user_id:
+            filter_query["user_id"] = user_id
+        
+        # Get total count
+        total_count = await db.user_progress.count_documents(filter_query)
+        
+        # Calculate skip
+        skip = (page - 1) * limit
+        
+        # Get paginated progress records
+        progress_records = await db.user_progress.find(
+            filter_query,
+            {"_id": 0}
+        ).sort("timestamp", -1).skip(skip).limit(limit).to_list(limit)
+        
+        # Flatten data for export
+        export_data = []
+        for record in progress_records:
+            flat_record = {
+                "user_id": record.get("user_id"),
+                "playable_id": record.get("playable_id"),
+                "answered": record.get("answered", False),
+                "skipped": record.get("skipped", False),
+                "correct": record.get("correct", False),
+                "selected_option": record.get("selected_option", ""),
+                "user_answer": record.get("user_answer", ""),
+                "time_taken": record.get("time_taken"),
+                "hints_used": record.get("hints_used"),
+                "timestamp": str(record.get("timestamp", "")) if record.get("timestamp") else "",
+            }
+            export_data.append(flat_record)
+        
+        return {
+            "data": export_data,
+            "count": len(export_data),
+            "total": total_count,
+            "page": page,
+            "limit": limit,
+            "total_pages": (total_count + limit - 1) // limit,
+            "fields": ["user_id", "playable_id", "answered", "skipped", "correct", "selected_option", "user_answer", "time_taken", "hints_used", "timestamp"],
+            "filter": {"user_id": user_id} if user_id else None
+        }
+    except Exception as e:
+        logging.error(f"Error exporting user progress: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/export/user-sessions")
+async def admin_export_user_sessions(
+    _: bool = Depends(verify_admin_token),
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(500, ge=1, le=1000, description="Items per page (max 1000 for export)"),
+    user_id: Optional[str] = Query(None, description="Filter by specific user_id")
+):
+    """Export user_sessions data with pagination (admin only)
+    
+    Returns user session data suitable for CSV/Excel export.
+    Use pagination to fetch all data in batches.
+    Optionally filter by user_id.
+    """
+    try:
+        # Build filter
+        filter_query = {}
+        if user_id:
+            filter_query["user_id"] = user_id
+        
+        # Get total count
+        total_count = await db.user_sessions.count_documents(filter_query)
+        
+        # Calculate skip
+        skip = (page - 1) * limit
+        
+        # Get paginated session records
+        sessions = await db.user_sessions.find(
+            filter_query,
+            {"_id": 0}
+        ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+        
+        # Flatten data for export
+        export_data = []
+        for session in sessions:
+            flat_session = {
+                "token": session.get("token"),
+                "user_id": session.get("user_id"),
+                "created_at": str(session.get("created_at", "")) if session.get("created_at") else "",
+                "expires_at": str(session.get("expires_at", "")) if session.get("expires_at") else "",
+            }
+            export_data.append(flat_session)
+        
+        return {
+            "data": export_data,
+            "count": len(export_data),
+            "total": total_count,
+            "page": page,
+            "limit": limit,
+            "total_pages": (total_count + limit - 1) // limit,
+            "fields": ["token", "user_id", "created_at", "expires_at"],
+            "filter": {"user_id": user_id} if user_id else None
+        }
+    except Exception as e:
+        logging.error(f"Error exporting user sessions: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/admin/user-progress/{email}")

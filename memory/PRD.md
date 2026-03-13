@@ -39,6 +39,18 @@ A mobile app (React Native/Expo) featuring a scrollable feed of quick, interacti
   - Pagination: `page`, `limit` (max 500)
   - Filters: `category`, `type`
   - Response: `{playables, count, total, page, limit, total_pages}`
+- **Export Users** (`GET /api/admin/export/users`):
+  - Pagination: `page`, `limit` (max 1000)
+  - Optional: `search` (filter by email/name)
+  - Returns flattened user data for CSV export
+- **Export User Progress** (`GET /api/admin/export/user-progress`):
+  - Pagination: `page`, `limit` (max 1000)
+  - Optional: `user_id` filter
+  - Returns user progress records
+- **Export User Sessions** (`GET /api/admin/export/user-sessions`):
+  - Pagination: `page`, `limit` (max 1000)
+  - Optional: `user_id` filter
+  - Returns user session records
 - **Database Indexes**: `playable_id (unique)`, `category`, `type`, `created_at`, `(category, type) compound`
 
 ### Category System (COMPLETED - March 2026)
