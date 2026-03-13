@@ -91,15 +91,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        console.log('Initializing auth...');
+        
         // Handle auth callback on web - check URL for session_id
         if (Platform.OS === 'web') {
-          await handleWebAuthCallback();
+          const hasSessionInUrl = window.location.href.includes('session_id=');
+          console.log('Web platform, session_id in URL:', hasSessionInUrl);
+          
+          if (hasSessionInUrl) {
+            // Process auth callback first, then skip checkExistingSession
+            // as we're getting a fresh session
+            await handleWebAuthCallback();
+            console.log('Auth callback processed, skipping checkExistingSession');
+            setLoading(false);
+            return;
+          }
         } else {
           // Handle deep link on cold start (native only)
           await handleInitialURL();
         }
         
-        // Check for existing session on mount
+        // Check for existing session on mount (only if no fresh auth)
         await checkExistingSession();
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -177,6 +189,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const exchangeSession = async (sessionId: string) => {
     try {
       setLoading(true);
+      console.log('Exchanging session with ID:', sessionId.substring(0, 20) + '...');
+      
       const response = await axios.post(
         `${BACKEND_URL}/api/auth/session`,
         {},
@@ -184,25 +198,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           headers: {
             'X-Session-ID': sessionId,
           },
+          timeout: 15000,
         }
       );
 
+      console.log('Session exchange response:', JSON.stringify(response.data, null, 2));
+
       const { session_token, user: userData } = response.data;
       
+      if (!session_token) {
+        console.error('No session_token in response');
+        throw new Error('No session_token received');
+      }
+      
       // Save token to persistent storage
+      console.log('Saving token to AsyncStorage...');
       await AsyncStorage.setItem(SESSION_TOKEN_KEY, session_token);
       setSessionToken(session_token);
+      console.log('Token saved successfully');
       
       // Fetch full user data
+      console.log('Fetching full user data...');
       const userResponse = await axios.get(`${BACKEND_URL}/api/auth/me`, {
         headers: {
           Authorization: `Bearer ${session_token}`,
         },
+        timeout: 15000,
       });
       
+      console.log('User data received:', JSON.stringify(userResponse.data, null, 2));
       setUser(userResponse.data);
-    } catch (error) {
-      console.error('Error exchanging session:', error);
+      console.log('User set successfully, onboarding_complete:', userResponse.data?.onboarding_complete);
+    } catch (error: any) {
+      console.error('Error exchanging session:', error?.message || error);
+      console.error('Error details:', error?.response?.data || 'No response data');
+      // Clear any partial state
+      setSessionToken(null);
+      setUser(null);
+      try {
+        await AsyncStorage.removeItem(SESSION_TOKEN_KEY);
+      } catch (e) {
+        // Ignore cleanup errors
+      }
     } finally {
       setLoading(false);
     }
@@ -210,10 +247,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkExistingSession = async () => {
     try {
+      console.log('Checking for existing session...');
       // Restore token from persistent storage
       let storedToken: string | null = null;
       try {
         storedToken = await AsyncStorage.getItem(SESSION_TOKEN_KEY);
+        console.log('Stored token found:', storedToken ? 'yes' : 'no');
       } catch (storageError) {
         console.log('Error reading from AsyncStorage:', storageError);
         // Clear potentially corrupted storage
@@ -229,6 +268,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (storedToken) {
         // Verify the token is still valid by calling /api/auth/me
         try {
+          console.log('Verifying stored token with /api/auth/me...');
           const response = await axios.get(`${BACKEND_URL}/api/auth/me`, {
             headers: {
               Authorization: `Bearer ${storedToken}`,
@@ -237,18 +277,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
           
           // Token is valid, restore the session
+          console.log('Token valid, restoring session. User:', response.data?.email);
           setSessionToken(storedToken);
           setUser(response.data);
           console.log('Session restored successfully');
         } catch (error: any) {
           // Token is invalid or expired, clear it
-          console.log('Stored token invalid, clearing...');
+          console.log('Stored token invalid, clearing... Error:', error?.message);
           try {
             await AsyncStorage.removeItem(SESSION_TOKEN_KEY);
           } catch (e) {
             // Ignore cleanup errors
           }
         }
+      } else {
+        console.log('No stored token found');
       }
     } catch (error) {
       console.error('Error checking existing session:', error);

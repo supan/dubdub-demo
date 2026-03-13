@@ -27,7 +27,10 @@ export default function LoginScreen() {
 
   // Navigate to appropriate screen after login
   const navigateAfterLogin = (loggedInUser: any) => {
-    if (!loggedInUser || !mounted) return; // Guard against undefined user and unmounted state
+    if (!loggedInUser || !mounted) {
+      console.log('navigateAfterLogin: Skipping - user:', !!loggedInUser, 'mounted:', mounted);
+      return;
+    }
     
     // Check if user needs onboarding (no categories selected or onboarding not complete)
     // Use optional chaining to safely access selected_categories.length for legacy users
@@ -35,9 +38,17 @@ export default function LoginScreen() {
                                Array.isArray(loggedInUser.selected_categories) && 
                                loggedInUser.selected_categories.length >= 3;
     
+    console.log('navigateAfterLogin:', {
+      onboarding_complete: loggedInUser.onboarding_complete,
+      hasValidCategories,
+      selected_categories: loggedInUser.selected_categories,
+    });
+    
     if (!loggedInUser.onboarding_complete || !hasValidCategories) {
+      console.log('Navigating to /onboarding');
       router.replace('/onboarding');
     } else {
+      console.log('Navigating to /feed');
       router.replace('/feed');
     }
   };
