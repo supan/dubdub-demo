@@ -1213,10 +1213,21 @@ async def get_playables_feed(
         logging.info(f"Fetched {len(candidates)} candidates for diversification")
         
         if not candidates:
+            logging.warning(f"No candidates found for user {current_user.user_id} with criteria: {match_criteria}")
             return []
         
-        # Apply diversification algorithm
-        result_playables = diversify_playables(candidates, limit, selected_categories)
+        # Apply diversification algorithm with fallback
+        try:
+            result_playables = diversify_playables(candidates, limit, selected_categories)
+        except Exception as diversify_error:
+            logging.error(f"Diversification failed, falling back to simple selection: {diversify_error}")
+            # Fallback: just return first N candidates without diversification
+            result_playables = candidates[:limit]
+        
+        if not result_playables:
+            logging.warning(f"Diversification returned 0 playables from {len(candidates)} candidates")
+            # Fallback to simple selection
+            result_playables = candidates[:limit]
         
         # Track total_served for returned playables (async, non-blocking)
         playable_ids_served = [p["playable_id"] for p in result_playables]
