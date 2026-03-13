@@ -611,32 +611,38 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
           )}
 
           {/* MCQ Options with reduced opacity */}
-          {playable.answer_type === 'mcq' && playable.options && (
-            <View style={styles.immersiveOptionsGrid}>
-              {playable.options.map((option: string, index: number) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.glassOption,
-                    selectedOption === option && styles.glassOptionSelected,
-                  ]}
-                  onPress={() => setSelectedOption(option)}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.glassOptionInner}>
-                    <Text
-                      style={[
-                        styles.glassOptionText,
-                        selectedOption === option && styles.glassOptionTextSelected,
-                      ]}
-                    >
-                      {option}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
+          {playable.answer_type === 'mcq' && playable.options && (() => {
+            const LONG_OPTION_THRESHOLD = 35;
+            const hasLongOptions = playable.options.some((opt: string) => opt.length > LONG_OPTION_THRESHOLD);
+            
+            return (
+              <View style={hasLongOptions ? styles.immersiveOptionsList : styles.immersiveOptionsGrid}>
+                {playable.options.map((option: string, index: number) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      hasLongOptions ? styles.glassOptionFullWidth : styles.glassOption,
+                      selectedOption === option && styles.glassOptionSelected,
+                    ]}
+                    onPress={() => setSelectedOption(option)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.glassOptionInner}>
+                      <Text
+                        style={[
+                          styles.glassOptionText,
+                          selectedOption === option && styles.glassOptionTextSelected,
+                        ]}
+                        numberOfLines={hasLongOptions ? undefined : 2}
+                      >
+                        {option}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            );
+          })()}
 
           {/* Text Input with reduced opacity */}
           {playable.answer_type === 'text_input' && (
@@ -733,32 +739,38 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
           )}
 
           {/* MCQ Options - Higher opacity */}
-          {playable.answer_type === 'mcq' && playable.options && (
-            <View style={styles.immersiveOptionsGrid}>
-              {playable.options.map((option: string, index: number) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.glassOptionVideo,
-                    selectedOption === option && styles.glassOptionSelectedVideo,
-                  ]}
-                  onPress={() => setSelectedOption(option)}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.glassOptionInner}>
-                    <Text
-                      style={[
-                        styles.glassOptionText,
-                        selectedOption === option && styles.glassOptionTextSelected,
-                      ]}
-                    >
-                      {option}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
+          {playable.answer_type === 'mcq' && playable.options && (() => {
+            const LONG_OPTION_THRESHOLD = 35;
+            const hasLongOptions = playable.options.some((opt: string) => opt.length > LONG_OPTION_THRESHOLD);
+            
+            return (
+              <View style={hasLongOptions ? styles.immersiveOptionsList : styles.immersiveOptionsGrid}>
+                {playable.options.map((option: string, index: number) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      hasLongOptions ? styles.glassOptionFullWidthVideo : styles.glassOptionVideo,
+                      selectedOption === option && styles.glassOptionSelectedVideo,
+                    ]}
+                    onPress={() => setSelectedOption(option)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.glassOptionInner}>
+                      <Text
+                        style={[
+                          styles.glassOptionText,
+                          selectedOption === option && styles.glassOptionTextSelected,
+                        ]}
+                        numberOfLines={hasLongOptions ? undefined : 2}
+                      >
+                        {option}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            );
+          })()}
 
           {/* Text Input - Higher opacity */}
           {playable.answer_type === 'text_input' && (
@@ -790,13 +802,17 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
   function renderMCQOptions() {
     if (playable.answer_type !== 'mcq' || !playable.options) return null;
 
+    // Check if any option is too long for 2-column grid (threshold: 35 chars)
+    const LONG_OPTION_THRESHOLD = 35;
+    const hasLongOptions = playable.options.some((opt: string) => opt.length > LONG_OPTION_THRESHOLD);
+
     return (
-      <View style={styles.optionsGrid}>
+      <View style={hasLongOptions ? styles.optionsList : styles.optionsGrid}>
         {playable.options.map((option: string, index: number) => (
           <TouchableOpacity
             key={index}
             style={[
-              styles.optionButton,
+              hasLongOptions ? styles.optionButtonFullWidth : styles.optionButton,
               selectedOption === option && styles.optionButtonSelected,
             ]}
             onPress={() => setSelectedOption(option)}
@@ -807,6 +823,7 @@ function PlayableCard({ playable, onAnswer, onGuessAnswer, submitting, currentIn
                 styles.optionText,
                 selectedOption === option && styles.optionTextSelected,
               ]}
+              numberOfLines={hasLongOptions ? undefined : 2}
             >
               {option}
             </Text>
@@ -925,28 +942,42 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
   },
+  optionsList: {
+    flexDirection: 'column',
+    gap: 10,
+  },
   optionButton: {
     width: '47%',
     backgroundColor: '#1E1E2E',
     borderRadius: 12,
-    padding: 14,
-    paddingVertical: 12,
+    padding: 16,
     borderWidth: 2,
     borderColor: '#2A2A3E',
-    minHeight: 56,
+    minHeight: 60,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  optionButtonFullWidth: {
+    width: '100%',
+    backgroundColor: '#1E1E2E',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderWidth: 2,
+    borderColor: '#2A2A3E',
+    minHeight: 48,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   optionButtonSelected: {
     borderColor: '#5B8DEF',
     backgroundColor: 'rgba(91, 141, 239, 0.15)',
   },
   optionText: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#E0E0E0',
     textAlign: 'center',
     fontWeight: '500',
-    lineHeight: 18,
   },
   optionTextSelected: {
     color: '#FFFFFF',
@@ -1059,8 +1090,21 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
+  immersiveOptionsList: {
+    flexDirection: 'column',
+    gap: 8,
+    marginBottom: 12,
+  },
   glassOption: {
     width: '48%',
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  glassOptionFullWidth: {
+    width: '100%',
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1.5,
@@ -1072,17 +1116,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,217,255,0.15)',
   },
   glassOptionInner: {
-    padding: 12,
-    minHeight: 48,
+    padding: 14,
+    minHeight: 50,
     justifyContent: 'center',
     alignItems: 'center',
   },
   glassOptionText: {
-    fontSize: 13,
+    fontSize: 15,
     color: '#FFFFFF',
     textAlign: 'center',
     fontWeight: '700',
-    lineHeight: 17,
     textShadowColor: '#000000',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
@@ -1408,6 +1451,14 @@ const styles = StyleSheet.create({
   },
   glassOptionVideo: {
     width: '48%',
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  glassOptionFullWidthVideo: {
+    width: '100%',
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1.5,
